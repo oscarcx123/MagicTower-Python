@@ -9,7 +9,7 @@ from tower_database import MAP_DATABASE
 #--- Hero Data Setting START ---
 # Initial Coordinate for Hero (Player)
 X_COORDINATE = 6
-Y_COORDINATE = 2
+Y_COORDINATE = 10
 PLAYER_FLOOR = 1
 # Initial Stats for Hero (Player)
 PLAYER_HP = 1000
@@ -52,7 +52,7 @@ clock = pygame.time.Clock()
 font_name = pygame.font.match_font("arial")
 
 #--- Functions START ---
-# Drawing functions
+# Drawing / Rendering functions
 # draw_text receives drawing surface, text, size of text, text coordinates (upper left corner)
 def draw_text(surface, text, size, x, y):
 	font = pygame.font.Font(font_name, size)
@@ -84,14 +84,10 @@ def draw_map(map_data):
 	temp_y = start_y
 	while temp_y < HEIGHT / BLOCK_UNIT:
 		while temp_x < WIDTH / BLOCK_UNIT - 4:
-			if map_data[temp_y][temp_x] == 1:
-				screen.blit(wall_img, ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
-			elif map_data[temp_y][temp_x] == 201:
-				screen.blit(greenSlime_img, ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
-			elif map_data[temp_y][temp_x] == 202:
-				screen.blit(redSlime_img, ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
-			elif map_data[temp_y][temp_x] == 203:
-				screen.blit(blackSlime_img, ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
+			map_element = map_data[temp_y][temp_x]
+			if int(map_element) != 0:
+				name = "img_" + str(map_element)
+				screen.blit(eval(name), ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
 			temp_x += 1
 		temp_y += 1
 		temp_x = start_x
@@ -108,6 +104,16 @@ def draw_status_bar():
 	draw_text(screen, "Y_KEY = " + str(player.yellowkey), 36, 0, 7)
 	draw_text(screen, "B_KEY = " + str(player.bluekey), 36, 0, 8)
 	draw_text(screen, "R_KEY = " + str(player.redkey), 36, 0, 9)
+
+# crop_images is used to split the image (64, 64) from the resources (32x, 32)
+def crop_images(image, prefix, start_num, height, width):
+	for i in range(int(height * 2 / BLOCK_UNIT)):
+		empty_surf = pygame.Surface((width, int(BLOCK_UNIT * i)))
+		empty_surf.blit(image, (0, -BLOCK_UNIT * (i-1)))
+		empty_surf = pygame.transform.chop(empty_surf, (0, width, 0, BLOCK_UNIT * (i - 1)))
+		empty_surf.set_colorkey(BLACK)
+		name = prefix + str(i+start_num)
+		globals()[name] = empty_surf
 
 # Rules functions
 # can_pass is used to determine whether a destination is passable or not. It returns a boolean value.
@@ -297,17 +303,58 @@ background_rect = background.get_rect()
 player_img = pygame.image.load(path.join(img_dir, "hero.png")).convert()
 # Load wall image
 wall_original = pygame.image.load(path.join(img_dir, "wall.png")).convert()
-wall_img = pygame.transform.scale(wall_original, (64, 64))
+img_1 = pygame.transform.scale(wall_original, (64, 64))
 # Load enemy images
-greenSlime_original = pygame.image.load(path.join(img_dir, "greenSlime.png")).convert()
-greenSlime_img = pygame.transform.scale(greenSlime_original, (64, 64))
-greenSlime_img.set_colorkey(BLACK)
-redSlime_original = pygame.image.load(path.join(img_dir, "redSlime.png")).convert()
-redSlime_img = pygame.transform.scale(redSlime_original, (64, 64))
-redSlime_img.set_colorkey(BLACK)
-blackSlime_original = pygame.image.load(path.join(img_dir, "blackSlime.png")).convert()
-blackSlime_img = pygame.transform.scale(blackSlime_original, (64, 64))
-blackSlime_img.set_colorkey(BLACK)
+enemies_full_black_original = pygame.image.load(path.join(img_dir, "enemies_full_black.png")).convert()
+enemies_full_black_original_rect = enemies_full_black_original.get_rect()
+width = enemies_full_black_original_rect.right
+height = enemies_full_black_original_rect.bottom
+enemies_full_black_img = pygame.transform.scale(enemies_full_black_original, (width * 2, height * 2))
+enemies_full_black_img.set_colorkey(BLACK)
+surf_mon_full = pygame.Surface((width, height * 2))
+surf_mon_full.blit(enemies_full_black_img,(0, 0))
+crop_images(surf_mon_full, "img_", 200, height, width)
+# Load Jewel images
+jewels = pygame.image.load(path.join(img_dir, "jewels.png")).convert()
+jewels_rect = jewels.get_rect()
+width = jewels_rect.right
+height = jewels_rect.bottom
+jewels_img = pygame.transform.scale(jewels, (width * 2, height * 2))
+jewels_img.set_colorkey(BLACK)
+crop_images(jewels_img, "img_", 26, height * 2, width * 2)
+# Load potion images
+potions = pygame.image.load(path.join(img_dir, "potions.png")).convert()
+potions_rect = potions.get_rect()
+width = potions_rect.right
+height = potions_rect.bottom
+potions_img = pygame.transform.scale(potions, (width * 2, height * 2))
+potions_img.set_colorkey(BLACK)
+crop_images(potions_img, "img_", 30, height * 2, width * 2)
+# Load key images
+keys = pygame.image.load(path.join(img_dir, "keys.png")).convert()
+keys_rect = keys.get_rect()
+width = keys_rect.right
+height = keys_rect.bottom
+keys_img = pygame.transform.scale(keys, (width * 2, height * 2))
+keys_img.set_colorkey(BLACK)
+crop_images(keys_img, "img_", 20, height * 2, width * 2)
+# Load door images
+doors = pygame.image.load(path.join(img_dir, "doors.png")).convert()
+doors_rect = doors.get_rect()
+width = doors_rect.right
+height = doors_rect.bottom
+doors_img = pygame.transform.scale(doors, (width * 2, height * 2))
+doors_img.set_colorkey(BLACK)
+crop_images(doors_img, "img_", 80, height * 2, width * 2)
+# Load stair images
+stairs = pygame.image.load(path.join(img_dir, "stairs.png")).convert()
+stairs_rect = stairs.get_rect()
+width = stairs_rect.right
+height = stairs_rect.bottom
+stairs_img = pygame.transform.scale(stairs, (width * 2, height * 2))
+stairs_img.set_colorkey(BLACK)
+crop_images(stairs_img, "img_", 86, height * 2, width * 2)
+
 
 # Load all game sounds
 pygame.mixer.music.load(path.join(snd_dir, "AxiumCrisis.ogg"))
