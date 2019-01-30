@@ -21,7 +21,13 @@ PLAYER_EXP = 0
 PLAYER_YELLOWKEY = 3
 PLAYER_BLUEKEY = 2
 PLAYER_REDKEY = 1
+PLAYER_GREENKEY = 1
+PLAYER_STEELKEY = 1
 #--- Hero Data Setting END ---
+
+#--- Optional Setting START ---
+STEEL_DOOR_NEEDS_KEY = True
+#--- Optional Setting END ---
 
 #--- Basic Constants START ---
 # Define some properties of the game
@@ -124,76 +130,45 @@ def can_pass(direction):
 			row = int(player.rect.top / BLOCK_UNIT)
 			column = int(player.rect.left / BLOCK_UNIT) - 5
 			map_object = map_data[row][column] # read from the map_data to see what's at the destination
-			# According to HTML5 Magic Tower,
-			# 0 = Nothing (No obstacle)
-			# 1 = Wall (blocks the player)
-			# Others = Object (blocks the player and might have to initiate some events such as battle)
-			if map_object != 1:
-				if map_object != 0:
-					battle_result = battle(map_object, row, column)
-					return False
+			if detect_events(map_object, row, column):
 				return True
 			else:
 				return False
+
 	if direction == "right":
 		if (player.rect.left / BLOCK_UNIT) - 4 < 12:
 			map_data = map_read(player.floor)
 			row = int(player.rect.top / BLOCK_UNIT)
 			column = int(player.rect.left / BLOCK_UNIT) - 3
 			map_object = map_data[row][column]
-			if map_object != 1:
-				if map_object != 0:
-					battle_result = battle(map_object, row, column)
-					return False
+			if detect_events(map_object, row, column):
 				return True
 			else:
 				return False
+
 	if direction == "up":
 		if player.rect.top / BLOCK_UNIT > 0:
 			map_data = map_read(player.floor)
 			row = int(player.rect.top / BLOCK_UNIT) - 1
 			column = int(player.rect.left / BLOCK_UNIT) - 4
 			map_object = map_data[row][column]
-			if map_object != 1:
-				if map_object != 0:
-					battle_result = battle(map_object, row, column)
-					return False
+			if detect_events(map_object, row, column):
 				return True
 			else:
 				return False
+
 	if direction == "down":
 		if (player.rect.top / BLOCK_UNIT) < 12:
 			map_data = map_read(player.floor)
 			row = int(player.rect.top / BLOCK_UNIT) + 1
 			column = int(player.rect.left / BLOCK_UNIT) - 4
 			map_object = map_data[row][column]
-			if map_object != 1:
-				if map_object != 0:
-					battle_result = battle(map_object, row, column)
-					return False
+			if detect_events(map_object, row, column):
 				return True
 			else:
 				return False
 
-# battle is used to determine the aftermath of a battle
-def battle(map_object, row, column):
-	result = get_damage_info(map_object)
-	# Check if the monster is unbeatable
-	if result == False:
-		return False
-	# Check if the player will be killed
-	else:
-		if result["damage"] >= player.hp:
-			# Will not initiate the battle
-			return False
-		else:
-			# Calculate the stats of player after battle
-			player.hp -= result["damage"]
-			player.gold += result["mon_gold"]
-			player.exp += result["mon_exp"]
-			map_write(player.floor, row, column, 0)
-			return True
-			
+# Tool functions
 # get_damage_info is used to "simulate" a battle so it's a crutial function
 # It can be used by the monster manual or a real battle
 def get_damage_info(map_object):
@@ -225,6 +200,128 @@ def get_damage_info(map_object):
 		damage = 0
 	result = {"damage": damage, "mon_gold": mon_gold, "mon_exp": mon_exp}
 	return result
+
+# Check if something is on the map
+def check_map(floor, target):
+	map_temp = map_database[floor - 1]
+	start_x = 0
+	start_y = 0
+	temp_x = start_x
+	temp_y = start_y
+	while temp_y < HEIGHT / BLOCK_UNIT:
+		while temp_x < WIDTH / BLOCK_UNIT - 4:
+			if map_temp[temp_y][temp_x]	== target:
+				return {"result": True, "y_coordinate": temp_y, "x_coordinate": temp_x}
+			temp_x += 1
+		temp_y += 1
+		temp_x = 0
+	return {"result": False}
+
+# Events functions
+# detect_events determine the event function that should be triggered
+def detect_events(map_object, row, column):
+	# According to HTML5 Magic Tower,
+	# 0 = Nothing (No obstacle)
+	# 1 = Wall (blocks the player)
+	# 21 - 69 = Items (Player can step on it and get the item)
+	# 81 - 86 = Doors (player can't step on but instead open it)
+	# 201+ = Monsters (trigger battle)
+	if map_object == 0:
+		return True
+	else:
+		if map_object == 1:
+			return False
+		elif map_object >= 21 and map_object <= 69:
+			get_item(map_object, row, column)
+			return True
+		# Skip special door here because it should be triggered by something other events
+		elif map_object >= 81 and map_object <= 84 or map_object == 86:
+			open_door(map_object, row, column)
+			return False
+		elif map_object >= 87 and map_object <= 88:
+			if map_object == 87:
+				change_floor("go_upstairs", row, column)
+			elif map_object == 88:
+				change_floor("go_downstairs", row, column)
+			return False
+		elif map_object >= 201:
+			battle(map_object, row, column)
+			return False
+		else:
+			return False
+
+# battle is used to determine the aftermath of a battle
+def battle(map_object, row, column):
+	result = get_damage_info(map_object)
+	# Check if the monster is unbeatable
+	if result == False:
+		return False
+	# Check if the player will be killed
+	else:
+		if result["damage"] >= player.hp:
+			# Will not initiate the battle if player is going to be killed
+			return False
+		else:
+			# Calculate the stats of player after battle
+			player.hp -= result["damage"]
+			player.gold += result["mon_gold"]
+			player.exp += result["mon_exp"]
+			map_write(player.floor, row, column, 0)
+			return True
+
+def get_item(map_object, row, column):
+	print("item test success")
+
+# open_door can open the door if requirements are met
+def open_door(map_object, row, column):
+	if map_object == 81 and player.yellowkey > 0:
+		player.yellowkey -= 1
+		map_write(player.floor, row, column, 0)
+	elif map_object == 82 and player.bluekey > 0:
+		player.bluekey -= 1
+		map_write(player.floor, row, column, 0)
+	elif map_object == 83 and player.redkey > 0:
+		player.redkey -= 1
+		map_write(player.floor, row, column, 0)
+	elif map_object == 84 and player.greenkey > 0:
+		player.greenkey -= 1
+		map_write(player.floor, row, column, 0)
+	elif map_object == 85:
+		map_write(player.floor, row, column, 0)
+	elif map_object == 86:
+		if STEEL_DOOR_NEEDS_KEY:
+			if player.steelkey > 0:
+				player.steelkey -= 1
+				map_write(player.floor, row, column, 0)
+		else: 
+			map_write(player.floor, row, column, 0)
+
+# Change floor can change the floor and it can be used without a stair
+# change_floor(destination floor, y, x)
+def change_floor(floor, row, column):
+	if floor == "go_upstairs":
+		check_map_result = check_map(player.floor + 1, 88)
+		if check_map_result["result"] == True:
+			x_coordinate = check_map_result["x_coordinate"]
+			y_coordinate = check_map_result["y_coordinate"]
+			player.rect.top = y_coordinate * BLOCK_UNIT
+			player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+		player.floor += 1
+	elif floor == "go_downstairs":
+		check_map_result = check_map(player.floor - 1, 87)
+		if check_map_result["result"] == True:
+			x_coordinate = check_map_result["x_coordinate"]
+			y_coordinate = check_map_result["y_coordinate"]
+			player.rect.top = y_coordinate * BLOCK_UNIT
+			player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+		player.floor -= 1
+	# When this function is not triggered by stairs
+	else:
+		x_coordinate = column
+		y_coordinate = row
+		player.rect.top = y_coordinate * BLOCK_UNIT
+		player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+		player.floor = floor
 
 # Data Functions
 # map_read can read data from map_database
@@ -259,6 +356,8 @@ class Player(pygame.sprite.Sprite):
 		self.yellowkey = PLAYER_YELLOWKEY
 		self.bluekey = PLAYER_BLUEKEY
 		self.redkey = PLAYER_REDKEY
+		self.greenkey = PLAYER_GREENKEY
+		self.steelkey = PLAYER_STEELKEY
 		self.floor = PLAYER_FLOOR
 
 	def update(self):

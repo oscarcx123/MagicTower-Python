@@ -19,6 +19,18 @@
 
 * [x] 发布初版Python魔塔样板的雏形
 
+### 2019.01.29 V0.1.0
+
+* [x] 增加crop_image函数
+
+### 2019.01.29 V0.2.0
+
+* [x] 实现上下楼以及开门的处理
+* [x] 增加change_floor函数
+* [x] 增加open_door函数
+* [x] 增加check_map函数
+* [x] 增加check_map函数
+
 ---------------------------
 
 # MagicTower-Python
