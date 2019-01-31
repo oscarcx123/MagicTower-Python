@@ -1,4 +1,4 @@
-# Python Magic Tower by Azure (oscarcx123)
+# Python Magic Tower by Azure (oscarcx123) & dljgs1
 import pygame
 import random
 import math
