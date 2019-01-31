@@ -10,7 +10,7 @@ temp_freq = 4  # 行动一格需要的帧数 scale的倍数最好 不是也行
 
 
 def temp_trans(pos):  # 仿RM 临时游戏坐标到绝对坐标转换 代表的是 centerx, bottom
-    return [int((pos[0] + 0.5) * temp_scale), (pos[1] + 1) * temp_scale]
+    return [int((pos[0] + 4.5) * temp_scale), (pos[1] + 1) * temp_scale]
 
 
 def rect_trans(rect):  # 获取rect的当前物理坐标
