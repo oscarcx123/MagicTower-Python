@@ -3,9 +3,11 @@ import pygame
 import random
 import math
 from os import path
-from tower_database import get_monster_data
-from tower_database import MAP_DATABASE
+from id_map import *
+from tower_map import *
+from monster import *
 from sysconf import *
+from items import *
 
 # Initialize pygame and create window
 pygame.init()
@@ -80,17 +82,11 @@ def crop_images(image, prefix, start_num, height, width):
     width *= 2
     i = 1
     while i <= int(height / BLOCK_UNIT):
-        print(i)
-        print(image)
-        print(start_num)
-        print(int(height / BLOCK_UNIT))
         empty_surf = pygame.Surface((width, int(BLOCK_UNIT * i)))
         empty_surf.blit(image, (0, -BLOCK_UNIT * (i - 1)))
         empty_surf = pygame.transform.chop(empty_surf, (0, width, 0, BLOCK_UNIT * (i - 1)))
         empty_surf.set_colorkey(BLACK)
         name = prefix + str(i + start_num)
-        print(name)
-        print(empty_surf)
         globals()[name] = empty_surf
         i += 1
 
@@ -104,7 +100,7 @@ def can_pass(direction):
             row = int(player.rect.top / BLOCK_UNIT)
             column = int(player.rect.left / BLOCK_UNIT) - 5
             map_object = map_data[row][column]  # read from the map_data to see what's at the destination
-            if detect_events(map_object, row, column):
+            if detect_events(map_object, column, row):
                 return True
             else:
                 return False
@@ -115,7 +111,7 @@ def can_pass(direction):
             row = int(player.rect.top / BLOCK_UNIT)
             column = int(player.rect.left / BLOCK_UNIT) - 3
             map_object = map_data[row][column]
-            if detect_events(map_object, row, column):
+            if detect_events(map_object, column, row):
                 return True
             else:
                 return False
@@ -126,7 +122,7 @@ def can_pass(direction):
             row = int(player.rect.top / BLOCK_UNIT) - 1
             column = int(player.rect.left / BLOCK_UNIT) - 4
             map_object = map_data[row][column]
-            if detect_events(map_object, row, column):
+            if detect_events(map_object, column, row):
                 return True
             else:
                 return False
@@ -137,7 +133,7 @@ def can_pass(direction):
             row = int(player.rect.top / BLOCK_UNIT) + 1
             column = int(player.rect.left / BLOCK_UNIT) - 4
             map_object = map_data[row][column]
-            if detect_events(map_object, row, column):
+            if detect_events(map_object, column, row):
                 return True
             else:
                 return False
@@ -187,7 +183,7 @@ def check_map(floor, target):
     while temp_y < HEIGHT / BLOCK_UNIT:
         while temp_x < WIDTH / BLOCK_UNIT - 4:
             if map_temp[temp_y][temp_x] == target:
-                return {"result": True, "y_coordinate": temp_y, "x_coordinate": temp_x}
+                return {"result": True, "x_coordinate": temp_x, "y_coordinate": temp_y}
             temp_x += 1
         temp_y += 1
         temp_x = 0
@@ -210,7 +206,7 @@ def detect_events(map_object, row, column):
         if map_object == 1:
             return False
         elif map_object >= 21 and map_object <= 69:
-            get_item(map_object, row, column)
+            pickup_item(map_object, row, column)
             return True
         # Skip special door here because it should be triggered by something other events
         elif map_object >= 81 and map_object <= 84 or map_object == 86:
@@ -230,7 +226,7 @@ def detect_events(map_object, row, column):
 
 
 # battle is used to determine the aftermath of a battle
-def battle(map_object, row, column):
+def battle(map_object, column, row):
     result = get_damage_info(map_object)
     # Check if the monster is unbeatable
     if result == False:
@@ -245,103 +241,59 @@ def battle(map_object, row, column):
             player.hp -= result["damage"]
             player.gold += result["mon_gold"]
             player.exp += result["mon_exp"]
-            map_write(player.floor, row, column, 0)
+            map_write(player.floor, column, row, 0)
             return True
 
-# get_item can process item events
-def get_item(map_object, row, column):
-    if map_object == 27:
-        player.attack += RED_JEWEL
-        map_write(player.floor, row, column, 0)
-    elif map_object == 28:
-        player.defend += BLUE_JEWEL
-        map_write(player.floor, row, column, 0)
-    elif map_object == 29:
-        player.mdefend += GREEN_JEWEL
-        map_write(player.floor, row, column, 0)
-    elif map_object == 30:
-        player.attack += YELLOW_JEWEL
-        player.defend += YELLOW_JEWEL
-        player.mdefend += YELLOW_JEWEL * GREEN_JEWEL
-        player.hp += YELLOW_JEWEL * RED_POTION
-        map_write(player.floor, row, column, 0)
-    elif map_object == 31:
-        player.hp += RED_POTION
-        map_write(player.floor, row, column, 0)
-    elif map_object == 32:
-        player.hp += BLUE_POTION
-        map_write(player.floor, row, column, 0)
-    elif map_object == 33:
-        player.hp += GREEN_POTION
-        map_write(player.floor, row, column, 0)
-    elif map_object == 34:
-        player.hp += YELLOW_POTION
-        map_write(player.floor, row, column, 0)
-    elif map_object == 35:
-        player.attack += SWORD_1
-        map_write(player.floor, row, column, 0)
-    elif map_object == 36:
-        player.defend += SHIELD_1
-        map_write(player.floor, row, column, 0)
-    elif map_object == 37:
-        player.attack += SWORD_2
-        map_write(player.floor, row, column, 0)
-    elif map_object == 38:
-        player.defend += SHIELD_2
-        map_write(player.floor, row, column, 0)
-    elif map_object == 39:
-        player.attack += SWORD_3
-        map_write(player.floor, row, column, 0)
-    elif map_object == 40:
-        player.defend += SHIELD_3
-        map_write(player.floor, row, column, 0)
-    elif map_object == 41:
-        player.attack += SWORD_4
-        map_write(player.floor, row, column, 0)
-    elif map_object == 42:
-        player.defend += SHIELD_4
-        map_write(player.floor, row, column, 0)
-    elif map_object == 43:
-        player.attack += SWORD_5
-        map_write(player.floor, row, column, 0)
-    elif map_object == 44:
-        player.defend += SHIELD_5
-        map_write(player.floor, row, column, 0)
-    elif (map_object >= 45 and map_object <= 55) or (map_object >= 57 and map_object <= 69):
-        player.item[map_object] += 1
-        map_write(player.floor, row, column, 0)
-    elif map_object == 56: # superPotion
-        player.hp *= 2
-        map_write(player.floor, row, column, 0)
+# pickup_item can process item pick up events
+def pickup_item(map_object, column, row):
+    item_name = RELATIONSHIP_DICT[str(map_object)]["id"]
+    item_type = ITEM_PROPERTY["items"][item_name]["cls"]
+    if item_type == "items":
+        exec(ITEM_PROPERTY["itemEffect"][item_name])
+        map_write(player.floor, column, row, 0)
+    elif item_type == "constants" or item_type == "tools" :
+        try:
+            player.item[map_object] += 1
+        except KeyError:
+            player.item[map_object] = 1
+    else:
+        pass
+
+# use_item can use a constant / tool item
+def use_item(item_number):
+    item_name = RELATIONSHIP_DICT[str(item_number)]["id"]
+    results = exec(ITEM_PROPERTY["useItemEffect"][item_name])
+    if results["result"] == False:
+        print(results["msg"]) # Will put it in a msg box in the future
 
 # open_door can open the door if requirements are met
-def open_door(map_object, row, column):
+def open_door(map_object, column, row):
     if map_object == 81 and player.yellowkey > 0:
         player.yellowkey -= 1
-        map_write(player.floor, row, column, 0)
+        map_write(player.floor, column, row, 0)
     elif map_object == 82 and player.bluekey > 0:
         player.bluekey -= 1
-        map_write(player.floor, row, column, 0)
+        map_write(player.floor, column, row, 0)
     elif map_object == 83 and player.redkey > 0:
         player.redkey -= 1
-        map_write(player.floor, row, column, 0)
+        map_write(player.floor, column, row, 0)
     elif map_object == 84 and player.greenkey > 0:
         player.greenkey -= 1
-        map_write(player.floor, row, column, 0)
+        map_write(player.floor, column, row, 0)
     elif map_object == 85:
-        map_write(player.floor, row, column, 0)
+        map_write(player.floor, column, row, 0)
     elif map_object == 86:
         if STEEL_DOOR_NEEDS_KEY:
             if player.steelkey > 0:
                 player.steelkey -= 1
-                map_write(player.floor, row, column, 0)
+                map_write(player.floor, column, row, 0)
         else:
-            map_write(player.floor, row, column, 0)
+            map_write(player.floor, column, row, 0)
 
 
 # Change floor can change the floor and it can be used without a stair
-# change_floor(destination floor, y, x)
-def change_floor(floor, row, column):
+# change_floor(destination floor, x, y)
+def change_floor(floor, column, row):
     if floor == "go_upstairs":
         check_map_result = check_map(player.floor + 1, 88)
         print(check_map_result)
@@ -377,7 +329,7 @@ def map_read(floor):
 
 
 # map_write can write data to map_database
-def map_write(floor, row, column, change):
+def map_write(floor, column, row, change):
     map_index = floor - 1
     map_database[map_index][row][column] = change
 
@@ -412,7 +364,7 @@ class Player(ActorSprite):
         self.greenkey = PLAYER_GREENKEY
         self.steelkey = PLAYER_STEELKEY
         self.floor = PLAYER_FLOOR
-        self.item = {}
+        self.item = PLAYER_ITEM
 
     def update(self):
         self.speedx = 0

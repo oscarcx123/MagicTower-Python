@@ -19,6 +19,7 @@ PLAYER_BLUEKEY = 0
 PLAYER_REDKEY = 0
 PLAYER_GREENKEY = 0
 PLAYER_STEELKEY = 0
+PLAYER_ITEM = {}
 # --- Hero Data Setting END ---
 
 # --- Item Data Setting START ---
