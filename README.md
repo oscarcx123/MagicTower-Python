@@ -15,6 +15,17 @@
 
 ## 更新说明
 
+### 2019.02.01 V0.3.1
+
+* [x] 废除get_item函数并改用pick_item函数
+* [x] 增加use_item函数
+* [x] 引入HTML5魔塔样板的item数据并存放到items.py
+* [x] 完成部分道具的实现
+* [x] 将地图数据分离到tower_map.py
+* [x] 将怪物数据分离到monster.py
+* [x] 将地图数据映射表分离到id_map.py
+* [x] 废除tower_database.py
+
 ### 2019.01.31 V0.3.0
 
 欢迎dljgs1大佬的加入！
