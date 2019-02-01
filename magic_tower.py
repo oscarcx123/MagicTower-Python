@@ -335,6 +335,12 @@ def map_write(floor, column, row, change):
 
 # --- Class START ---
 
+# test event
+from winbase import TextWin
+first = TextWin("mid",
+                "    欢迎来到python魔塔样板v0.x\n1. 本窗口的调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n 3. 事件触发可以考虑用列表\n 4. 文本解析也许比较费时？可以考虑先解析")
+first.show_on()
+
 # *** 修改为继承自ActorSprite类（权宜之计用来测试 后面还是分离开）
 from sprite import ActorSprite
 
@@ -391,6 +397,9 @@ class Player(ActorSprite):
                 self.move(0)
                 self.speedy = BLOCK_UNIT
                 print(self.pos)
+        elif keystate[pygame.K_SPACE]:
+            first.updateText()  # 后面改成触发事件表
+
         ActorSprite.update(self)
         return
 
@@ -471,7 +480,9 @@ pygame.mixer.music.play(loops=-1)  # Keeps the background music on loop
 # Load Sprites
 all_sprites = pygame.sprite.Group()
 player = Player()
+all_sprites.add(first)
 all_sprites.add(player)
+
 # --- Loading Resources END ---
 
 # --- Game START---
@@ -499,3 +510,6 @@ while running:
 
 pygame.quit()
 # --- Game END---
+
+
+
