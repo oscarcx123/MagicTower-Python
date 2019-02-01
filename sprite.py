@@ -10,7 +10,7 @@ temp_freq = 4  # 行动一格需要的帧数 scale的倍数最好 不是也行
 
 
 def temp_trans(pos):  # 仿RM 临时游戏坐标到绝对坐标转换 代表的是 centerx, bottom
-    return [int((pos[0] + 0.5) * temp_scale), (pos[1] + 1) * temp_scale]
+    return [int((pos[0] + 4.5) * temp_scale), (pos[1] + 1) * temp_scale]
 
 
 def rect_trans(rect):  # 获取rect的当前物理坐标
@@ -32,7 +32,7 @@ class ActorSprite(pygame.sprite.Sprite):
         self._dy = int(image.get_height() / size[1])  # 高度
         self.image = self.src.subsurface(self.face[1] * self._dx, self.face[0] * self._dy, self._dx, self._dy)
         self.rect = self.image.get_rect()
-        self.rect.centerx,self.rect.bottom = temp_trans(pos)
+        self.rect.centerx, self.rect.bottom = temp_trans(pos)
 
         self.moving = False
         self._walk = 0
@@ -45,16 +45,18 @@ class ActorSprite(pygame.sprite.Sprite):
 
         step = int(temp_scale / temp_freq) + int(((temp_scale % temp_freq) * 2 - 1) / temp_freq)
 
+        # 步长算法： 如果有余数且余数大于步长的一半 分配到每一步上 否则之后对齐
+
         def shiftleg():  # 对齐变腿
             self.face[1] = (self.face[1] + 1) % self.size[1]
             # print("换腿", self.face[1])
+
         def attention():
             if self.face[1] % 2 == 0:
                 return
             else:
                 shiftleg()
 
-        # 步长算法： 如果有余数且余数大于步长的一半 分配到每一步上 否则之后对齐
         # 在一条轴上的移动 callback是进入对齐线前后的回调函数
         def move_axis(cur, dst, step, block, callback=None):
             """
@@ -73,7 +75,7 @@ class ActorSprite(pygame.sprite.Sprite):
             else:
                 return 0
 
-            if 0 < res < 2*step:
+            if 0 < res < 2 * step:
                 # 即将走入的区间
                 if callback is not None:
                     callback()
@@ -86,8 +88,8 @@ class ActorSprite(pygame.sprite.Sprite):
                     diff = res
             return diff
 
-        sx = move_axis(cur_pos[0], dst_pos[0], step, temp_scale) #, shiftleg)
-        sy = move_axis(cur_pos[1], dst_pos[1], step, temp_scale) # , shiftleg)
+        sx = move_axis(cur_pos[0], dst_pos[0], step, temp_scale)  # , shiftleg)
+        sy = move_axis(cur_pos[1], dst_pos[1], step, temp_scale)  # , shiftleg)
 
         if self.moving:
             self._walk += 1
@@ -105,7 +107,7 @@ class ActorSprite(pygame.sprite.Sprite):
             self.moving = False
 
     def move(self, dir):  # TODO:渐变 | 边界判断
-        if self.moving:
+        if self.moving:  # 移动中不接受新指令
             return
         if dir < self.size[0]:
             self.face[0] = dir
@@ -119,3 +121,7 @@ class ActorSprite(pygame.sprite.Sprite):
             self.pos[1] -= 1
         print(self.pos)
         # self.update()
+
+    def move_directly(self, pos):  # 瞬移
+        self.pos = pos
+        self.rect.centerx, self.rect.bottom = temp_trans(pos)

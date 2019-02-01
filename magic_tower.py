@@ -1,53 +1,11 @@
-# Python Magic Tower by Azure (oscarcx123)
+# Python Magic Tower by Azure (oscarcx123) & dljgs1
 import pygame
 import random
 import math
 from os import path
 from tower_database import get_monster_data
 from tower_database import MAP_DATABASE
-
-# --- Hero Data Setting START ---
-# Initial Coordinate for Hero (Player)
-X_COORDINATE = 6
-Y_COORDINATE = 10
-PLAYER_FLOOR = 1
-# Initial Stats for Hero (Player)
-PLAYER_HP = 1000
-PLAYER_ATK = 10
-PLAYER_DEF = 5
-PLAYER_MDEF = 10
-PLAYER_GOLD = 100
-PLAYER_EXP = 0
-PLAYER_YELLOWKEY = 3
-PLAYER_BLUEKEY = 2
-PLAYER_REDKEY = 1
-PLAYER_GREENKEY = 1
-PLAYER_STEELKEY = 1
-# --- Hero Data Setting END ---
-
-# --- Optional Setting START ---
-STEEL_DOOR_NEEDS_KEY = True
-# --- Optional Setting END ---
-
-# --- Basic Constants START ---
-# Define some properties of the game
-WIDTH = 1088  # (13 + 4) * 64
-HEIGHT = 832  # 13 * 64
-# BLOCK_UNIT is used to create "invisible tiles" later. In this case the size of a block is 64 * 64 instead of 32 * 32
-BLOCK_UNIT = HEIGHT / 13  # BLOCK_UNIT = 64
-FPS = 12
-
-# Define Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
-# Define directories for images and sounds
-img_dir = path.join(path.dirname(__file__), "img")
-snd_dir = path.join(path.dirname(__file__), "sound")
-# --- Basic Constants END ---
+from sysconf import *
 
 # Initialize pygame and create window
 pygame.init()
@@ -118,13 +76,23 @@ def draw_status_bar():
 
 # crop_images is used to split the image (64, 64) from the resources (32x, 32)
 def crop_images(image, prefix, start_num, height, width):
-    for i in range(int(height * 2 / BLOCK_UNIT)):
+    height *= 2
+    width *= 2
+    i = 1
+    while i <= int(height / BLOCK_UNIT):
+        print(i)
+        print(image)
+        print(start_num)
+        print(int(height / BLOCK_UNIT))
         empty_surf = pygame.Surface((width, int(BLOCK_UNIT * i)))
         empty_surf.blit(image, (0, -BLOCK_UNIT * (i - 1)))
         empty_surf = pygame.transform.chop(empty_surf, (0, width, 0, BLOCK_UNIT * (i - 1)))
         empty_surf.set_colorkey(BLACK)
         name = prefix + str(i + start_num)
+        print(name)
+        print(empty_surf)
         globals()[name] = empty_surf
+        i += 1
 
 
 # Rules functions
@@ -189,7 +157,7 @@ def get_damage_info(map_object):
     mon_gold = monster_stats["money"]
     mon_exp = monster_stats["experience"]
     # Check if hero_atk > mon_def
-    if player.attack < mon_def:
+    if player.attack <= mon_def:
         return False
     # Calculate damage taken by player per turn
     damage_from_mon_per_turn = mon_atk - player.defend
@@ -234,6 +202,7 @@ def detect_events(map_object, row, column):
     # 1 = Wall (blocks the player)
     # 21 - 69 = Items (Player can step on it and get the item)
     # 81 - 86 = Doors (player can't step on but instead open it)
+    # 87 - 88 = Stairs (Player can't step on it)
     # 201+ = Monsters (trigger battle)
     if map_object == 0:
         return True
@@ -279,10 +248,71 @@ def battle(map_object, row, column):
             map_write(player.floor, row, column, 0)
             return True
 
-
+# get_item can process item events
 def get_item(map_object, row, column):
-    print("item test success")
-
+    if map_object == 27:
+        player.attack += RED_JEWEL
+        map_write(player.floor, row, column, 0)
+    elif map_object == 28:
+        player.defend += BLUE_JEWEL
+        map_write(player.floor, row, column, 0)
+    elif map_object == 29:
+        player.mdefend += GREEN_JEWEL
+        map_write(player.floor, row, column, 0)
+    elif map_object == 30:
+        player.attack += YELLOW_JEWEL
+        player.defend += YELLOW_JEWEL
+        player.mdefend += YELLOW_JEWEL * GREEN_JEWEL
+        player.hp += YELLOW_JEWEL * RED_POTION
+        map_write(player.floor, row, column, 0)
+    elif map_object == 31:
+        player.hp += RED_POTION
+        map_write(player.floor, row, column, 0)
+    elif map_object == 32:
+        player.hp += BLUE_POTION
+        map_write(player.floor, row, column, 0)
+    elif map_object == 33:
+        player.hp += GREEN_POTION
+        map_write(player.floor, row, column, 0)
+    elif map_object == 34:
+        player.hp += YELLOW_POTION
+        map_write(player.floor, row, column, 0)
+    elif map_object == 35:
+        player.attack += SWORD_1
+        map_write(player.floor, row, column, 0)
+    elif map_object == 36:
+        player.defend += SHIELD_1
+        map_write(player.floor, row, column, 0)
+    elif map_object == 37:
+        player.attack += SWORD_2
+        map_write(player.floor, row, column, 0)
+    elif map_object == 38:
+        player.defend += SHIELD_2
+        map_write(player.floor, row, column, 0)
+    elif map_object == 39:
+        player.attack += SWORD_3
+        map_write(player.floor, row, column, 0)
+    elif map_object == 40:
+        player.defend += SHIELD_3
+        map_write(player.floor, row, column, 0)
+    elif map_object == 41:
+        player.attack += SWORD_4
+        map_write(player.floor, row, column, 0)
+    elif map_object == 42:
+        player.defend += SHIELD_4
+        map_write(player.floor, row, column, 0)
+    elif map_object == 43:
+        player.attack += SWORD_5
+        map_write(player.floor, row, column, 0)
+    elif map_object == 44:
+        player.defend += SHIELD_5
+        map_write(player.floor, row, column, 0)
+    elif (map_object >= 45 and map_object <= 55) or (map_object >= 57 and map_object <= 69):
+        player.item[map_object] += 1
+        map_write(player.floor, row, column, 0)
+    elif map_object == 56: # superPotion
+        player.hp *= 2
+        map_write(player.floor, row, column, 0)
 
 # open_door can open the door if requirements are met
 def open_door(map_object, row, column):
@@ -314,26 +344,24 @@ def open_door(map_object, row, column):
 def change_floor(floor, row, column):
     if floor == "go_upstairs":
         check_map_result = check_map(player.floor + 1, 88)
-        if check_map_result["result"] == True:
+        print(check_map_result)
+        if check_map_result["result"]:
             x_coordinate = check_map_result["x_coordinate"]
             y_coordinate = check_map_result["y_coordinate"]
-            player.rect.top = y_coordinate * BLOCK_UNIT
-            player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+            player.move_directly([x_coordinate, y_coordinate])
         player.floor += 1
     elif floor == "go_downstairs":
         check_map_result = check_map(player.floor - 1, 87)
-        if check_map_result["result"] == True:
+        if check_map_result["result"]:
             x_coordinate = check_map_result["x_coordinate"]
             y_coordinate = check_map_result["y_coordinate"]
-            player.rect.top = y_coordinate * BLOCK_UNIT
-            player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+            player.move_directly([x_coordinate, y_coordinate])
         player.floor -= 1
     # When this function is not triggered by stairs
     else:
         x_coordinate = column
         y_coordinate = row
-        player.rect.top = y_coordinate * BLOCK_UNIT
-        player.rect.left = (x_coordinate + 4) * BLOCK_UNIT
+        player.move_directly([x_coordinate, y_coordinate])
         player.floor = floor
 
 
@@ -364,11 +392,8 @@ class Player(ActorSprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.transform.scale(player_img, (64 * 4, 64 * 4))
         self.image.set_colorkey(WHITE)
-        self.rect = self.image.get_rect()
-        self.rect.top = Y_COORDINATE * BLOCK_UNIT
-        self.rect.left = (X_COORDINATE + 4) * BLOCK_UNIT
 
-        ActorSprite.__init__(self, 0, self.image, [X_COORDINATE + 4, Y_COORDINATE], [4, 4])
+        ActorSprite.__init__(self, 0, self.image, [X_COORDINATE, Y_COORDINATE], [4, 4])
 
         self.speedx = 0
         self.speedy = 0
@@ -384,15 +409,16 @@ class Player(ActorSprite):
         self.greenkey = PLAYER_GREENKEY
         self.steelkey = PLAYER_STEELKEY
         self.floor = PLAYER_FLOOR
+        self.item = {}
 
     def update(self):
-        print(self.pos)
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()
         if keystate[pygame.K_LEFT]:
             if can_pass("left"):
                 self.speedx = -BLOCK_UNIT
+                print(self.pos)
                 # ***
                 self.move(1)
         elif keystate[pygame.K_RIGHT]:
@@ -400,30 +426,21 @@ class Player(ActorSprite):
                 # ***
                 self.move(2)
                 self.speedx = BLOCK_UNIT
+                print(self.pos)
         elif keystate[pygame.K_UP]:
             if can_pass("up"):
                 # ***
                 self.move(3)
                 self.speedy = -BLOCK_UNIT
+                print(self.pos)
         elif keystate[pygame.K_DOWN]:
             if can_pass("down"):
                 # ***
                 self.move(0)
                 self.speedy = BLOCK_UNIT
+                print(self.pos)
         ActorSprite.update(self)
         return
-
-        self.rect.x += self.speedx
-        self.rect.y += self.speedy
-        if self.rect.right > WIDTH:
-            self.rect.right = WIDTH
-        if self.rect.left < 4 * BLOCK_UNIT:
-            self.rect.left = 4 * BLOCK_UNIT
-        if self.rect.top < 0:
-            self.rect.top = 0
-        if self.rect.bottom > HEIGHT:
-            self.rect.bottom = HEIGHT
-
 
 # --- Class END ---
 
@@ -450,7 +467,7 @@ enemies_full_black_img = pygame.transform.scale(enemies_full_black_original, (wi
 enemies_full_black_img.set_colorkey(BLACK)
 surf_mon_full = pygame.Surface((width, height * 2))
 surf_mon_full.blit(enemies_full_black_img, (0, 0))
-crop_images(surf_mon_full, "img_", 200, height, width)
+crop_images(surf_mon_full, "img_", 200, height / 2, width / 2)
 # Load Jewel images
 jewels = pygame.image.load(path.join(img_dir, "jewels.png")).convert()
 jewels_rect = jewels.get_rect()
@@ -458,7 +475,7 @@ width = jewels_rect.right
 height = jewels_rect.bottom
 jewels_img = pygame.transform.scale(jewels, (width * 2, height * 2))
 jewels_img.set_colorkey(BLACK)
-crop_images(jewels_img, "img_", 26, height * 2, width * 2)
+crop_images(jewels_img, "img_", 26, height, width)
 # Load potion images
 potions = pygame.image.load(path.join(img_dir, "potions.png")).convert()
 potions_rect = potions.get_rect()
@@ -466,7 +483,8 @@ width = potions_rect.right
 height = potions_rect.bottom
 potions_img = pygame.transform.scale(potions, (width * 2, height * 2))
 potions_img.set_colorkey(BLACK)
-crop_images(potions_img, "img_", 30, height * 2, width * 2)
+crop_images(potions_img, "img_", 30, height, width)
+
 # Load key images
 keys = pygame.image.load(path.join(img_dir, "keys.png")).convert()
 keys_rect = keys.get_rect()
@@ -474,7 +492,7 @@ width = keys_rect.right
 height = keys_rect.bottom
 keys_img = pygame.transform.scale(keys, (width * 2, height * 2))
 keys_img.set_colorkey(BLACK)
-crop_images(keys_img, "img_", 20, height * 2, width * 2)
+crop_images(keys_img, "img_", 20, height, width)
 # Load door images
 doors = pygame.image.load(path.join(img_dir, "doors.png")).convert()
 doors_rect = doors.get_rect()
@@ -482,7 +500,7 @@ width = doors_rect.right
 height = doors_rect.bottom
 doors_img = pygame.transform.scale(doors, (width * 2, height * 2))
 doors_img.set_colorkey(BLACK)
-crop_images(doors_img, "img_", 80, height * 2, width * 2)
+crop_images(doors_img, "img_", 80, height, width)
 # Load stair images
 stairs = pygame.image.load(path.join(img_dir, "stairs.png")).convert()
 stairs_rect = stairs.get_rect()
@@ -490,7 +508,7 @@ width = stairs_rect.right
 height = stairs_rect.bottom
 stairs_img = pygame.transform.scale(stairs, (width * 2, height * 2))
 stairs_img.set_colorkey(BLACK)
-crop_images(stairs_img, "img_", 86, height * 2, width * 2)
+crop_images(stairs_img, "img_", 86, height, width)
 
 # Load all game sounds
 pygame.mixer.music.load(path.join(snd_dir, "AxiumCrisis.ogg"))
