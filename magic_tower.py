@@ -94,49 +94,33 @@ def crop_images(image, prefix, start_num, height, width):
 # Rules functions
 # can_pass is used to determine whether a destination is passable or not. It returns a boolean value.
 def can_pass(direction):
+    map_data = map_read(player.floor)
+    x = player.pos[0]
+    y = player.pos[1]
+
     if direction == "left":
-        if (player.rect.left / BLOCK_UNIT) - 4 > 0:  # Check whether the player is located next to the boarder
-            map_data = map_read(player.floor)
-            row = int(player.rect.top / BLOCK_UNIT)
-            column = int(player.rect.left / BLOCK_UNIT) - 5
-            map_object = map_data[row][column]  # read from the map_data to see what's at the destination
-            if detect_events(map_object, column, row):
-                return True
-            else:
-                return False
+        if x > 0:
+            x -= 1
+        else:
+            return False
+    elif direction == "right":
+        if x >= len(map_data[0]):  # TODO 把地图坐标做出来
+            return False
+        x += 1
+    elif direction == "up":
+        if y > 0:
+            y -= 1
+        else:
+            return False
+    elif direction == "down":
+        if y >= len(map_data):
+            return False
+        y += 1
+    else:
+        return False
+    print(player.pos, x, y)
 
-    if direction == "right":
-        if (player.rect.left / BLOCK_UNIT) - 4 < 12:
-            map_data = map_read(player.floor)
-            row = int(player.rect.top / BLOCK_UNIT)
-            column = int(player.rect.left / BLOCK_UNIT) - 3
-            map_object = map_data[row][column]
-            if detect_events(map_object, column, row):
-                return True
-            else:
-                return False
-
-    if direction == "up":
-        if player.rect.top / BLOCK_UNIT > 0:
-            map_data = map_read(player.floor)
-            row = int(player.rect.top / BLOCK_UNIT) - 1
-            column = int(player.rect.left / BLOCK_UNIT) - 4
-            map_object = map_data[row][column]
-            if detect_events(map_object, column, row):
-                return True
-            else:
-                return False
-
-    if direction == "down":
-        if (player.rect.top / BLOCK_UNIT) < 12:
-            map_data = map_read(player.floor)
-            row = int(player.rect.top / BLOCK_UNIT) + 1
-            column = int(player.rect.left / BLOCK_UNIT) - 4
-            map_object = map_data[row][column]
-            if detect_events(map_object, column, row):
-                return True
-            else:
-                return False
+    return detect_events(map_data[y][x], x, y)
 
 
 # Tool functions
@@ -244,6 +228,7 @@ def battle(map_object, column, row):
             map_write(player.floor, column, row, 0)
             return True
 
+
 # pickup_item can process item pick up events
 def pickup_item(map_object, column, row):
     item_name = RELATIONSHIP_DICT[str(map_object)]["id"]
@@ -251,7 +236,7 @@ def pickup_item(map_object, column, row):
     if item_type == "items":
         exec(ITEM_PROPERTY["itemEffect"][item_name])
         map_write(player.floor, column, row, 0)
-    elif item_type == "constants" or item_type == "tools" :
+    elif item_type == "constants" or item_type == "tools":
         try:
             player.item[map_object] += 1
         except KeyError:
@@ -259,12 +244,14 @@ def pickup_item(map_object, column, row):
     else:
         pass
 
+
 # use_item can use a constant / tool item
 def use_item(item_number):
     item_name = RELATIONSHIP_DICT[str(item_number)]["id"]
     results = exec(ITEM_PROPERTY["useItemEffect"][item_name])
     if results["result"] == False:
-        print(results["msg"]) # Will put it in a msg box in the future
+        print(results["msg"])  # Will put it in a msg box in the future
+
 
 # open_door can open the door if requirements are met
 def open_door(map_object, column, row):
@@ -337,6 +324,7 @@ def map_write(floor, column, row, change):
 
 # test event
 from winbase import TextWin
+
 first = TextWin("mid",
                 "    欢迎来到python魔塔样板v0.x\n1. 本窗口的调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n 3. 事件触发可以考虑用列表\n 4. 文本解析也许比较费时？可以考虑先解析")
 first.show_on()
@@ -373,10 +361,11 @@ class Player(ActorSprite):
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()
-        if keystate[pygame.K_LEFT]:
+        if player.moving:
+            pass
+        elif keystate[pygame.K_LEFT]:
             if can_pass("left"):
                 self.speedx = -BLOCK_UNIT
-                print(self.pos)
                 # ***
                 self.move(1)
         elif keystate[pygame.K_RIGHT]:
@@ -384,24 +373,22 @@ class Player(ActorSprite):
                 # ***
                 self.move(2)
                 self.speedx = BLOCK_UNIT
-                print(self.pos)
         elif keystate[pygame.K_UP]:
             if can_pass("up"):
                 # ***
                 self.move(3)
                 self.speedy = -BLOCK_UNIT
-                print(self.pos)
         elif keystate[pygame.K_DOWN]:
             if can_pass("down"):
                 # ***
                 self.move(0)
                 self.speedy = BLOCK_UNIT
-                print(self.pos)
         elif keystate[pygame.K_SPACE]:
             first.updateText()  # 后面改成触发事件表
 
         ActorSprite.update(self)
         return
+
 
 # --- Class END ---
 
@@ -510,6 +497,3 @@ while running:
 
 pygame.quit()
 # --- Game END---
-
-
-
