@@ -1,6 +1,6 @@
 # Python Magic Tower by Azure (oscarcx123) & dljgs1
 import pygame
-import random
+import time
 import math
 from os import path
 from id_map import *
@@ -333,6 +333,8 @@ first.show_on()
 from sprite import ActorSprite
 
 
+
+
 class Player(ActorSprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -361,6 +363,8 @@ class Player(ActorSprite):
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()
+        is_mouse_pressed = pygame.mouse.get_pressed()[0]
+
         if player.moving:
             pass
         elif keystate[pygame.K_LEFT]:
@@ -384,7 +388,58 @@ class Player(ActorSprite):
                 self.move(0)
                 self.speedy = BLOCK_UNIT
         elif keystate[pygame.K_SPACE]:
-            first.updateText()  # 后面改成触发事件表
+            first.updateText()
+
+        
+        #鼠标点击怪物得到怪物信息
+        if is_mouse_pressed:
+            mouse_x,mouse_y = pygame.mouse.get_pos()
+            print(mouse_x,mouse_y)
+            x = math.floor((mouse_x - 256)/64)
+            y = math.floor(mouse_y / 64)
+            #获得坐标对应的x y索引
+            if(x>=0 and x<14 and y>=0 and y<14):
+                mon = map_read(player.floor)[y][x]
+                if(mon > 200):
+                    #仅对范围内的怪物有效
+                    mon_name = RELATIONSHIP_DICT[str(mon)]["id"]
+                    monster_surf = pygame.display.set_mode((WIDTH, HEIGHT))  # 长，宽，个人认为这种方法效率不高？？
+                    BLACK = (0, 0, 0)
+                    GREEN = (0, 255, 0)
+                    BLUE = (0, 0, 128)
+
+                    fontObj = pygame.font.Font('resource/simhei.ttf', 32)
+                    # render方法返回Surface对象
+
+                    mon_info = MONSTER_DATA[mon_name];
+                    mon_str1 = mon_info["name"] + '。   生命值：' + str(mon_info["hp"]) + '   攻击:' + str(
+                        mon_info["atk"]) + '   防御:' \
+                              + str(mon_info["def"]) +'    金币：' + str(mon_info["money"])
+                    mon_str2 = '加点：' + str(
+                        mon_info["point"]) \
+                              + '    经验值：' + str(mon_info["experience"]) + '    特殊属性：' + str(mon_info["special"]) \
+                    + '    伤害：' + str(get_damage_info(mon)["damage"])
+                    #原型如下：Font.render(text, antialias, color, background=None): return Surface
+                    # 参数解释：
+                    # text ：要显示的文字内容,仅支持单行，即不能使用\n进行换行，如要打印多行，要建立多个font对象。
+                    # 麻烦的一批
+                    textSurfaceObj1 = fontObj.render(mon_str1, True, GREEN, BLUE)
+                    # get_rect()方法返回rect对象
+                    textSurfaceObj2 = fontObj.render(mon_str2, True, GREEN, BLUE)
+                    textRectObj1 = textSurfaceObj1.get_rect()
+                    textRectObj1.center = (WIDTH / 2 , HEIGHT / 2 - 100)
+
+                    textRectObj2 = textSurfaceObj1.get_rect()
+                    textRectObj2.center = (WIDTH / 2 , HEIGHT / 2 + 100)
+
+                    monster_surf.fill(BLACK)
+                    monster_surf.blit(textSurfaceObj1, textRectObj1)
+                    monster_surf.blit(textSurfaceObj2, textRectObj2)
+                    pygame.display.update()
+                    time.sleep(3)
+                    #三秒后回到游戏
+
+
 
         ActorSprite.update(self)
         return
