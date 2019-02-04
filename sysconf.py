@@ -1,13 +1,16 @@
+from os import path
 # 系统设置 其他地方都会用到这里的配置
 
-
-# --- Hero Data Setting START ---
-from os import path
-# Initial Coordinate for Hero (Player)
+# 全塔属性设置
+TOWER_NAME = "Magic Tower"
+FONT_NAME = "arial"
+# --- 勇士数据设置 START ---
+# 玩家初始坐标以及楼层
+# face[0]调用勇士朝向 0=下，1=左，2=右，3=上
 X_COORDINATE = 6
 Y_COORDINATE = 10
 PLAYER_FLOOR = 1
-# Initial Stats for Hero (Player)
+# 玩家初始属性
 PLAYER_HP = 100
 PLAYER_ATK = 1
 PLAYER_DEF = 0
@@ -20,20 +23,20 @@ PLAYER_REDKEY = 0
 PLAYER_GREENKEY = 0
 PLAYER_STEELKEY = 0
 PLAYER_ITEM = {}
-# --- Hero Data Setting END ---
+# --- 勇士数据设置 END ---
 
-# --- Item Data Setting START ---
-# Jewel
+# --- 物品/道具数据设置 START ---
+# 宝石
 RED_JEWEL = 1
 BLUE_JEWEL = 1
 GREEN_JEWEL = 4
 YELLOW_JEWEL = 1
-# Potion
+# 血瓶
 RED_POTION = 40
 BLUE_POTION = 80
 GREEN_POTION = 400
 YELLOW_POTION = 800
-# Equipment
+# 装备
 SWORD_1 = 10
 SHIELD_1 = 10
 SWORD_2 = 20
@@ -44,11 +47,14 @@ SWORD_4 = 80
 SHIELD_4 = 80
 SWORD_5 = 160
 SHIELD_5 = 160
-# --- Item Data Setting END ---
 
-# --- Optional Setting START ---
+# 【可选】设置
 STEEL_DOOR_NEEDS_KEY = True
-# --- Optional Setting END ---
+BIG_KEY_OPEN_YELLOW_DOORS = False
+# --- 道具数据设置 END ---
+
+
+
 
 # --- Basic Constants START ---
 # Define some properties of the game
