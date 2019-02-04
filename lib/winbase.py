@@ -12,7 +12,7 @@ from pygame import Rect
 from sysconf import WIDTH, HEIGHT
 import re
 
-dw_pattern = re.compile("[\x00-\xff]", re.A) #  匹配半角字符
+dw_pattern = re.compile("[\x00-\xff]", re.A)  # 匹配半角字符
 
 
 class WinBase(Sprite):
@@ -80,7 +80,7 @@ class WinBase(Sprite):
             self.alpha = int(255 * value)
         self.src_show.set_alpha(self.alpha)
 
-    def flush_skin(self):# 刷新
+    def flush_skin(self):  # 刷新
         self.src_show = self.init_wind(self.rect.w, self.rect.h, self.dir)
         self.image = self.src_show
 
@@ -104,11 +104,12 @@ WHITE = (255, 255, 255)
 
 
 class TextWin(WinBase):
-    def __init__(self, type, content=None):
+    def __init__(self, type, content=None,is_talk=False):
         x = (WIDTH - TEXT_WIN_WIDTH) / 2
         y = 0  # 默认贴边
         w = TEXT_WIN_WIDTH
         h = TEXT_WIN_HEIGHT
+        self.is_talk = is_talk
         if type == "mid":
             y = int(HEIGHT / 2 - TEXT_WIN_HEIGHT / 2)
         elif type == "down":
@@ -126,6 +127,10 @@ class TextWin(WinBase):
             self.content = content
             self.drawText()
 
+
+    def _calcu_text_list(self):
+        pass
+
     def drawText(self, size=36, content=None):
         if content is None:
             content = self.content
@@ -142,12 +147,13 @@ class TextWin(WinBase):
         line_num = int((h - 2 * TEXT_TOP_BOARD) / dh)
         print("行长：%d 行数： %d" % (line_len, line_num))
 
-        #text_len = len(content) + len(dw_pattern.findall(content))
-        #if line_num * line_len > text_len:
+        # text_len = len(content) + len(dw_pattern.findall(content))
+        # if line_num * line_len > text_len:
         #    self.res_content = content[line_num * line_len + 1:]
         #    content = content[0:line_num * line_len]
 
         line_list = []
+
         def get_real_len(s):
             return len(s) - int(len(dw_pattern.findall(s)) * 0.5 + 0.6)
 
@@ -161,7 +167,7 @@ class TextWin(WinBase):
                 line += tstr
                 clen += get_real_len(tstr)
                 content = content[tlen:]
-            if content != '' and get_real_len(content)<=2:
+            if content != '' and get_real_len(content) <= 2:
                 line += content
             print("对齐长度：", get_real_len(line))
             return line

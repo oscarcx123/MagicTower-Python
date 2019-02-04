@@ -1,0 +1,346 @@
+from pygame import Surface
+import pygame
+from pygame.transform import scale
+from pygame.sprite import Group
+from sprite import EventSprite
+from sysconf import *
+from lib.utools import *
+
+"""
+    ground 概念说明：
+    1. 画布：属于surface功能，相当于一个画板
+    2. 可重定位：提供给父画布坐标转换的功能
+    3. 树形结构：ground之间为树形关系，游戏全屏幕screnn为根ground
+    4. 访问协议：子ground从规则上不能操作父ground的属性，可以访问父的操作
+    5. 坐标转换：为子类提供逻辑坐标到绝对坐标的转换，逻辑坐标系统需要自己继承了写
+    6. 精灵显示：每个ground的内部存在一个SpriteGroup，根据层级在draw的时候顺序更新
+
+    类比： 一个多层多房间的操场？
+
+    需要改进：同级碰撞检测 并自适应调整、
+
+"""
+
+BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 128)
+WHITE = (255, 255, 255)
+
+from os import path
+import copy
+from sprite import EventSprite
+
+
+from pygame import Rect
+
+# 获取敌人图像：
+enemies_full_black_original = pygame.image.load(path.join(img_dir, "enemies_full_black.png")).convert()
+enemy_image = crop_images(enemies_full_black_original, 200, Rect(0, 0, 64, 32))
+
+#
+
+img_dir = "img"
+wall_original = pygame.image.load(path.join(img_dir, "wall.png"))
+static_element = {'1': wall_original}
+
+clock = pygame.time.Clock()
+clock.tick(100)
+
+
+#  基本绘制区域
+#  x, y, w, h
+#  如果需要逻辑坐标 继承该类 实现trans_locate函数（逻辑转物理）
+class GroundSurface:
+    def __init__(self, *args):
+        """
+        *0 自动生成屏幕画布
+        *1 Surface
+        *2 (w, h)
+        *4(5) x,y,w,h,(scale放大率-暂时没用)
+        :param args:
+        """
+        L = len(args)
+        scale = 1.0
+        if L == 0:
+            surface = pygame.display.set_mode((WIDTH, HEIGHT))
+            self.rect = surface.get_rect()
+        elif L == 1:
+            surface = args[0]
+            self.rect = surface.get_rect()
+        elif L == 2:
+            surface = Surface(args)
+            self.rect = surface.get_rect()
+        elif L >= 4:
+            surface = Surface(args[2:4])
+            rect = surface.get_rect()
+            rect.left = args[0]
+            rect.top = args[1]
+            if L > 4:
+                scale = args[4]
+            self.rect = rect
+        else:
+            surface = Surface()
+            print("error ground surface")
+            self.rect = surface.get_rect()
+        self.w = self.rect.w
+        self.h = self.rect.h
+        self.surface = surface
+        self.scale = scale
+        self.parent = None
+        self.layer = 0
+        self.children = []
+        self.group = Group()
+        # 当前画布占用情况 无记忆 不考虑缝隙等复杂情况 指定的是一个“可绘制矩形范围”
+        self.curpos = {"left": 0, "top": 0,
+                       "right": 0,
+                       "bottom": 0,
+                       "mid": 0}
+
+    # 增加子画布 这类画布可以是别的独立画布 也可以给出参数创建
+    def add_child(self, *args):
+        if len(args) == 1:
+            # 插入别的画布到自适应的左上角 这样做由于对齐问题只能插一行 并且导致自适应混乱 多行需要手动重定位curpos
+            ground_surface = args[0]
+            rect = ground_surface.rect
+            rect.left = self.curpos['left']
+            rect.top = self.curpos['top']
+            self.curpos['left'] += rect.w
+        elif len(args) == 2:  # 自适应画布 贴边或者定在中心 第一个指定类型 第二个指定大小
+            ground_surface = self.create_addaptive_surface(*args)
+        elif len(args) == 3:  # 插入别的画布到指定坐标 无视碰撞
+            ground_surface = args[0]
+            ground_surface.rect.left = args[1]
+            ground_surface.rect.top = args[2]
+        else:  # 用Ground方式创建画布
+            ground_surface = GroundSurface(*args)
+
+        ground_surface.layer = self.layer + 1
+        ground_surface.parent = self
+        ground_surface.scale *= self.scale
+        self.children.append(ground_surface)
+
+        return ground_surface
+
+    # 自适应矩形
+    def create_addaptive_surface(self, type, value):
+        if type not in self.curpos:
+            print("error type of ground")
+            return
+        w = self.rect.w
+        h = self.rect.h
+        t = self.curpos["top"]
+        r = self.curpos["right"]
+        l = self.curpos["left"]
+        b = self.curpos["bottom"]
+        op = {"left": Rect(l, t, value, h - t - b),
+              "top": Rect(l, t, w - l - r, value),
+              "right": Rect(w - value - r, t, value, h - t - b),
+              "bottom": Rect(l, h - value - b, w - l - r, value),
+              "mid": Rect(max(l, int((w - value) / 2)),
+                          max(r, int((h - value) / 2)),
+                          min(w - l - r, value), min(h - t - b, value))
+              }
+        rect = op[type]
+        # print(rect)
+        # print(rect.w)
+        # print(rect.h)
+        ground_surface = GroundSurface(Surface([rect.w, rect.h]))
+        ground_surface.rect.left = rect.left
+        ground_surface.rect.top = rect.top
+        self.curpos[type] += value
+        return ground_surface
+
+    # 填充一个surface到画布上，以变形/重复等方式 fill_rect指定填充范围 默认全图
+    def fill_surface(self, surface: Surface, mode="scale", fill_rect=None):
+        rect = surface.get_rect()
+        if fill_rect is None:
+            fill_rect = self.rect
+            rect.left = 0
+            rect.top = 0
+        else:
+            rect.left = fill_rect.left
+            rect.top = fill_rect.top
+
+        if mode == "scale":
+            # print(self.rect.w,self.rect.h)
+            self.surface.blit(scale(surface, (fill_rect.w, fill_rect.h)), fill_rect)
+        elif mode == "repeat":
+            while rect.top <= fill_rect.top:
+                rect.left = 0
+                while rect.left <= fill_rect.left:
+                    self.surface.blit(surface, rect)
+                    rect.left += rect.w
+                rect.top += rect.h
+
+    # 填充一个sprite到画布上 这个Sprite会被添加到当前画布的精灵组
+    def add_sprite(self, sprite, mode="normal", fill_rect=None):
+        if mode == "scale":
+            sprite.image = scale(sprite.image, (fill_rect.w, fill_rect.h))
+        if fill_rect is None:
+            sprite.rect = sprite.image.get_rect()
+        else:
+            sprite.rect.left = fill_rect.left
+            sprite.rect.top = fill_rect.top
+        sprite.image = sprite.image.copy()
+        self.group.add(sprite)
+
+    #  重定位 - 画布的内部逻辑坐标转换为外部坐标（父类可视坐标系）
+    def relocate(self, *args):
+        x, y = self.trans_loacate(*args)
+        x += self.rect.left
+        y += self.rect.top
+        return x, y
+
+    #
+    def trans_loacate(self, *args):
+        return args
+
+    #  刷新函数： 可以根据变化层级刷新部分内容而不是全部一起刷新
+    #  !不同画布不能有不同的刷新率，刷新率以最快为准，控制动画频率在sprite的update中自行控制
+    def flush(self, screen=None):
+        self.group.update(pygame.time.get_ticks())
+        self.group.draw(self.surface)
+        if screen is not None:
+            screen.blit(self.surface, self.rect)
+        for c in self.children:
+            c.flush(screen=self.surface)
+
+    def fill(self, arg):
+        self.surface.fill(arg)
+
+
+"""
+
+地图ground的demo：
+
+建立需要知道地图逻辑大小w,h（如(13,13)），起始坐标默认0，0，
+需要一个全局的资源访问接口，data_dict ，是id到Surface或者Sprite的映射
+
+在地图ground范围内显示的有两类元素（暂不考虑动态图块 视为事件精灵）：
+1. 静态图块： 典型元素如墙、道具、…… 直接使用Surface类素材
+2. 动态事件： 如怪物、门…… 使用EventSprite(id,configure)生成，其中configure是对该事件动画的配置（素材形状）
+
+
+
+"""
+from pygame import Rect
+
+
+class MapGround(GroundSurface):
+    def __init__(self, w, h, block_size=36):
+        self.block_size = block_size
+        self.width = w
+        self.height = h
+        super().__init__(0, 0, w * block_size, h * block_size)
+
+    def trans_loacate(self, *args):
+        """
+        逻辑转物理，默认为top left
+        :param args:
+        :arg[3]: "up":top centerx "down": bottom centerx
+
+        exmaple: map.trans_locate(12,12,'down') # 获取坐标 然后在该位置绘制敌人
+
+        :return:
+        """
+        x, y = args[0], args[1]
+        if len(args) > 2:
+            if args[2] == "up":
+                return int((x + 0.5) * self.block_size), y * self.block_size
+            elif args[2] == "down":
+                return int((x + 0.5) * self.block_size), (y + 1) * self.block_size
+
+        return x * self.block_size, y * self.block_size
+
+    def clear_map(self):
+        # self.group.clear()
+        self.group.empty()
+
+    # 可以把map_data设为属性【当前地图】
+    def draw_map(self, map_data):
+        print("draw map")
+        self.clear_map()
+        temp_x = 0
+        temp_y = 0
+        px, py = self.trans_loacate(0, 0)
+        rect = Rect(px, py, self.block_size, self.block_size)
+
+        while temp_y < self.height:
+            while temp_x < self.width:
+                map_element = map_data[temp_y][temp_x]
+                if int(map_element) != 0:
+                    # sprite的显示需要接通group
+                    name = str(map_element)
+                    if name in static_element:  # 静态数据 单纯的surface贴图 用左上画图的定位方式
+                        px, py = self.trans_loacate(temp_x, temp_y)
+                        rect.left = px
+                        rect.top = py
+                        self.fill_surface(static_element[name], fill_rect=rect)
+                    elif name in enemy_image:  # 动态数据（目前就敌人数据）EventSprite
+                        px, py = self.trans_loacate(temp_x, temp_y)
+                        print(temp_x, temp_y)
+                        rect.left = px
+                        rect.top = py
+                        # 敌人的默认配置：
+                        self.add_sprite(EventSprite(name, enemy_image[name], [1, 2]), fill_rect=rect)
+
+                temp_x += 1
+            temp_y += 1
+            temp_x = 0
+
+
+pygame.init()
+pygame.mixer.init()
+wall = pygame.image.load("img/wall.png")
+
+screen = pygame.display.set_mode([WIDTH, HEIGHT])  # 初始化窗口
+rootSurface = GroundSurface(screen)
+s1 = rootSurface.add_child("left", 224)  # 状态栏
+s1_1 = s1.add_child("top", 40)
+s1_2 = s1.add_child("mid", 90)
+s1_3 = GroundSurface(0, 0, 120, 120, 0.4)
+s1.add_child(s1_3)
+s2 = rootSurface.add_child("bottom", 64)  # 道具栏
+s3 = rootSurface.add_child(MapGround(13, 13, 32), 224, 0)
+
+# s12.fill_surface(wall, "scale")
+# s3.fill_surface(wall, "repeat")
+
+from tower_map import MAP_DATABASE
+
+s1_1.fill(RED)
+s1_2.fill(WHITE)
+s1.fill(GREEN)
+s2.fill(BLUE)
+# s2.add_sprite(EventSprite("201", enemy_image["201"], [1, 2]))
+
+s3.draw_map(MAP_DATABASE[0])
+
+running = True
+ct = 1
+
+# clock = pygame.time.Clock()
+
+import threading
+
+
+def conf():
+    while True:
+        try:
+            print(eval(input()))
+        except:
+            print("error")
+
+
+t = threading.Thread(target=conf)
+t.start()
+
+while running:
+    pygame.display.update()
+    pygame.time.delay(10)
+    rootSurface.flush(screen=screen)
+    for event in pygame.event.get():
+        # Check for closing window
+        if event.type == pygame.QUIT:
+            running = False

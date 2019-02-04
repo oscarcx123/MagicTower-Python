@@ -2,11 +2,9 @@
 import pygame
 import time
 import math
-from os import path
 from id_map import *
 from tower_map import *
 from monster import *
-from sysconf import *
 from items import *
 
 # Initialize pygame and create window
@@ -323,7 +321,7 @@ def map_write(floor, column, row, change):
 # --- Class START ---
 
 # test event
-from winbase import TextWin
+from lib.winbase import TextWin
 
 first = TextWin("mid",
                 "    欢迎来到python魔塔样板v0.x\n1. 本窗口的调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n 3. 事件触发可以考虑用列表\n 4. 文本解析也许比较费时？可以考虑先解析")
@@ -331,8 +329,6 @@ first.show_on()
 
 # *** 修改为继承自ActorSprite类（权宜之计用来测试 后面还是分离开）
 from sprite import ActorSprite
-
-
 
 
 class Player(ActorSprite):
@@ -390,18 +386,17 @@ class Player(ActorSprite):
         elif keystate[pygame.K_SPACE]:
             first.updateText()
 
-        
-        #鼠标点击怪物得到怪物信息
+        # 鼠标点击怪物得到怪物信息
         if is_mouse_pressed:
-            mouse_x,mouse_y = pygame.mouse.get_pos()
-            print(mouse_x,mouse_y)
-            x = math.floor((mouse_x - 256)/64)
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            print(mouse_x, mouse_y)
+            x = math.floor((mouse_x - 256) / 64) #  TODO：坐标转换
             y = math.floor(mouse_y / 64)
-            #获得坐标对应的x y索引
-            if(x>=0 and x<14 and y>=0 and y<14):
+            # 获得坐标对应的x y索引
+            if 0 <= x < 14 and 0 <= y < 14:
                 mon = map_read(player.floor)[y][x]
-                if(mon > 200):
-                    #仅对范围内的怪物有效
+                if mon > 200:
+                    # 仅对范围内的怪物有效
                     mon_name = RELATIONSHIP_DICT[str(mon)]["id"]
                     monster_surf = pygame.display.set_mode((WIDTH, HEIGHT))  # 长，宽，个人认为这种方法效率不高？？
                     BLACK = (0, 0, 0)
@@ -414,12 +409,12 @@ class Player(ActorSprite):
                     mon_info = MONSTER_DATA[mon_name];
                     mon_str1 = mon_info["name"] + '。   生命值：' + str(mon_info["hp"]) + '   攻击:' + str(
                         mon_info["atk"]) + '   防御:' \
-                              + str(mon_info["def"]) +'    金币：' + str(mon_info["money"])
+                               + str(mon_info["def"]) + '    金币：' + str(mon_info["money"])
                     mon_str2 = '加点：' + str(
                         mon_info["point"]) \
-                              + '    经验值：' + str(mon_info["experience"]) + '    特殊属性：' + str(mon_info["special"]) \
-                    + '    伤害：' + str(get_damage_info(mon)["damage"])
-                    #原型如下：Font.render(text, antialias, color, background=None): return Surface
+                               + '    经验值：' + str(mon_info["experience"]) + '    特殊属性：' + str(mon_info["special"]) \
+                               + '    伤害：' + str(get_damage_info(mon)["damage"])
+                    # 原型如下：Font.render(text, antialias, color, background=None): return Surface
                     # 参数解释：
                     # text ：要显示的文字内容,仅支持单行，即不能使用\n进行换行，如要打印多行，要建立多个font对象。
                     # 麻烦的一批
@@ -427,19 +422,17 @@ class Player(ActorSprite):
                     # get_rect()方法返回rect对象
                     textSurfaceObj2 = fontObj.render(mon_str2, True, GREEN, BLUE)
                     textRectObj1 = textSurfaceObj1.get_rect()
-                    textRectObj1.center = (WIDTH / 2 , HEIGHT / 2 - 100)
+                    textRectObj1.center = (WIDTH / 2, HEIGHT / 2 - 100)
 
                     textRectObj2 = textSurfaceObj1.get_rect()
-                    textRectObj2.center = (WIDTH / 2 , HEIGHT / 2 + 100)
+                    textRectObj2.center = (WIDTH / 2, HEIGHT / 2 + 100)
 
                     monster_surf.fill(BLACK)
                     monster_surf.blit(textSurfaceObj1, textRectObj1)
                     monster_surf.blit(textSurfaceObj2, textRectObj2)
                     pygame.display.update()
                     time.sleep(3)
-                    #三秒后回到游戏
-
-
+                    # 三秒后回到游戏
 
         ActorSprite.update(self)
         return
