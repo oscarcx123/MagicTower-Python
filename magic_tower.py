@@ -1,4 +1,5 @@
-# Python Magic Tower by Azure (oscarcx123) & dljgs1
+# Python Magic Tower
+# Dev Team: Azure (oscarcx123), 君浪 (dljgs1), 终末之扉 (sunhao1296)
 import pygame
 import time
 import math
@@ -13,17 +14,17 @@ from items import *
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Magic Tower")
+pygame.display.set_caption(TOWER_NAME)
 clock = pygame.time.Clock()
-font_name = pygame.font.match_font("arial")
+font_name = pygame.font.match_font(FONT_NAME)
 
 
 # --- Functions START ---
 # Drawing / Rendering functions
 # draw_text receives drawing surface, text, size of text, text coordinates (upper left corner)
-def draw_text(surface, text, size, x, y):
+def draw_text(surface, text, size, color, x, y):
     font = pygame.font.Font(font_name, size)
-    text_surface = font.render(text, True, WHITE)
+    text_surface = font.render(text, True, color)
     text_rect = text_surface.get_rect()
     text_rect.left = x * BLOCK_UNIT
     text_rect.top = y * BLOCK_UNIT
@@ -33,13 +34,13 @@ def draw_text(surface, text, size, x, y):
 # draw_background is used to draw the ground tiles
 def draw_background():
     # Start from "4 * BLOCK_UNIT" because the left hand side is the hero's status bar
-    start_x = 4 * BLOCK_UNIT
+    start_x = 0
     start_y = 0
     temp_x = start_x
     temp_y = start_y
     while temp_y < HEIGHT:
         while temp_x < WIDTH:
-            screen.blit(background, (temp_x, temp_y))
+            screen.blit(background, (temp_x + 4 * BLOCK_UNIT, temp_y))
             temp_x += BLOCK_UNIT
         temp_y += BLOCK_UNIT
         temp_x = start_x
@@ -49,6 +50,7 @@ def draw_background():
 def draw_map(map_data):
     start_x = 0
     start_y = 0
+    cnt = 0
     temp_x = start_x
     temp_y = start_y
     while temp_y < HEIGHT / BLOCK_UNIT:
@@ -57,23 +59,34 @@ def draw_map(map_data):
             if int(map_element) != 0:
                 name = "img_" + str(map_element)
                 screen.blit(eval(name), ((temp_x + 4) * BLOCK_UNIT, temp_y * BLOCK_UNIT))
+                # 显伤
+                if int(map_element) > 200:
+                    damage = get_damage_info(map_element)
+                    cnt += 1
+                    print("cnt",cnt,",",damage,temp_x,temp_y)
+                    if damage == False:
+                        damage = "???"
+                        draw_text(screen, str(damage), 26, WHITE, temp_x + 4.5, temp_y)
+                    else:
+                        draw_text(screen,str(damage["damage"]),26, WHITE, temp_x + 4, temp_y + 0.5)
             temp_x += 1
         temp_y += 1
         temp_x = start_x
+    cnt = 0
 
 
 # draw_status_bar is used to draw the text on the status bar
 def draw_status_bar():
-    draw_text(screen, "FLOOR = " + str(player.floor), 36, 0, 0)
-    draw_text(screen, "HP = " + str(player.hp), 36, 0, 1)
-    draw_text(screen, "ATK = " + str(player.attack), 36, 0, 2)
-    draw_text(screen, "DEF = " + str(player.defend), 36, 0, 3)
-    draw_text(screen, "MDEF = " + str(player.mdefend), 36, 0, 4)
-    draw_text(screen, "GOLD = " + str(player.gold), 36, 0, 5)
-    draw_text(screen, "EXP = " + str(player.exp), 36, 0, 6)
-    draw_text(screen, "Y_KEY = " + str(player.yellowkey), 36, 0, 7)
-    draw_text(screen, "B_KEY = " + str(player.bluekey), 36, 0, 8)
-    draw_text(screen, "R_KEY = " + str(player.redkey), 36, 0, 9)
+    draw_text(screen, "FLOOR = " + str(player.floor), 36, WHITE, 0, 0)
+    draw_text(screen, "HP = " + str(player.hp), 36, WHITE, 0, 1)
+    draw_text(screen, "ATK = " + str(player.attack), 36, WHITE, 0, 2)
+    draw_text(screen, "DEF = " + str(player.defend), 36, WHITE, 0, 3)
+    draw_text(screen, "MDEF = " + str(player.mdefend), 36, WHITE, 0, 4)
+    draw_text(screen, "GOLD = " + str(player.gold), 36, WHITE, 0, 5)
+    draw_text(screen, "EXP = " + str(player.exp), 36, WHITE, 0, 6)
+    draw_text(screen, "Y_KEY = " + str(player.yellowkey), 36, WHITE, 0, 7)
+    draw_text(screen, "B_KEY = " + str(player.bluekey), 36, WHITE, 0, 8)
+    draw_text(screen, "R_KEY = " + str(player.redkey), 36, WHITE, 0, 9)
 
 
 # crop_images is used to split the image (64, 64) from the resources (32x, 32)
@@ -241,6 +254,8 @@ def pickup_item(map_object, column, row):
             player.item[map_object] += 1
         except KeyError:
             player.item[map_object] = 1
+        finally:
+            map_write(player.floor, column, row, 0)
     else:
         pass
 
@@ -389,6 +404,7 @@ class Player(ActorSprite):
                 self.speedy = BLOCK_UNIT
         elif keystate[pygame.K_SPACE]:
             first.updateText()
+            pygame.time.wait(150)
 
         
         #鼠标点击怪物得到怪物信息
@@ -444,7 +460,6 @@ class Player(ActorSprite):
         ActorSprite.update(self)
         return
 
-
 # --- Class END ---
 
 # --- Loading Resources START ---
@@ -471,31 +486,14 @@ enemies_full_black_img.set_colorkey(BLACK)
 surf_mon_full = pygame.Surface((width, height * 2))
 surf_mon_full.blit(enemies_full_black_img, (0, 0))
 crop_images(surf_mon_full, "img_", 200, height / 2, width / 2)
-# Load Jewel images
-jewels = pygame.image.load(path.join(img_dir, "jewels.png")).convert()
-jewels_rect = jewels.get_rect()
-width = jewels_rect.right
-height = jewels_rect.bottom
-jewels_img = pygame.transform.scale(jewels, (width * 2, height * 2))
-jewels_img.set_colorkey(BLACK)
-crop_images(jewels_img, "img_", 26, height, width)
-# Load potion images
-potions = pygame.image.load(path.join(img_dir, "potions.png")).convert()
-potions_rect = potions.get_rect()
-width = potions_rect.right
-height = potions_rect.bottom
-potions_img = pygame.transform.scale(potions, (width * 2, height * 2))
-potions_img.set_colorkey(BLACK)
-crop_images(potions_img, "img_", 30, height, width)
-
-# Load key images
-keys = pygame.image.load(path.join(img_dir, "keys.png")).convert()
-keys_rect = keys.get_rect()
+# Load item images
+items = pygame.image.load(path.join(img_dir, "items.png")).convert()
+keys_rect = items.get_rect()
 width = keys_rect.right
 height = keys_rect.bottom
-keys_img = pygame.transform.scale(keys, (width * 2, height * 2))
-keys_img.set_colorkey(BLACK)
-crop_images(keys_img, "img_", 20, height, width)
+items_img = pygame.transform.scale(items, (width * 2, height * 2))
+items_img.set_colorkey(BLACK)
+crop_images(items_img, "img_", 20, height, width)
 # Load door images
 doors = pygame.image.load(path.join(img_dir, "doors.png")).convert()
 doors_rect = doors.get_rect()

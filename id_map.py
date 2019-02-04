@@ -4,6 +4,22 @@
 
 # --- Number to Id Relationship Dict START ---
 RELATIONSHIP_DICT = {
+    "1": {"cls": "terrains", "id": "yellowWall"},
+    "2": {"cls": "terrains", "id": "whiteWall"},
+    "3": {"cls": "terrains", "id": "blueWall"},
+    "4": {"cls": "animates", "id": "star", "noPass": True},
+    "5": {"cls": "animates", "id": "lava", "noPass": True},
+    "6": {"cls": "terrains", "id": "ice"},
+    "7": {"cls": "terrains", "id": "blueShop-left"},
+    "8": {"cls": "terrains", "id": "blueShop-right"},
+    "9": {"cls": "terrains", "id": "pinkShop-left"},
+    "10": {"cls": "terrains", "id": "pinkShop-right"},
+    "11": {"cls": "animates", "id": "lavaNet", "noPass": False, "trigger": "passNet"},
+    "12": {"cls": "animates", "id": "poisonNet", "noPass": False, "trigger": "passNet"},
+    "13": {"cls": "animates", "id": "weakNet", "noPass": False, "trigger": "passNet"},
+    "14": {"cls": "animates", "id": "curseNet", "noPass": False, "trigger": "passNet"},
+    "15": {"cls": "animates", "id": "blueWater", "noPass": True},
+    "16": {"cls": "animates", "id": "water", "noPass": True},
     "21": {"cls": "items", "id": "yellowKey"},
     "22": {"cls": "items", "id": "blueKey"},
     "23": {"cls": "items", "id": "redKey"},

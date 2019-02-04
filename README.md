@@ -15,6 +15,15 @@
 
 ## 更新说明
 
+### 2019.02.04 V0.4.0
+
+欢迎终末之扉(sunhao1296)大佬的加入！
+
+* [x] 修复若干bugs
+* [x] 简单怪物手册实现
+* [x] 简单怪物显伤实现
+* [x] 完成大部分道具效果
+
 ### 2019.02.01 V0.3.1
 
 * [x] 废除get_item函数并改用pick_item函数
@@ -28,7 +37,7 @@
 
 ### 2019.01.31 V0.3.0
 
-欢迎dljgs1大佬的加入！
+欢迎君浪(dljgs1)大佬的加入！
 
 * [x] 添加ActorSprite
 * [x] 实现勇士动态行走图
@@ -60,7 +69,7 @@
 ## Intro
 Magic Tower written in Python
 
-English annotation is included in the source file
+Partial English annotation is included in the source file
 
 ### Magic Tower written in other languages
 #### HTML5

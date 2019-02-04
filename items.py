@@ -307,57 +307,6 @@ ITEM_PROPERTY = {
 			"cls": "items",
 			"name": "新物品"
 		},
-		"I322": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I323": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I324": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I325": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I326": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I327": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I328": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I329": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I330": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I331": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I332": {
-			"cls": "items",
-			"name": "新物品"
-		},
-		"I333": {
-			"cls": "equips",
-			"name": "新物品",
-			"equip": {
-				"type": 0
-			}
-		},
 		"I334": {
 			"cls": "constants",
 			"name": "生命之叶",
@@ -367,7 +316,7 @@ ITEM_PROPERTY = {
 	},
 
 	"itemEffect": {
-		"redJewel": "player.attack += RED_JEWEL\nplayer.defend += BLUE_JEWEL",
+		"redJewel": "player.attack += RED_JEWEL",
 		"blueJewel": "player.defend += BLUE_JEWEL",
 		"greenJewel": "player.mdefend += GREEN_JEWEL",
 		"yellowJewel": "player.attack += YELLOW_JEWEL\nplayer.defend += YELLOW_JEWEL\nplayer.mdefend += YELLOW_JEWEL * GREEN_JEWEL\nplayer.hp += YELLOW_JEWEL * RED_POTION",
@@ -445,10 +394,8 @@ def book():
 	
 def fly():
 	pass
-	
-def pickaxe():
-	pass
 
+# 地震卷轴，可以破坏当前层的所有墙
 def earthquake():
 	temp_x = 0
 	temp_y = 0
@@ -462,8 +409,31 @@ def earthquake():
 		temp_x = 0
 	return {"result": True}
 
+# 破墙镐，可以破坏勇士面前的墙
 def pickaxe():
-	pass
+	x_coord = player.pos[0]
+	y_coord = player.pos[1]
+	if player.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+		y_coord += 1
+		if mapdata[y_coord][x_coord] == 1:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 1 and x_coord - 1 > 0:
+		x_coord -= 1
+		if mapdata[y_coord][x_coord] == 1:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+		x_coord += 1
+		if mapdata[y_coord][x_coord] == 1:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 3 and y_coord - 1 > 0:
+		y_coord -= 1
+		if mapdata[y_coord][x_coord] == 1:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	return {"result": False, "msg": "The target is not a wall"}
 
 def icePickaxe():
 	pass
@@ -471,18 +441,79 @@ def icePickaxe():
 def snow():
 	pass
 
+# 大钥匙，默认全钥匙+1，在全塔属性提供启用另一效果的开关
+# 另一效果为开启当前层所有黄门
 def bigKey():
-	player.yellowkey += 1
-	player.bluekey += 1
-	player.redkey += 1
+	if BIG_KEY_OPEN_YELLOW_DOORS:
+		temp_x = 0
+		temp_y = 0
+		map_read(player.floor)
+		while temp_y < HEIGHT / BLOCK_UNIT:
+			while temp_x < WIDTH / BLOCK_UNIT - 4:
+				if map_temp[temp_y][temp_x] == 81:  # 81 = Yellow Door
+					map_write(player.floor, temp_x, temp_y, 0)
+				temp_x += 1
+			temp_y += 1
+			temp_x = 0
+	else:
+		player.yellowkey += 1
+		player.bluekey += 1
+		player.redkey += 1
 	return {"result": True}
 
+# 炸弹，可以炸掉勇士面前的怪物
 def bomb():
-	pass
+	x_coord = player.pos[0]
+	y_coord = player.pos[1]
+	if player.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+		y_coord += 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 1 and x_coord - 1 > 0:
+		x_coord -= 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+		x_coord += 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 3 and y_coord - 1 > 0:
+		y_coord -= 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	return {"result": False, "msg": "The target is not a monster"}
 
+# 圣锤，在样板中的作用跟炸弹完全一样
 def hammer():
-	pass
+	x_coord = player.pos[0]
+	y_coord = player.pos[1]
+	if player.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+		y_coord += 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 1 and x_coord - 1 > 0:
+		x_coord -= 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+		x_coord += 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	elif player.face[0] == 3 and y_coord - 1 > 0:
+		y_coord -= 1
+		if mapdata[y_coord][x_coord] > 200:
+			map_write(player.floor, x_coord, y_coord, 0)
+			return True
+	return {"result": False, "msg": "The target is not a monster"}
 
+# 中心对称飞行器，可以飞向当前楼层中心对称的位置
 def centerFly():
 	x_coordinate = player.pos[0]
 	y_coordinate = player.pos[1]
@@ -498,7 +529,8 @@ def centerFly():
 		return {"result": True}
 	else:
 		return {"result": False, "msg": "Obstacle blocking"}
-    
+
+# 上楼器，可以飞往楼上的相同位置
 def upFly():
 	if player.floor + 1 > len(map_database):
 		return {"result": False, "msg": "You are on top floor"}
@@ -507,7 +539,8 @@ def upFly():
 		return {"result": True}
 	else:
 		return {"result": False, "msg": "Obstacle blocking"}
-		
+
+# 下楼器，可以飞往楼下的相同位置
 def downFly():
 	if player.floor - 1 < 0:
 		return {"result": False, "msg": "You are on bottom floor"}
@@ -526,14 +559,41 @@ def weakWine():
 def curseWine():
 	pass
 
+# 圣水，使用后生命翻倍
 def superWine():
-	pass
+	player.hp *= 2
+	return True
 
+# 生命魔杖，可以恢复100点生命值
 def lifeWand():
-	pass
+	player.hp += 100
+	return True
 
+# 跳跃靴，能跳跃到前方两格处
 def jumpShoes():
-	pass
+	x_coord = player.pos[0]
+	y_coord = player.pos[1]
+	if player.face[0] == 0 and y_coord + 2 < int(HEIGHT / BLOCK_UNIT):
+		y_coord += 2
+		if mapdata[y_coord][x_coord] == 0:
+			player.pos[1] += 2
+			return True
+	elif player.face[0] == 1 and x_coord - 2 > 0:
+		x_coord -= 2
+		if mapdata[y_coord][x_coord] == 0:
+			player.pos[0] -= 2
+			return True
+	elif player.face[0] == 2 and x_coord + 2 < int(WIDTH / BLOCK_UNIT):
+		x_coord += 2
+		if mapdata[y_coord][x_coord] == 0:
+			player.pos[0] += 2
+			return True
+	elif player.face[0] == 3 and y_coord - 2 > 0:
+		y_coord -= 2
+		if mapdata[y_coord][x_coord] == 0:
+			player.pos[1] -= 2
+			return True
+	return {"result": False, "msg": "The destination is not empty"}
 
 def skill1():
 	pass
