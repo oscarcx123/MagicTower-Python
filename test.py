@@ -29,8 +29,9 @@ def init():
 import threading
 
 
+running = True
 def console():
-    while True:
+    while running:
         r = input()
         try:
             print(eval(r))
@@ -45,9 +46,11 @@ t = threading.Thread(target=console)
 t.start()
 
 init()
-running = True
+clock = pygame.time.Clock()
+
 while running:
     pygame.display.update()
+    clock.tick(60)
 
     # 背景
     # RootScreen.fill_surface(load_image("img/ground.png"), mode="repeat")
