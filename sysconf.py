@@ -63,6 +63,8 @@ HEIGHT = 832  # 13 * 64
 # BLOCK_UNIT is used to create "invisible tiles" later. In this case the size of a block is 64 * 64 instead of 32 * 32
 BLOCK_UNIT = HEIGHT / 13  # BLOCK_UNIT = 64
 FPS = 120
+RESOURCE_SCALE = BLOCK_UNIT/32
+
 
 # Define directories for images and sounds
 img_dir = path.join(path.dirname(__file__), "img")

@@ -11,7 +11,7 @@ ICON_IMG = crop_images(load_image("img/icons.png"), ICON_START_NUM, create_rect(
 def register_icon(img, idnum=None):
     if idnum is None:
         idnum = ICON_START_NUM + len(ICON_IMG)
-    ICON_IMG[idnum] = img
+    ICON_IMG[str(idnum)] = img
 
 
 def register_icon_crops(image, rect=None, start_num=None):
@@ -27,3 +27,6 @@ def register_icon_crops(image, rect=None, start_num=None):
 
 # !insert! === 在这里注册额外素材 ===
 register_icon(load_image("img/wall.png"), idnum=1)
+register_icon(load_image("img/ground.png"), idnum=0)
+register_icon_crops(load_image("img/doors.png"), start_num=81)
+register_icon_crops(load_image("img/stairs.png"), start_num=87)

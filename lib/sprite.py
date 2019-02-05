@@ -33,45 +33,54 @@ class EventSprite(pygame.sprite.Sprite):
         self.speed_x = 0
         self.speed_y = 0
         self.moving_frames = 0
+        self.callback = None
 
     def update(self, *args):
         if self.moving_frames > 0:
             self.moving_frames -= 1
-
             self.rect.centerx += self.speed_x
             self.rect.bottom += self.speed_y
-            if self.moving_frames == 0:
+            if self.moving_frames == 0: # 当前运动结束
+                if self.callback is not None:
+                    self.callback()
+                self.callback = None
                 self.moving = False
+                return
 
         if self.animate or self.moving:
             ticks = args[0]
             if ticks - self.frame_ct >= self.animate_speed:
-                # 运动频率可以通过 animate_speed修改?
+                # 运动频率可以通过 animate_speed修改
                 self.frame_ct = args[0]
-                # print(self.frame_ct)
-                self.face[1] = (self.face[1] + 1) % 2  # self.shape[1]
+                self.face[1] = (self.face[1] + 1) % self.shape[1]  # self.shape[1]
                 # print(self.id, self.face, self.frame_ct)
-        elif self.face[1] % 2 == 1:
+        elif self.face[1] % 2 == 1:  # 对齐
             self.face[1] = (self.face[1] + 1) % self.shape[1]
         self.image = self.src.subsurface(self.face[1] * self._dx, self.face[0] * self._dy, self._dx, self._dy)
 
     def change_face(self, spdx, spdy):
-        if spdy > 0.1:
-            self.face[0] = 0
-        elif spdx < -0.1 and self.shape[0] > 1:
-            self.face[0] = 1
-        elif spdx > 0.1 and self.shape[0] > 2:
-            self.face[0] = 2
-        elif spdy < -0.1 and self.shape[0] > 3:
-            self.face[0] = 3
+        if abs(spdx) < abs(spdy):
+            if spdy < 0 and self.shape[0] > 3:
+                self.face[0] = 3
+            if spdy > 0:
+                self.face[0] = 0
+        else:
+            if spdx < 0 and self.shape[0] > 1:
+                self.face[0] = 1
+            elif spdx > 0 and self.shape[0] > 2:
+                self.face[0] = 2
 
     # 移动精灵：一般要给出目标位置(默认centerx,bottom)和时间，根据FPS屡次更新完成
-    # 实现： 一般在update里反复写  尝试过使用多线程异步完成 但没必要而且时间不好控制
-    def move(self, dst, time=100.):
-        if self.moving:
-            return False
+    # 实现： 一般在update里反复写  尝试过使用多线程异步完成 可以使用但没必要而且时间不好控制
+    # 移动速度取决于动画时间
+    # TODO:在此用时间限定 time: 运动完所需的毫秒数——可能与FPS有关 这里还没做好
+    def move(self, dst, time=None, callback=None):
+        #if self.moving:
+        #    return False
         diff_x = dst[0] - self.rect.centerx
         diff_y = dst[1] - self.rect.bottom
+        if time is None:
+            time = self.animate_speed / 2
         frames = FPS * time / 1000
         wtime = time / 1000 / frames
         self.speed_x = diff_x / frames
@@ -79,6 +88,7 @@ class EventSprite(pygame.sprite.Sprite):
         self.moving = True
         self.change_face(diff_x, diff_y)
         self.moving_frames = frames
+        self.callback = callback
         # 弃用线程
         # self.move_t = threading.Thread(target=move_thread)
         # self.move_t.start()
@@ -87,3 +97,4 @@ class EventSprite(pygame.sprite.Sprite):
     def move_directly(self, dst):
         self.rect.centerx = dst[0]
         self.rect.bottom = dst[1]
+

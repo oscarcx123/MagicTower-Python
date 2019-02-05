@@ -101,7 +101,7 @@ MONSTER_DATA = {
 MONSTER_START_NUM = 200
 MONSTER_IMG = crop_images(load_image("img/enemys.png"),
                           MONSTER_START_NUM,
-                          pygame.Rect(0, 0, 64, 32))
+                          pygame.Rect(0, 0, BLOCK_UNIT*2, BLOCK_UNIT))
 
 
 # :TODO:

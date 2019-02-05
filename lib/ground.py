@@ -33,9 +33,12 @@ from sprite import EventSprite
 
 
 from pygame import Rect
+"""
+pygame.init()
+pygame.mixer.init()
 
 # 获取敌人图像：
-enemies_full_black_original = pygame.image.load(path.join(img_dir, "enemies_full_black.png")).convert()
+enemies_full_black_original = pygame.image.load("img/enemys.png")
 enemy_image = crop_images(enemies_full_black_original, 200, Rect(0, 0, 64, 32))
 
 #
@@ -46,6 +49,7 @@ static_element = {'1': wall_original}
 
 clock = pygame.time.Clock()
 clock.tick(100)
+"""
 
 
 #  基本绘制区域
@@ -166,23 +170,20 @@ class GroundSurface:
             # print(self.rect.w,self.rect.h)
             self.surface.blit(scale(surface, (fill_rect.w, fill_rect.h)), fill_rect)
         elif mode == "repeat":
-            while rect.top <= fill_rect.top:
-                rect.left = 0
-                while rect.left <= fill_rect.left:
+            while rect.bottom <= fill_rect.bottom:
+                while rect.right <= fill_rect.right:
                     self.surface.blit(surface, rect)
                     rect.left += rect.w
+                rect.left = 0
                 rect.top += rect.h
 
     # 填充一个sprite到画布上 这个Sprite会被添加到当前画布的精灵组
     def add_sprite(self, sprite, mode="normal", fill_rect=None):
-        if mode == "scale":
-            sprite.image = scale(sprite.image, (fill_rect.w, fill_rect.h))
-        if fill_rect is None:
-            sprite.rect = sprite.image.get_rect()
-        else:
+        if fill_rect is not None:
+            if mode == "scale": # 这个对精灵基本没用 放弃吧
+                sprite.image = scale(sprite.image, (fill_rect.w, fill_rect.h))
             sprite.rect.left = fill_rect.left
             sprite.rect.top = fill_rect.top
-        sprite.image = sprite.image.copy()
         self.group.add(sprite)
 
     #  重定位 - 画布的内部逻辑坐标转换为外部坐标（父类可视坐标系）
@@ -192,7 +193,13 @@ class GroundSurface:
         y += self.rect.top
         return x, y
 
-    #
+    #  重新设置surface大小 其他设置不变（如果增大会向右下扩张）
+    def resize(self,w,h):
+        self.surface = Surface((w, h))
+        self.rect.w = w
+        self.rect.h = h
+
+    # 需要被实现 逻辑坐标到物理坐标的转换:
     def trans_loacate(self, *args):
         return args
 
@@ -202,96 +209,15 @@ class GroundSurface:
         self.group.update(pygame.time.get_ticks())
         self.group.draw(self.surface)
         if screen is not None:
-            screen.blit(self.surface, self.rect)
+            screen.blit(self.surface.convert_alpha(self.surface), self.rect)
         for c in self.children:
             c.flush(screen=self.surface)
 
+    # 填充纯色（debug使用）
     def fill(self, arg):
         self.surface.fill(arg)
 
-
 """
-
-地图ground的demo：
-
-建立需要知道地图逻辑大小w,h（如(13,13)），起始坐标默认0，0，
-需要一个全局的资源访问接口，data_dict ，是id到Surface或者Sprite的映射
-
-在地图ground范围内显示的有两类元素（暂不考虑动态图块 视为事件精灵）：
-1. 静态图块： 典型元素如墙、道具、…… 直接使用Surface类素材
-2. 动态事件： 如怪物、门…… 使用EventSprite(id,configure)生成，其中configure是对该事件动画的配置（素材形状）
-
-
-
-"""
-from pygame import Rect
-
-
-class MapGround(GroundSurface):
-    def __init__(self, w, h, block_size=36):
-        self.block_size = block_size
-        self.width = w
-        self.height = h
-        super().__init__(0, 0, w * block_size, h * block_size)
-
-    def trans_loacate(self, *args):
-        """
-        逻辑转物理，默认为top left
-        :param args:
-        :arg[3]: "up":top centerx "down": bottom centerx
-
-        exmaple: map.trans_locate(12,12,'down') # 获取坐标 然后在该位置绘制敌人
-
-        :return:
-        """
-        x, y = args[0], args[1]
-        if len(args) > 2:
-            if args[2] == "up":
-                return int((x + 0.5) * self.block_size), y * self.block_size
-            elif args[2] == "down":
-                return int((x + 0.5) * self.block_size), (y + 1) * self.block_size
-
-        return x * self.block_size, y * self.block_size
-
-    def clear_map(self):
-        # self.group.clear()
-        self.group.empty()
-
-    # 可以把map_data设为属性【当前地图】
-    def draw_map(self, map_data):
-        print("draw map")
-        self.clear_map()
-        temp_x = 0
-        temp_y = 0
-        px, py = self.trans_loacate(0, 0)
-        rect = Rect(px, py, self.block_size, self.block_size)
-
-        while temp_y < self.height:
-            while temp_x < self.width:
-                map_element = map_data[temp_y][temp_x]
-                if int(map_element) != 0:
-                    # sprite的显示需要接通group
-                    name = str(map_element)
-                    if name in static_element:  # 静态数据 单纯的surface贴图 用左上画图的定位方式
-                        px, py = self.trans_loacate(temp_x, temp_y)
-                        rect.left = px
-                        rect.top = py
-                        self.fill_surface(static_element[name], fill_rect=rect)
-                    elif name in enemy_image:  # 动态数据（目前就敌人数据）EventSprite
-                        px, py = self.trans_loacate(temp_x, temp_y)
-                        print(temp_x, temp_y)
-                        rect.left = px
-                        rect.top = py
-                        # 敌人的默认配置：
-                        self.add_sprite(EventSprite(name, enemy_image[name], [1, 2]), fill_rect=rect)
-
-                temp_x += 1
-            temp_y += 1
-            temp_x = 0
-
-
-pygame.init()
-pygame.mixer.init()
 wall = pygame.image.load("img/wall.png")
 
 screen = pygame.display.set_mode([WIDTH, HEIGHT])  # 初始化窗口
@@ -302,8 +228,7 @@ s1_2 = s1.add_child("mid", 90)
 s1_3 = GroundSurface(0, 0, 120, 120, 0.4)
 s1.add_child(s1_3)
 s2 = rootSurface.add_child("bottom", 64)  # 道具栏
-s3 = rootSurface.add_child(MapGround(13, 13, 32), 224, 0)
-
+# s3 = rootSurface.add_child(MapGround(13, 13, 32), 224, 0)
 # s12.fill_surface(wall, "scale")
 # s3.fill_surface(wall, "repeat")
 
@@ -315,7 +240,7 @@ s1.fill(GREEN)
 s2.fill(BLUE)
 # s2.add_sprite(EventSprite("201", enemy_image["201"], [1, 2]))
 
-s3.draw_map(MAP_DATABASE[0])
+# s3.draw_map(MAP_DATABASE[0])
 
 running = True
 ct = 1
@@ -323,17 +248,14 @@ ct = 1
 # clock = pygame.time.Clock()
 
 import threading
-
-
-def conf():
+def console():
     while True:
         try:
             print(eval(input()))
         except:
             print("error")
 
-
-t = threading.Thread(target=conf)
+t = threading.Thread(target=console)
 t.start()
 
 while running:
@@ -344,3 +266,4 @@ while running:
         # Check for closing window
         if event.type == pygame.QUIT:
             running = False
+"""

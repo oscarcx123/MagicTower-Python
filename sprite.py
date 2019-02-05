@@ -224,7 +224,7 @@ class Player(EventSprite):
         self.speedx = 0
         self.speedy = 0
 
-    def update(self,*args):
+    def update(self, *args):
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()
@@ -240,7 +240,7 @@ class Player(EventSprite):
         super().update(*args)
         # print(keystate)
 
-
+"""
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
@@ -260,3 +260,4 @@ if __name__ == '__main__':
             # Check for closing window
             if event.type == pygame.QUIT:
                 running = False
+"""
