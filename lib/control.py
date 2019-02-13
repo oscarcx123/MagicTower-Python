@@ -8,7 +8,7 @@ class Player(EventSprite):
     def __init__(self):
         from os import path
         player_img = pygame.image.load(path.join(img_dir, "hero48.png"))
-        self.image = pygame.transform.scale(player_img, (64 * 4, 64 * 4))
+        self.image = pygame.transform.scale(player_img, (int(BLOCK_UNIT * 4), int(BLOCK_UNIT * 4)))
         # self.image.set_colorkey(WHITE)
         super().__init__(0, self.image, [4, 4])
         self.speedx = 0
@@ -18,7 +18,7 @@ class Player(EventSprite):
         map_pos = CurrentMap.trans_loacate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
         self.rect.bottom = map_pos[1]
-        self.animate_speed = 100
+        self.animate_speed = 250  # 移动一格所需要的毫秒数 & 换腿所需时间的两倍
         self.animate = False
 
     # TODO：各种block的处理
@@ -44,9 +44,10 @@ class Player(EventSprite):
                     else:
                         x = op[0] + self.pos[0]
                         y = op[1] + self.pos[1]
+
                         def temp_fun():
                             self.pos = [x, y]
-                        self.move(CurrentMap.trans_loacate(x, y, "down"), callback=temp_fun)
 
+                        self.move(CurrentMap.trans_loacate(x, y, "down"), callback=temp_fun)
 
         super().update(*args)

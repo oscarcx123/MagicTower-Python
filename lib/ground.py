@@ -31,8 +31,8 @@ from os import path
 import copy
 from sprite import EventSprite
 
-
 from pygame import Rect
+
 """
 pygame.init()
 pygame.mixer.init()
@@ -180,7 +180,7 @@ class GroundSurface:
     # 填充一个sprite到画布上 这个Sprite会被添加到当前画布的精灵组
     def add_sprite(self, sprite, mode="normal", fill_rect=None):
         if fill_rect is not None:
-            if mode == "scale": # 这个对精灵基本没用 放弃吧
+            if mode == "scale":  # 这个对精灵基本没用 放弃吧
                 sprite.image = scale(sprite.image, (fill_rect.w, fill_rect.h))
             sprite.rect.left = fill_rect.left
             sprite.rect.top = fill_rect.top
@@ -194,7 +194,7 @@ class GroundSurface:
         return x, y
 
     #  重新设置surface大小 其他设置不变（如果增大会向右下扩张）
-    def resize(self,w,h):
+    def resize(self, w, h):
         self.surface = Surface((w, h))
         self.rect.w = w
         self.rect.h = h
@@ -216,6 +216,7 @@ class GroundSurface:
     # 填充纯色（debug使用）
     def fill(self, arg):
         self.surface.fill(arg)
+
 
 """
 wall = pygame.image.load("img/wall.png")
