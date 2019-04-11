@@ -19,6 +19,7 @@ from pygame import Rect, Surface
 from .sprite import EventSprite
 from lib.utools import *
 from sysconf import *
+import lib
 
 
 class MapGround(GroundSurface):
@@ -92,6 +93,7 @@ class MapGround(GroundSurface):
                         img_rect.topleft = rect.topleft
                         sp = list(ret[2])
                         self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
+                        self.add_sprite(lib.PlayerCon)
                     elif ret is not None:
                         self.fill_surface(ret, fill_rect=rect)
                 temp_x += 1
@@ -104,4 +106,8 @@ class MapGround(GroundSurface):
             return self.map_data[y][x]
         else:
             return []
+            
+    def set_block(self, x, y, target):
+        if self.map_data is not None:
+            self.map_data[y][x] = target
 

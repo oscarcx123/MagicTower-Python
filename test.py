@@ -10,6 +10,7 @@ from lib.utools import *
 from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
+from lib import ui
 
 RootScreen = GroundSurface(screen)
 StatusBar = None
@@ -23,6 +24,8 @@ def init():
     RootScreen.add_child(CurrentMap)
     StatusBar.fill(BLUE)
     # 可对状态栏进行操作
+    ui.init_ui()
+    ui.init_status_bar()
 
 
 # ===== debug === 发布模式注释下面内容

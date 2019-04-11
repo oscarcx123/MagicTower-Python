@@ -10,7 +10,7 @@ from lib.utools import *
     ground 概念说明：
     1. 画布：属于surface功能，相当于一个画板
     2. 可重定位：提供给父画布坐标转换的功能
-    3. 树形结构：ground之间为树形关系，游戏全屏幕screnn为根ground
+    3. 树形结构：ground之间为树形关系，游戏全屏幕screen为根ground
     4. 访问协议：子ground从规则上不能操作父ground的属性，可以访问父的操作
     5. 坐标转换：为子类提供逻辑坐标到绝对坐标的转换，逻辑坐标系统需要自己继承了写
     6. 精灵显示：每个ground的内部存在一个SpriteGroup，根据层级在draw的时候顺序更新

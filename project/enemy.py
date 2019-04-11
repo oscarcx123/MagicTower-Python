@@ -103,7 +103,7 @@ MONSTER_IMG = crop_images(load_image("img/enemys.png"),
                           MONSTER_START_NUM,
                           pygame.Rect(0, 0, BLOCK_UNIT*2, BLOCK_UNIT))
 
-
+'''
 # :TODO:
 def register_monster(enemy_id, info):
     pass
@@ -113,5 +113,5 @@ def get_damage_info(enemy_id):
     pass
 
 # --- Monster Data END ---
-
+'''
 # !insert! === 在这里写敌人相关的自定义操作 ===
