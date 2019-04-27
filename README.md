@@ -2,11 +2,9 @@
 ## 简介
 使用Python的Pygame模块制作的魔塔样板，理论上支持全平台游戏！
 
-程序是在树莓派上编写的，而且我没有安装中文输入法，所以注释全部为英文
-
 **目前的情况来看，完全不会编程的用户，使用起来可能会有一定难度！**
 
-### 其它语言编写的魔塔
+### 其它语言编写的开源魔塔
 #### HTML5
 * [HTML5样板](https://github.com/ckcz123/mota-js/)
 * [HTML5魔塔游戏列表](https://h5mota.com/)
@@ -14,6 +12,17 @@
 * [C++魔塔](https://github.com/ckcz123/mota)
 
 ## 更新说明
+
+### 2019.04.26 V0.5.1
+* [x] 初步完成重构
+当前待处理工作：
+* 道具 - 背包UI，具体道具效果代码核查
+* 怪物手册UI
+* 怪物显伤
+* 音效
+* 存读档 - 界面UI，具体存读档实现
+* 开始界面UI
+
 
 ### 2019.02.05 V0.5.0
 * [x] 重构大部分显示代码实现以及工程目录分布
@@ -26,8 +35,6 @@
 
 
 ### 2019.02.04 V0.4.0
-
-欢迎终末之扉(sunhao1296)大佬的加入！
 
 * [x] 修复若干bugs
 * [x] 简单怪物手册实现
@@ -46,8 +53,6 @@
 * [x] 废除tower_database.py
 
 ### 2019.01.31 V0.3.0
-
-欢迎君浪(dljgs1)大佬的加入！
 
 * [x] 添加ActorSprite
 * [x] 实现勇士动态行走图
@@ -79,9 +84,7 @@
 ## Intro
 Magic Tower written in Python
 
-Partial English annotation is included in the source file
-
-### Magic Tower written in other languages
+### Other Open Source Magic Towers
 #### HTML5
 * [HTML5 Magic Tower Template](https://github.com/ckcz123/mota-js/)
 * [HTML5 Magic Tower Games](https://h5mota.com/)

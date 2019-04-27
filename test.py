@@ -18,7 +18,7 @@ StatusBar = None
 
 def init():
     global StatusBar
-    CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR - 1])
+    CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR])
     CurrentMap.add_sprite(PlayerCon)
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT*4)  # 状态栏
     RootScreen.add_child(CurrentMap)

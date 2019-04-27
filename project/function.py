@@ -3,9 +3,10 @@ import math
 from lib import CurrentMap
 from lib import ui
 from project.enemy import *
-from project.block import *
+from project.block import BlockData
 from project.items import ITEMS_DATA
 import lib
+from project.floors import MAP_DATABASE
 
 # get_damage_info 获取战斗伤害（模拟战斗）
 def get_damage_info(map_object):
@@ -40,10 +41,10 @@ def get_damage_info(map_object):
 # get_monster_data 获得怪物数据
 def get_monster_data(map_object):
     # 从/project/block.py获取怪物id
-	monster_id = BlockData[str(map_object)]["id"]
+    monster_id = BlockData[str(map_object)]["id"]
     # 从/project/enemy.py获取怪物详细数据
-	monster_stats = MONSTER_DATA[monster_id]
-	return monster_stats
+    monster_stats = MONSTER_DATA[monster_id]
+    return monster_stats
 
 # battle 进行战斗并结算
 def battle(map_object, x, y):
@@ -69,16 +70,16 @@ def battle(map_object, x, y):
             ui.update_status_bar()
             return True
 
-# pickup_item can process item pick up events
+# pickup_item 处理物品（直接使用/进入道具栏）
 def pickup_item(map_object, x, y):
     item_name = BlockData[str(map_object)]["id"]
     item_type = ITEMS_DATA["items"][item_name]["cls"]
+    # item_type为items，直接使用
     if item_type == "items":
         exec(ITEMS_DATA["itemEffect"][item_name])
         CurrentMap.set_block(x, y, 0)
         CurrentMap.draw_map()
-        # 刷新状态栏显示
-        ui.update_status_bar()
+    # item_type为constants/tools，进入道具栏
     elif item_type == "constants" or item_type == "tools":
         try:
             lib.PlayerCon.item[map_object] += 1
@@ -87,103 +88,109 @@ def pickup_item(map_object, x, y):
         finally:
             CurrentMap.set_block(x, y, 0)
             CurrentMap.draw_map()
-            # 刷新状态栏显示
-            ui.update_status_bar()
+    # item_type为keys，直接在玩家属性添加（钥匙为玩家属性一部分）
+    elif item_type == "keys":
+        if map_object == 21:
+            lib.PlayerCon.yellowkey += 1
+        elif map_object == 22:
+            lib.PlayerCon.bluekey += 1
+        elif map_object == 23:
+            lib.PlayerCon.redkey += 1
+        CurrentMap.set_block(x, y, 0)
+        CurrentMap.draw_map()
     else:
         pass
+    # 刷新状态栏显示
+    ui.update_status_bar()
+
+        
+# open_door 处理开门事件（map_object = 85 -> 花门）
+def open_door(map_object, x, y):
+    if map_object == 81 and lib.PlayerCon.yellowkey > 0:
+        lib.PlayerCon.yellowkey -= 1
+        CurrentMap.set_block(x, y, 0)
+        # 刷新地图显示
+        CurrentMap.draw_map()
+        # 刷新状态栏显示
+        ui.update_status_bar()
+        return True
+    elif map_object == 82 and lib.PlayerCon.bluekey > 0:
+        lib.PlayerCon.bluekey -= 1
+        CurrentMap.set_block(x, y, 0)
+        # 刷新地图显示
+        CurrentMap.draw_map()
+        # 刷新状态栏显示
+        ui.update_status_bar()
+        return True
+    elif map_object == 83 and lib.PlayerCon.redkey > 0:
+        lib.PlayerCon.redkey -= 1
+        CurrentMap.set_block(x, y, 0)
+        # 刷新地图显示
+        CurrentMap.draw_map()
+        # 刷新状态栏显示
+        ui.update_status_bar()
+        return True
+    elif map_object == 84 and lib.PlayerCon.greenkey > 0:
+        lib.PlayerCon.greenkey -= 1
+        CurrentMap.set_block(x, y, 0)
+        # 刷新地图显示
+        CurrentMap.draw_map()
+        # 刷新状态栏显示
+        ui.update_status_bar()
+        return True
+    elif map_object == 86:
+        if STEEL_DOOR_NEEDS_KEY:
+            if lib.PlayerCon.steelkey > 0:
+                lib.PlayerCon.steelkey -= 1
+                CurrentMap.set_block(x, y, 0)
+                # 刷新地图显示
+                CurrentMap.draw_map()
+                # 刷新状态栏显示
+                ui.update_status_bar()
+                return True
+        else:
+            CurrentMap.set_block(x, y, 0)
+            # 刷新地图显示
+            CurrentMap.draw_map()
+            # 刷新状态栏显示
+            ui.update_status_bar()
+            return True
+    return False
+
+# change_floor 处理切换楼层
+def change_floor(block, x, y):
+    # 上楼处理
+    if block == 87:
+        CurrentMap.set_map(MAP_DATABASE[lib.PlayerCon.floor + 1])
+        lib.PlayerCon.floor += 1
+        check_map_result = CurrentMap.check_block(88)
+        print(f"check_map_result:{check_map_result}")
+        if len(check_map_result) == 1:
+            x_coordinate = check_map_result[0][0]
+            y_coordinate = check_map_result[0][1]
+            lib.PlayerCon.change_hero_loc(x_coordinate, y_coordinate)
+    # 下楼处理
+    elif block == 88:
+        CurrentMap.set_map(MAP_DATABASE[lib.PlayerCon.floor - 1])
+        lib.PlayerCon.floor -= 1
+        check_map_result = CurrentMap.check_block(87)
+        print(f"check_map_result:{check_map_result}")
+        if len(check_map_result) == 1:
+            x_coordinate = check_map_result[0][0]
+            y_coordinate = check_map_result[0][1]
+            lib.PlayerCon.change_hero_loc(x_coordinate, y_coordinate)
+    # TODO: 事件调用（不指定楼梯）
+    # 刷新地图显示
+    CurrentMap.draw_map()
+    # 刷新状态栏显示
+    ui.update_status_bar()
 
 '''
-# Events functions
-# detect_events determine the event function that should be triggered
-def detect_events(map_object, row, column):
-    # According to HTML5 Magic Tower,
-    # 0 = Nothing (No obstacle)
-    # 1 = Wall (blocks the player)
-    # 21 - 69 = Items (Player can step on it and get the item)
-    # 81 - 86 = Doors (player can't step on but instead open it)
-    # 87 - 88 = Stairs (Player can't step on it)
-    # 201+ = Monsters (trigger battle)
-    if map_object == 0:
-        return True
-    else:
-        if map_object == 1:
-            return False
-        elif map_object >= 21 and map_object <= 69:
-            pickup_item(map_object, row, column)
-            return True
-        # Skip special door here because it should be triggered by something other events
-        elif map_object >= 81 and map_object <= 84 or map_object == 86:
-            open_door(map_object, row, column)
-            return False
-        elif map_object >= 87 and map_object <= 88:
-            if map_object == 87:
-                change_floor("go_upstairs", row, column)
-            elif map_object == 88:
-                change_floor("go_downstairs", row, column)
-            return False
-        elif map_object >= 201:
-            battle(map_object, row, column)
-            return False
-        else:
-            return False
-
-
 # use_item can use a constant / tool item
 def use_item(item_number):
     item_name = RELATIONSHIP_DICT[str(item_number)]["id"]
     results = exec(ITEM_PROPERTY["useItemEffect"][item_name])
     if results["result"] == False:
         print(results["msg"])  # Will put it in a msg box in the future
-
-
-# open_door can open the door if requirements are met
-def open_door(map_object, column, row):
-    if map_object == 81 and player.yellowkey > 0:
-        player.yellowkey -= 1
-        map_write(player.floor, column, row, 0)
-    elif map_object == 82 and player.bluekey > 0:
-        player.bluekey -= 1
-        map_write(player.floor, column, row, 0)
-    elif map_object == 83 and player.redkey > 0:
-        player.redkey -= 1
-        map_write(player.floor, column, row, 0)
-    elif map_object == 84 and player.greenkey > 0:
-        player.greenkey -= 1
-        map_write(player.floor, column, row, 0)
-    elif map_object == 85:
-        map_write(player.floor, column, row, 0)
-    elif map_object == 86:
-        if STEEL_DOOR_NEEDS_KEY:
-            if player.steelkey > 0:
-                player.steelkey -= 1
-                map_write(player.floor, column, row, 0)
-        else:
-            map_write(player.floor, column, row, 0)
-
-
-# Change floor can change the floor and it can be used without a stair
-# change_floor(destination floor, x, y)
-def change_floor(floor, column, row):
-    if floor == "go_upstairs":
-        check_map_result = check_map(player.floor + 1, 88)
-        print(check_map_result)
-        if check_map_result["result"]:
-            x_coordinate = check_map_result["x_coordinate"]
-            y_coordinate = check_map_result["y_coordinate"]
-            player.move_directly([x_coordinate, y_coordinate])
-        player.floor += 1
-    elif floor == "go_downstairs":
-        check_map_result = check_map(player.floor - 1, 87)
-        if check_map_result["result"]:
-            x_coordinate = check_map_result["x_coordinate"]
-            y_coordinate = check_map_result["y_coordinate"]
-            player.move_directly([x_coordinate, y_coordinate])
-        player.floor -= 1
-    # When this function is not triggered by stairs
-    else:
-        x_coordinate = column
-        y_coordinate = row
-        player.move_directly([x_coordinate, y_coordinate])
-        player.floor = floor
 
 '''

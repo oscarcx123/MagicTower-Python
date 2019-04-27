@@ -16,7 +16,7 @@ class Player(EventSprite):
         self.speedy = 0
         self.pos = [X_COORDINATE, Y_COORDINATE]
         self.floor = PLAYER_FLOOR
-        map_pos = CurrentMap.trans_loacate(*self.pos, "down")
+        map_pos = CurrentMap.trans_locate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
         self.rect.bottom = map_pos[1]
         self.animate_speed = 250  # 移动一格所需要的毫秒数 & 换腿所需时间的两倍
@@ -37,11 +37,23 @@ class Player(EventSprite):
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
+        # block_id = 1 -> 墙
         if int(block_id) == 1:
             return False
+        # block_id = 21~69 -> 道具
         elif int(block_id) >= 21 and int(block_id) <= 69:
             pickup_item(block_id, x, y)
             return True
+        # block_id = 81~86 -> 门
+        elif int(block_id) >= 81 and int(block_id) <= 84 or int(block_id) == 86:
+            result = open_door(block_id, x, y)
+            if result == False:
+                return False
+        # block_id = 87~88 -> 楼梯
+        elif int(block_id) == 87 or int(block_id) == 88:
+            result = change_floor(block_id, x, y)
+            return False
+        # block_id = 201+ -> 怪物
         elif int(block_id) >= 201:
             result = battle(block_id, x, y)
             if result == False:
@@ -69,6 +81,10 @@ class Player(EventSprite):
                         def temp_fun():
                             self.pos = [x, y]
 
-                        self.move(CurrentMap.trans_loacate(x, y, "down"), callback=temp_fun)
+                        self.move(CurrentMap.trans_locate(x, y, "down"), callback=temp_fun)
 
         super().update(*args)
+
+    def change_hero_loc(self, x, y):
+        self.move_directly(CurrentMap.trans_locate(x, y, "down"))
+        self.pos = [x, y]

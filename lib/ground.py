@@ -188,7 +188,7 @@ class GroundSurface:
 
     #  重定位 - 画布的内部逻辑坐标转换为外部坐标（父类可视坐标系）
     def relocate(self, *args):
-        x, y = self.trans_loacate(*args)
+        x, y = self.trans_locate(*args)
         x += self.rect.left
         y += self.rect.top
         return x, y
@@ -200,7 +200,7 @@ class GroundSurface:
         self.rect.h = h
 
     # 需要被实现 逻辑坐标到物理坐标的转换:
-    def trans_loacate(self, *args):
+    def trans_locate(self, *args):
         return args
 
     #  刷新函数： 可以根据变化层级刷新部分内容而不是全部一起刷新

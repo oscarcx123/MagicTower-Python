@@ -31,7 +31,7 @@ class MapGround(GroundSurface):
         self.temp_srufcae = None
         super().__init__(0, 0, w * block_size, h * block_size)
 
-    def trans_loacate(self, *args):
+    def trans_locate(self, *args):
         """
         逻辑转物理，默认为top left
         :param args:
@@ -65,7 +65,7 @@ class MapGround(GroundSurface):
             self.surface.blit(self.temp_srufcae, self.temp_srufcae.get_rect())
         super().flush(screen=screen)
 
-    # 绘制地图 之后刷新不再重绘 除非更新地图状态
+    # draw_map 绘制地图，之后刷新不再重绘，除非更新地图状态
     def draw_map(self, map_data=None):
         print("draw map")
         self.clear_map() # 清空精灵
@@ -73,10 +73,11 @@ class MapGround(GroundSurface):
             map_data = self.map_data
         temp_x = 0
         temp_y = 0
-        px, py = self.trans_loacate(0, 0)
+        px, py = self.trans_locate(0, 0)
         rect = Rect(px, py, self.block_size, self.block_size)
         ground = get_resource('0')  # 地板 先暂时这么搞吧
         self.fill_surface(ground, mode="repeat")
+        self.add_sprite(lib.PlayerCon)
         while temp_y < self.height:
             while temp_x < self.width:
                 map_element = map_data[temp_y][temp_x]
@@ -84,7 +85,7 @@ class MapGround(GroundSurface):
                     # sprite的显示需要接通group
                     name = str(map_element)
                     ret = get_resource(name)
-                    px, py = self.trans_loacate(temp_x, temp_y, "down")
+                    px, py = self.trans_locate(temp_x, temp_y, "down")
                     rect.centerx = px
                     rect.bottom = py
                     if type(ret) is tuple:  # 属于精灵 (注意：此时不能直接导入精灵，因为先有map后有精灵）
@@ -93,20 +94,40 @@ class MapGround(GroundSurface):
                         img_rect.topleft = rect.topleft
                         sp = list(ret[2])
                         self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
-                        self.add_sprite(lib.PlayerCon)
                     elif ret is not None:
                         self.fill_surface(ret, fill_rect=rect)
                 temp_x += 1
             temp_y += 1
             temp_x = 0
             self.temp_srufcae = self.surface.copy()
-
+    
+    # get_block 获取指定地点的图块
     def get_block(self, x, y):
         if self.map_data is not None:
             return self.map_data[y][x]
         else:
             return []
-            
+    
+    # check_block 获取指定图块的地点，没有则返回空数组
+    def check_block(self, target):
+        if self.map_data is not None:
+            temp_x = 0
+            temp_y = 0
+            height = int(HEIGHT / BLOCK_UNIT)
+            width = int(WIDTH / BLOCK_UNIT) - 4 # -4是因为左边有状态栏
+            result = []
+            while temp_y < height:
+                while temp_x < width:
+                    if self.map_data[temp_y][temp_x] == target:
+                        result.append([temp_x,temp_y])
+                    temp_x += 1
+                temp_y += 1
+                temp_x = 0
+            return result
+        else:
+            return []
+    
+    # set_block 设置指定点的图块
     def set_block(self, x, y, target):
         if self.map_data is not None:
             self.map_data[y][x] = target
