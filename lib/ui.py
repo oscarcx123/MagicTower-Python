@@ -7,7 +7,6 @@ import lib
 def init_ui():
     from test import StatusBar
     global StatusBar
-    init_font()
 
 def init_font():
     global font_name

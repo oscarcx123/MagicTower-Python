@@ -20,7 +20,7 @@ from .sprite import EventSprite
 from lib.utools import *
 from sysconf import *
 import lib
-
+from lib import ui
 
 class MapGround(GroundSurface):
     def __init__(self, w, h, block_size=32):
@@ -64,7 +64,11 @@ class MapGround(GroundSurface):
         if self.temp_srufcae is not None: # 地图刷新时先直接绘上静态部分
             self.surface.blit(self.temp_srufcae, self.temp_srufcae.get_rect())
         super().flush(screen=screen)
-
+    
+    def lib_map_init(self):
+        from project.function import get_damage_info
+        global get_damage_info
+    
     # draw_map 绘制地图，之后刷新不再重绘，除非更新地图状态
     def draw_map(self, map_data=None):
         print("draw map")
@@ -96,6 +100,13 @@ class MapGround(GroundSurface):
                         self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
                     elif ret is not None:
                         self.fill_surface(ret, fill_rect=rect)
+                    if map_element > 200:
+                        result = get_damage_info(map_element)
+                        if result == False:
+                            damage = "???"
+                        else:
+                            damage = result["damage"]
+                        ui.draw_text(self, str(damage), 22, WHITE, temp_x, temp_y)
                 temp_x += 1
             temp_y += 1
             temp_x = 0

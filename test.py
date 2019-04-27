@@ -11,13 +11,17 @@ from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import ui
+from lib import map
 
 RootScreen = GroundSurface(screen)
 StatusBar = None
 
 
 def init():
+    ui.init_font()
     global StatusBar
+    # 延迟map初始化，避免文件的循环引用
+    CurrentMap.lib_map_init()
     CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR])
     CurrentMap.add_sprite(PlayerCon)
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT*4)  # 状态栏
@@ -26,7 +30,6 @@ def init():
     # 可对状态栏进行操作
     ui.init_ui()
     ui.init_status_bar()
-
 
 # ===== debug === 发布模式注释下面内容
 import threading
@@ -50,10 +53,10 @@ t = threading.Thread(target=console)
 
 t.start()
 
+# ===============================#
+
 init()
 clock = pygame.time.Clock()
-
-# ===============================#
 
 while running:
     pygame.display.update()
