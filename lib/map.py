@@ -19,8 +19,7 @@ from pygame import Rect, Surface
 from .sprite import EventSprite
 from lib.utools import *
 from sysconf import *
-import lib
-from lib import ui
+from lib import global_var
 
 class MapGround(GroundSurface):
     def __init__(self, w, h, block_size=32):
@@ -65,6 +64,7 @@ class MapGround(GroundSurface):
             self.surface.blit(self.temp_srufcae, self.temp_srufcae.get_rect())
         super().flush(screen=screen)
     
+    # TODO: 目前显伤放在draw_map里头，因此这里要进行初始化获取get_damage_info函数
     def lib_map_init(self):
         from project.function import get_damage_info
         global get_damage_info
@@ -81,7 +81,8 @@ class MapGround(GroundSurface):
         rect = Rect(px, py, self.block_size, self.block_size)
         ground = get_resource('0')  # 地板 先暂时这么搞吧
         self.fill_surface(ground, mode="repeat")
-        self.add_sprite(lib.PlayerCon)
+        PlayerCon = global_var.get_value("PlayerCon")
+        self.add_sprite(PlayerCon)
         while temp_y < self.height:
             while temp_x < self.width:
                 map_element = map_data[temp_y][temp_x]
@@ -106,7 +107,7 @@ class MapGround(GroundSurface):
                             damage = "???"
                         else:
                             damage = result["damage"]
-                        ui.draw_text(self, str(damage), 22, WHITE, temp_x, temp_y)
+                        self.draw_text(str(damage), 22, WHITE, temp_x, temp_y)
                 temp_x += 1
             temp_y += 1
             temp_x = 0

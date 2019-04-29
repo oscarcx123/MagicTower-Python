@@ -322,28 +322,28 @@ ITEMS_DATA = {
 	},
 
 	"itemEffect": {
-		"redJewel": "lib.PlayerCon.attack += RED_JEWEL",
-		"blueJewel": "lib.PlayerCon.defend += BLUE_JEWEL",
-		"greenJewel": "lib.PlayerCon.mdefend += GREEN_JEWEL",
-		"yellowJewel": "lib.PlayerCon.attack += YELLOW_JEWEL\nlib.PlayerCon.defend += YELLOW_JEWEL\nlib.PlayerCon.mdefend += YELLOW_JEWEL * GREEN_JEWEL\nlib.PlayerCon.hp += YELLOW_JEWEL * RED_POTION",
-		"redPotion": "lib.PlayerCon.hp += RED_POTION",
-		"bluePotion": "lib.PlayerCon.hp += BLUE_POTION",
-		"yellowPotion": "lib.PlayerCon.hp += GREEN_POTION",
-		"greenPotion": "lib.PlayerCon.hp += YELLOW_POTION",
+		"redJewel": "PlayerCon.attack += RED_JEWEL",
+		"blueJewel": "PlayerCon.defend += BLUE_JEWEL",
+		"greenJewel": "PlayerCon.mdefend += GREEN_JEWEL",
+		"yellowJewel": "PlayerCon.attack += YELLOW_JEWEL\nPlayerCon.defend += YELLOW_JEWEL\nPlayerCon.mdefend += YELLOW_JEWEL * GREEN_JEWEL\nPlayerCon.hp += YELLOW_JEWEL * RED_POTION",
+		"redPotion": "PlayerCon.hp += RED_POTION",
+		"bluePotion": "PlayerCon.hp += BLUE_POTION",
+		"yellowPotion": "PlayerCon.hp += GREEN_POTION",
+		"greenPotion": "PlayerCon.hp += YELLOW_POTION",
 		"sword0": "pass",
-		"sword1": "lib.PlayerCon.attack += SWORD_1",
-		"sword2": "lib.PlayerCon.attack += SWORD_2",
-		"sword3": "lib.PlayerCon.attack += SWORD_3",
-		"sword4": "lib.PlayerCon.attack += SWORD_4",
-		"sword5": "lib.PlayerCon.attack += SWORD_5",
+		"sword1": "PlayerCon.attack += SWORD_1",
+		"sword2": "PlayerCon.attack += SWORD_2",
+		"sword3": "PlayerCon.attack += SWORD_3",
+		"sword4": "PlayerCon.attack += SWORD_4",
+		"sword5": "PlayerCon.attack += SWORD_5",
 		"shield0": "pass",
-		"shield1": "lib.PlayerCon.defend += SHIELD_1",
-		"shield2": "lib.PlayerCon.defend += SHIELD_2",
-		"shield3": "lib.PlayerCon.defend += SHIELD_3",
-		"shield4": "lib.PlayerCon.defend += SHIELD_4",
-		"shield5": "lib.PlayerCon.defend += SHIELD_5",
-		"superPotion": "lib.PlayerCon.hp *= 2",
-		"moneyPocket": "lib.PlayerCon.gold += 500"
+		"shield1": "PlayerCon.defend += SHIELD_1",
+		"shield2": "PlayerCon.defend += SHIELD_2",
+		"shield3": "PlayerCon.defend += SHIELD_3",
+		"shield4": "PlayerCon.defend += SHIELD_4",
+		"shield5": "PlayerCon.defend += SHIELD_5",
+		"superPotion": "PlayerCon.hp *= 2",
+		"moneyPocket": "PlayerCon.gold += 500"
 	},
 	"itemEffectTip": {
 		"redJewel": "'，攻击+'+core.values.redJewel * ratio",
@@ -405,11 +405,11 @@ def fly():
 def earthquake():
 	temp_x = 0
 	temp_y = 0
-	map_read(lib.PlayerCon.floor)
+	map_read(PlayerCon.floor)
 	while temp_y < HEIGHT / BLOCK_UNIT:
 		while temp_x < WIDTH / BLOCK_UNIT - 4:
 			if map_temp[temp_y][temp_x] == 1: # Only Yellow Wall by default
-				map_write(lib.PlayerCon.floor, temp_x, temp_y, 0)
+				map_write(PlayerCon.floor, temp_x, temp_y, 0)
 			temp_x += 1
 		temp_y += 1
 		temp_x = 0
@@ -417,27 +417,27 @@ def earthquake():
 
 # 破墙镐，可以破坏勇士面前的墙
 def pickaxe():
-	x_coord = lib.PlayerCon.pos[0]
-	y_coord = lib.PlayerCon.pos[1]
-	if lib.PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+	x_coord = PlayerCon.pos[0]
+	y_coord = PlayerCon.pos[1]
+	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
 		if mapdata[y_coord][x_coord] == 1:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
 		x_coord -= 1
 		if mapdata[y_coord][x_coord] == 1:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
 		if mapdata[y_coord][x_coord] == 1:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
 		y_coord -= 1
 		if mapdata[y_coord][x_coord] == 1:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
 	return {"result": False, "msg": "The target is not a wall"}
 
@@ -453,105 +453,105 @@ def bigKey():
 	if BIG_KEY_OPEN_YELLOW_DOORS:
 		temp_x = 0
 		temp_y = 0
-		map_read(lib.PlayerCon.floor)
+		map_read(PlayerCon.floor)
 		while temp_y < HEIGHT / BLOCK_UNIT:
 			while temp_x < WIDTH / BLOCK_UNIT - 4:
 				if map_temp[temp_y][temp_x] == 81:  # 81 = Yellow Door
-					map_write(lib.PlayerCon.floor, temp_x, temp_y, 0)
+					map_write(PlayerCon.floor, temp_x, temp_y, 0)
 				temp_x += 1
 			temp_y += 1
 			temp_x = 0
 	else:
-		lib.PlayerCon.yellowkey += 1
-		lib.PlayerCon.bluekey += 1
-		lib.PlayerCon.redkey += 1
+		PlayerCon.yellowkey += 1
+		PlayerCon.bluekey += 1
+		PlayerCon.redkey += 1
 	return {"result": True}
 
 # 炸弹，可以炸掉勇士面前的怪物
 def bomb():
-	x_coord = lib.PlayerCon.pos[0]
-	y_coord = lib.PlayerCon.pos[1]
-	if lib.PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+	x_coord = PlayerCon.pos[0]
+	y_coord = PlayerCon.pos[1]
+	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
 		x_coord -= 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
 		y_coord -= 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
 	return {"result": False, "msg": "The target is not a monster"}
 
 # 圣锤，在样板中的作用跟炸弹完全一样
 def hammer():
-	x_coord = lib.PlayerCon.pos[0]
-	y_coord = lib.PlayerCon.pos[1]
-	if lib.PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
+	x_coord = PlayerCon.pos[0]
+	y_coord = PlayerCon.pos[1]
+	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
 		x_coord -= 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
+	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
-	elif lib.PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
 		y_coord -= 1
 		if mapdata[y_coord][x_coord] > 200:
-			map_write(lib.PlayerCon.floor, x_coord, y_coord, 0)
+			map_write(PlayerCon.floor, x_coord, y_coord, 0)
 			return True
 	return {"result": False, "msg": "The target is not a monster"}
 
 # 中心对称飞行器，可以飞向当前楼层中心对称的位置
 def centerFly():
-	x_coordinate = lib.PlayerCon.pos[0]
-	y_coordinate = lib.PlayerCon.pos[1]
+	x_coordinate = PlayerCon.pos[0]
+	y_coordinate = PlayerCon.pos[1]
 	x_max_index = int(WIDTH / BLOCK_UNIT) - 5
 	y_max_index = int(HEIGHT / BLOCK_UNIT) - 1
 	x_center = x_max_index / 2
 	y_center = y_max_index / 2
 	x_after_fly = x_coordinate - (2 * (x_coordinate - x_center))
 	y_after_fly = y_coordinate - (2 * (y_coordinate - y_center))
-	if check_map(lib.PlayerCon.floor, 0):
-		lib.PlayerCon.pos[0] = x_after_fly
-		lib.PlayerCon.pos[1] = y_after_fly
+	if check_map(PlayerCon.floor, 0):
+		PlayerCon.pos[0] = x_after_fly
+		PlayerCon.pos[1] = y_after_fly
 		return {"result": True}
 	else:
 		return {"result": False, "msg": "Obstacle blocking"}
 
 # 上楼器，可以飞往楼上的相同位置
 def upFly():
-	if lib.PlayerCon.floor + 1 > len(map_database):
+	if PlayerCon.floor + 1 > len(map_database):
 		return {"result": False, "msg": "You are on top floor"}
-	elif check_map(lib.PlayerCon.floor + 1, 0):
-		lib.PlayerCon.floor += 1
+	elif check_map(PlayerCon.floor + 1, 0):
+		PlayerCon.floor += 1
 		return {"result": True}
 	else:
 		return {"result": False, "msg": "Obstacle blocking"}
 
 # 下楼器，可以飞往楼下的相同位置
 def downFly():
-	if lib.PlayerCon.floor - 1 < 0:
+	if PlayerCon.floor - 1 < 0:
 		return {"result": False, "msg": "You are on bottom floor"}
-	elif check_map(lib.PlayerCon.floor - 1, 0):
-		lib.PlayerCon.floor -= 1
+	elif check_map(PlayerCon.floor - 1, 0):
+		PlayerCon.floor -= 1
 		return {"result": True}
 	else:
 		return {"result": False, "msg": "Obstacle blocking"}
@@ -567,37 +567,37 @@ def curseWine():
 
 # 圣水，使用后生命翻倍
 def superWine():
-	lib.PlayerCon.hp *= 2
+	PlayerCon.hp *= 2
 	return True
 
 # 生命魔杖，可以恢复100点生命值
 def lifeWand():
-	lib.PlayerCon.hp += 100
+	PlayerCon.hp += 100
 	return True
 
 # 跳跃靴，能跳跃到前方两格处
 def jumpShoes():
-	x_coord = lib.PlayerCon.pos[0]
-	y_coord = lib.PlayerCon.pos[1]
-	if lib.PlayerCon.face[0] == 0 and y_coord + 2 < int(HEIGHT / BLOCK_UNIT):
+	x_coord = PlayerCon.pos[0]
+	y_coord = PlayerCon.pos[1]
+	if PlayerCon.face[0] == 0 and y_coord + 2 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 2
 		if mapdata[y_coord][x_coord] == 0:
-			lib.PlayerCon.pos[1] += 2
+			PlayerCon.pos[1] += 2
 			return True
-	elif lib.PlayerCon.face[0] == 1 and x_coord - 2 > 0:
+	elif PlayerCon.face[0] == 1 and x_coord - 2 > 0:
 		x_coord -= 2
 		if mapdata[y_coord][x_coord] == 0:
-			lib.PlayerCon.pos[0] -= 2
+			PlayerCon.pos[0] -= 2
 			return True
-	elif lib.PlayerCon.face[0] == 2 and x_coord + 2 < int(WIDTH / BLOCK_UNIT):
+	elif PlayerCon.face[0] == 2 and x_coord + 2 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 2
 		if mapdata[y_coord][x_coord] == 0:
-			lib.PlayerCon.pos[0] += 2
+			PlayerCon.pos[0] += 2
 			return True
-	elif lib.PlayerCon.face[0] == 3 and y_coord - 2 > 0:
+	elif PlayerCon.face[0] == 3 and y_coord - 2 > 0:
 		y_coord -= 2
 		if mapdata[y_coord][x_coord] == 0:
-			lib.PlayerCon.pos[1] -= 2
+			PlayerCon.pos[1] -= 2
 			return True
 	return {"result": False, "msg": "The destination is not empty"}
 

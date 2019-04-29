@@ -10,26 +10,31 @@ from lib.utools import *
 from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
-from lib import ui
-from lib import map
+from lib import global_var
+from project.function import function_init, draw_status_bar
 
 RootScreen = GroundSurface(screen)
-StatusBar = None
+global StatusBar
 
 
 def init():
-    ui.init_font()
-    global StatusBar
+    # 初始化全局变量
+    global_var._init()
+    global_var.set_value("font_name",pygame.font.match_font(FONT_NAME))
     # 延迟map初始化，避免文件的循环引用
     CurrentMap.lib_map_init()
+    # 设置PlayerCon为全局变量（必须要在CurrentMap.set_map之前完成）
+    global_var.set_value("PlayerCon", PlayerCon)
+    function_init()
+    # 初始化地图
     CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR])
     CurrentMap.add_sprite(PlayerCon)
-    StatusBar = RootScreen.add_child("left", BLOCK_UNIT*4)  # 状态栏
+    # 状态栏
+    StatusBar = RootScreen.add_child("left", BLOCK_UNIT*4)
+    global_var.set_value("StatusBar",StatusBar)
     RootScreen.add_child(CurrentMap)
-    StatusBar.fill(BLUE)
-    # 可对状态栏进行操作
-    ui.init_ui()
-    ui.init_status_bar()
+    # 绘制状态栏
+    draw_status_bar()
 
 # ===== debug === 发布模式注释下面内容
 import threading

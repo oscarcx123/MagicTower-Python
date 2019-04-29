@@ -5,6 +5,7 @@ from pygame.sprite import Group
 from sprite import EventSprite
 from sysconf import *
 from lib.utools import *
+from lib import global_var
 
 """
     ground 概念说明：
@@ -26,24 +27,6 @@ import copy
 from sprite import EventSprite
 
 from pygame import Rect
-
-"""
-pygame.init()
-pygame.mixer.init()
-
-# 获取敌人图像：
-enemies_full_black_original = pygame.image.load("img/enemys.png")
-enemy_image = crop_images(enemies_full_black_original, 200, Rect(0, 0, 64, 32))
-
-#
-
-img_dir = "img"
-wall_original = pygame.image.load(path.join(img_dir, "wall.png"))
-static_element = {'1': wall_original}
-
-clock = pygame.time.Clock()
-clock.tick(100)
-"""
 
 
 #  基本绘制区域
@@ -211,54 +194,12 @@ class GroundSurface:
     def fill(self, arg):
         self.surface.fill(arg)
 
-
-"""
-wall = pygame.image.load("img/wall.png")
-
-screen = pygame.display.set_mode([WIDTH, HEIGHT])  # 初始化窗口
-rootSurface = GroundSurface(screen)
-s1 = rootSurface.add_child("left", 224)  # 状态栏
-s1_1 = s1.add_child("top", 40)
-s1_2 = s1.add_child("mid", 90)
-s1_3 = GroundSurface(0, 0, 120, 120, 0.4)
-s1.add_child(s1_3)
-s2 = rootSurface.add_child("bottom", 64)  # 道具栏
-# s3 = rootSurface.add_child(MapGround(13, 13, 32), 224, 0)
-# s12.fill_surface(wall, "scale")
-# s3.fill_surface(wall, "repeat")
-
-from tower_map import MAP_DATABASE
-
-s1_1.fill(RED)
-s1_2.fill(WHITE)
-s1.fill(GREEN)
-s2.fill(BLUE)
-# s2.add_sprite(EventSprite("201", enemy_image["201"], [1, 2]))
-
-# s3.draw_map(MAP_DATABASE[0])
-
-running = True
-ct = 1
-
-# clock = pygame.time.Clock()
-
-import threading
-def console():
-    while True:
-        try:
-            print(eval(input()))
-        except:
-            print("error")
-
-t = threading.Thread(target=console)
-t.start()
-
-while running:
-    pygame.display.update()
-    pygame.time.delay(10)
-    rootSurface.flush(screen=screen)
-    for event in pygame.event.get():
-        # Check for closing window
-        if event.type == pygame.QUIT:
-            running = False
-"""
+    # draw_text 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），color（文字颜色），x，y（xy相对坐标）
+    def draw_text(self, text, size, color, x, y):
+        font_name = global_var.get_value("font_name")
+        font = pygame.font.Font(font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.left = x * BLOCK_UNIT
+        text_rect.top = y * BLOCK_UNIT
+        self.surface.blit(text_surface, text_rect)
