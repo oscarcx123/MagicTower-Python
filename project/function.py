@@ -1,5 +1,5 @@
 import math
-
+import pygame
 from lib import CurrentMap
 from project.enemy import *
 from project.block import BlockData
@@ -11,6 +11,8 @@ from lib import global_var
 def function_init():
     global PlayerCon
     PlayerCon = global_var.get_value("PlayerCon")
+    global RootScreen
+    RootScreen = global_var.get_value("RootScreen")
 
 # get_damage_info 获取战斗伤害（模拟战斗）
 def get_damage_info(map_object):
@@ -189,9 +191,10 @@ def change_floor(block, x, y):
     # 刷新状态栏显示
     draw_status_bar()
 
+# draw_status_bar 绘制状态栏
 def draw_status_bar():
     StatusBar = global_var.get_value("StatusBar")
-    StatusBar.fill(BLUE)
+    StatusBar.fill(SKYBLUE)
     StatusBar.draw_text("FLOOR = " + str(PlayerCon.floor), 36, WHITE, 0, 0)
     StatusBar.draw_text("HP = " + str(PlayerCon.hp), 36, WHITE, 0, 1)
     StatusBar.draw_text("ATK = " + str(PlayerCon.attack), 36, WHITE, 0, 2)
@@ -203,6 +206,39 @@ def draw_status_bar():
     StatusBar.draw_text("B_KEY = " + str(PlayerCon.bluekey), 36, WHITE, 0, 8)
     StatusBar.draw_text("R_KEY = " + str(PlayerCon.redkey), 36, WHITE, 0, 9)
 
+# draw_start_menu 绘制开始菜单
+# TODO: 文字居中自适应
+def draw_start_menu(index=1):
+    global_var.set_value("index",index)
+    RootScreen.fill(SKYBLUE)
+    RootScreen.draw_text(TOWER_NAME, 64, WHITE, 6, 0)
+    RootScreen.draw_text("开始游戏", 36, WHITE, 7, 6)
+    RootScreen.draw_text("读取存档", 36, WHITE, 7, 7)
+    if index == 1:
+        RootScreen.draw_text("->", 36, WHITE, 6, 6)
+    if index == 2:
+        RootScreen.draw_text("->", 36, WHITE, 6, 7)
+    pygame.display.flip()
+    
+
+# wait_start_menu 在开始菜单页面等待并执行用户操作
+def wait_start_menu():
+    index = global_var.get_value("index")
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_UP and index > 1:
+                    draw_start_menu(index-1)
+                    index = global_var.get_value("index")
+                elif event.key == pygame.K_DOWN and index < 2:
+                    draw_start_menu(index+1)
+                    index = global_var.get_value("index")
+                elif event.key == pygame.K_RETURN and index == 1: # K_RETURN就是ENTER键
+                    waiting = False
+    print("GAME START!")
 '''
 # use_item can use a constant / tool item
 def use_item(item_number):

@@ -3,8 +3,9 @@ from os import path
 # 系统设置 其他地方都会用到这里的配置
 
 # 全塔属性设置
-TOWER_NAME = "Magic Tower"
-FONT_NAME = "arial"
+TOWER_NAME = "Python魔塔"
+FONT_NAME = "resource/simhei.ttf"
+DEBUG = False
 # --- 勇士数据设置 START ---
 # 玩家初始坐标以及楼层
 # face[0]调用勇士朝向 0=下，1=左，2=右，3=上

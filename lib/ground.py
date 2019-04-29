@@ -203,3 +203,8 @@ class GroundSurface:
         text_rect.left = x * BLOCK_UNIT
         text_rect.top = y * BLOCK_UNIT
         self.surface.blit(text_surface, text_rect)
+        
+    # draw_lines 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
+    # 例子：draw_lines([(1,1),(1,100),(100,1),(1,1)], 5, WHITE) -> 一个线条宽度为5px的白色三角形
+    def draw_lines(self, points, width, color):
+        pygame.draw.lines(self, color, False, points, width)
