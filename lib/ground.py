@@ -194,17 +194,43 @@ class GroundSurface:
     def fill(self, arg):
         self.surface.fill(arg)
 
-    # draw_text 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），color（文字颜色），x，y（xy相对坐标）
-    def draw_text(self, text, size, color, x, y):
+    # draw_text 在画布上绘制文字
+    # 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），color（文字颜色），x，y（xy相对坐标）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
+    def draw_text(self, text, size, color, x, y, mode=None):
         font_name = global_var.get_value("font_name")
         font = pygame.font.Font(font_name, size)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
-        text_rect.left = x * BLOCK_UNIT
-        text_rect.top = y * BLOCK_UNIT
+        if mode == "px":
+            text_rect.left = x
+            text_rect.top = y
+        else:
+            text_rect.left = x * BLOCK_UNIT
+            text_rect.top = y * BLOCK_UNIT
         self.surface.blit(text_surface, text_rect)
         
-    # draw_lines 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
+    # draw_lines 在画布上绘制（一条或多条）线段
+    # 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
     # 例子：draw_lines([(1,1),(1,100),(100,1),(1,1)], 5, WHITE) -> 一个线条宽度为5px的白色三角形
-    def draw_lines(self, points, width, color):
-        pygame.draw.lines(self, color, False, points, width)
+    def draw_lines(self, points, width, color, mode=None):
+        if mode == "px":
+            pygame.draw.lines(self.surface, color, False, points, width)
+        else:
+            block_points = []
+            for item in points:
+                block_points.append([item[0] * BLOCK_UNIT, item[1] * BLOCK_UNIT])
+            pygame.draw.lines(self.surface, color, False, points, width)
+
+    
+    # draw_rect 在画布上绘制矩形
+    # start_pos（矩形其中一个角的坐标，可为任意角），格式[(x, y)]），end_pos（start_pos所选角的对角）
+    # width（线条宽度），color（线条颜色）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
+    def draw_rect(self, start_pos, end_pos, width, color, mode=None):
+        if mode == "px":
+            pygame.draw.lines(self.surface, color, True, [(end_pos[0],start_pos[1]),(start_pos[0],start_pos[1]),(start_pos[0],end_pos[1]),(end_pos[0],end_pos[1])], width)
+        else:
+            pygame.draw.lines(self.surface, color, True, [(end_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT),(end_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT)], width)
+        

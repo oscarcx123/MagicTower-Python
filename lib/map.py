@@ -143,4 +143,9 @@ class MapGround(GroundSurface):
     def set_block(self, x, y, target):
         if self.map_data is not None:
             self.map_data[y][x] = target
+            
+    # remove_block 移除指定点的图块（等价于set_block(x, y, 0)）
+    def remove_block(self, x, y):
+        if self.map_data is not None:
+            self.map_data[y][x] = 0
 

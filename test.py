@@ -14,14 +14,14 @@ from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import global_var
-from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu
+from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu, draw_enemy_book, wait_enemy_book
 
 RootScreen = GroundSurface(screen)
 global StatusBar
 running = True
 start_menu = True
 
-def init():
+def init(): 
     # 初始化全局变量
     global_var._init()
     global_var.set_value("font_name",FONT_NAME)
@@ -62,6 +62,7 @@ clock = pygame.time.Clock()
 
 # 主程序
 while running:
+    # 展示开始菜单
     if start_menu == True:
         draw_start_menu()
         wait_start_menu()
@@ -78,3 +79,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYUP:
+            if event.key == pygame.K_x:
+                draw_enemy_book()
+                wait_enemy_book()
