@@ -28,7 +28,7 @@ class MapGround(GroundSurface):
         self.height = h
         self.map_data = None
         self.temp_srufcae = None
-        super().__init__(0, 0, w * block_size, h * block_size)
+        super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
 
     def trans_locate(self, *args):
         """

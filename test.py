@@ -16,7 +16,7 @@ from lib.ground import GroundSurface
 from lib import global_var
 from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu, draw_enemy_book, wait_enemy_book
 
-RootScreen = GroundSurface(screen)
+RootScreen = GroundSurface(mode="copy",surface=screen)
 global StatusBar
 running = True
 start_menu = True

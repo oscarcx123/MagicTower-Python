@@ -30,40 +30,46 @@ from pygame import Rect
 
 
 #  基本绘制区域
-#  x, y, w, h
+#  x, y（画布左上角位置）, w, h（画布宽高）, scale（放大率）
 #  如果需要逻辑坐标 继承该类 实现trans_locate函数（逻辑转物理）
+#  mode（模式） = auto, copy, custom
+"""
+*auto 自动生成屏幕画布
+*copy 传入Surface
+*custom 传入w,h 或 x,y,w,h 或 x,y,w,h,scale
+"""
 class GroundSurface:
-    def __init__(self, *args):
-        """
-        *0 自动生成屏幕画布
-        *1 Surface
-        *2 (w, h)
-        *4(5) x,y,w,h,(scale放大率-暂时没用)
-        :param args:
-        """
-        L = len(args)
+    def __init__(self, **kwargs):
         scale = 1.0
-        if L == 0:
-            surface = pygame.display.set_mode((WIDTH, HEIGHT))
-            self.rect = surface.get_rect()
-        elif L == 1:
-            surface = args[0]
-            self.rect = surface.get_rect()
-        elif L == 2:
-            surface = Surface(args)
-            self.rect = surface.get_rect()
-        elif L >= 4:
-            surface = Surface(args[2:4])
-            rect = surface.get_rect()
-            rect.left = args[0]
-            rect.top = args[1]
-            if L > 4:
-                scale = args[4]
-            self.rect = rect
+        if "mode" in kwargs:
+            mode = kwargs["mode"]
+            if mode == "auto":
+                surface = pygame.display.set_mode((WIDTH, HEIGHT))
+                self.rect = surface.get_rect()
+            elif mode == "copy":
+                surface = kwargs["surface"]
+                self.rect = surface.get_rect()
+            elif mode == "custom":
+                if "x" not in kwargs:
+                    kwargs["x"] = 0
+                if "y" not in kwargs:
+                    kwargs["y"] = 0
+                surface = Surface((int(kwargs["w"]), int(kwargs["h"])))
+                rect = surface.get_rect()
+                rect.left = kwargs["x"]
+                rect.top = kwargs["y"]
+                if "scale" in kwargs:
+                    scale = kwargs["scale"]
+                self.rect = rect
+            else:
+                surface = Surface()
+                print("GroundSurface错误，提供的mode不存在")
+                self.rect = surface.get_rect()
         else:
             surface = Surface()
-            print("error ground surface")
+            print("GroundSurface错误，未提供mode参数")
             self.rect = surface.get_rect()
+            
         self.w = self.rect.w
         self.h = self.rect.h
         self.surface = surface
@@ -88,7 +94,7 @@ class GroundSurface:
             rect.top = self.curpos['top']
             self.curpos['left'] += rect.w
         elif len(args) == 2:  # 自适应画布 贴边或者定在中心 第一个指定类型 第二个指定大小
-            ground_surface = self.create_addaptive_surface(*args)
+            ground_surface = self.create_adaptive_surface(*args)
         elif len(args) == 3:  # 插入别的画布到指定坐标 无视碰撞
             ground_surface = args[0]
             ground_surface.rect.left = args[1]
@@ -104,7 +110,7 @@ class GroundSurface:
         return ground_surface
 
     # 自适应矩形
-    def create_addaptive_surface(self, type, value):
+    def create_adaptive_surface(self, type, value):
         if type not in self.curpos:
             print("error type of ground")
             return
@@ -126,7 +132,7 @@ class GroundSurface:
         # print(rect)
         # print(rect.w)
         # print(rect.h)
-        ground_surface = GroundSurface(Surface([rect.w, rect.h]))
+        ground_surface = GroundSurface(mode="copy",surface=Surface([rect.w, rect.h]))
         ground_surface.rect.left = rect.left
         ground_surface.rect.top = rect.top
         self.curpos[type] += value
@@ -233,4 +239,22 @@ class GroundSurface:
             pygame.draw.lines(self.surface, color, True, [(end_pos[0],start_pos[1]),(start_pos[0],start_pos[1]),(start_pos[0],end_pos[1]),(end_pos[0],end_pos[1])], width)
         else:
             pygame.draw.lines(self.surface, color, True, [(end_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT),(end_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT)], width)
+    
+    
+    def draw_icon(self, map_element, rect, px=None, py=None):
+        # sprite的显示需要接通group
+        name = str(map_element)
+        ret = get_resource(name)
+        if px==None and py==None:
+            px, py = self.trans_locate(temp_x, temp_y, "down")
+        rect.centerx = px
+        rect.bottom = py
+        if type(ret) is tuple:  # 属于精灵 (注意：此时不能直接导入精灵，因为先有map后有精灵）
+            img = ret[0]
+            img_rect = ret[1]  # 以资源本体大小显示 用以支持超过32*32的图像
+            img_rect.topleft = rect.topleft
+            sp = list(ret[2])
+            self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
+        elif ret is not None:
+            self.fill_surface(ret, fill_rect=rect)
         
