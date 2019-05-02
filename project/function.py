@@ -23,7 +23,11 @@ def flush_status():
     draw_status_bar()
 
 # get_damage_info 获取战斗伤害（模拟战斗）
-def get_damage_info(map_object):
+def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
+    if hero_atk == None and hero_def == None and hero_mdef == None:
+        hero_atk = PlayerCon.attack
+        hero_def = PlayerCon.defend
+        hero_mdef = PlayerCon.mdefend
     # 通过get_enemy_info获得怪物数据
     monster_stats = get_enemy_info(map_object)
     mon_name = monster_stats["name"]
@@ -33,7 +37,7 @@ def get_damage_info(map_object):
     mon_gold = monster_stats["money"]
     mon_exp = monster_stats["experience"]
     # 检测勇士能否破怪物防御
-    if PlayerCon.attack <= mon_def:
+    if hero_atk <= mon_def:
         return {"status": False,
                 "mon_name": mon_name,
                 "mon_hp": mon_hp,
@@ -43,16 +47,16 @@ def get_damage_info(map_object):
                 "mon_exp": mon_exp,
                 "damage": "???"}
     # 计算每回合勇士受到的伤害
-    damage_from_mon_per_turn = mon_atk - PlayerCon.defend
+    damage_from_mon_per_turn = mon_atk - hero_def
     # 勇士受到伤害是否 < 0
     if damage_from_mon_per_turn < 0:
         damage_from_mon_per_turn = 0
     # 计算每回合勇士对怪物造成的伤害
-    damage_from_hero_per_turn = PlayerCon.attack - mon_def
+    damage_from_hero_per_turn = hero_atk - mon_def
     # 计算勇士击杀怪物所需的回合数
     turn = math.ceil(mon_hp / damage_from_hero_per_turn)
     # 计算勇士本次战斗所受到的伤害
-    damage = damage_from_mon_per_turn * (turn - 1) - PlayerCon.mdefend
+    damage = damage_from_mon_per_turn * (turn - 1) - hero_mdef
     # 勇士不允许受到负数伤害（治疗）
     if damage < 0:
         damage = 0
@@ -65,6 +69,45 @@ def get_damage_info(map_object):
                 "mon_exp": mon_exp,
                 "damage": damage}
     return result
+
+# get_criticals 获得攻击临界数据
+# map_object（怪物数字id），result_num（临界结果数量）
+# TODO: 目前使用暴力循环法，未来实现二分法
+def get_criticals(map_object, result_num):
+    # 设定循环攻击上限
+    LOOP_MAX_ATK = 100
+    critical_list = []
+    hero_atk = PlayerCon.attack
+    hero_def = PlayerCon.defend
+    hero_mdef = PlayerCon.mdefend
+    # 获得当前怪物伤害数据
+    monster_stats = get_enemy_info(map_object)
+    initial_damage_info = get_damage_info(map_object)
+    previous_damage = initial_damage_info["damage"]
+    # 如果无法破防，直接返回破防所需的增量攻击
+    if previous_damage == "???":
+        return [[initial_damage_info["mon_def"] - hero_atk + 1, "???"]]
+    if hero_atk <= LOOP_MAX_ATK:
+        for new_atk in range(hero_atk+1, monster_stats["hp"] + monster_stats["def"]):
+            next_damage_info = get_damage_info(map_object,new_atk,hero_def,hero_mdef)
+            next_damage = next_damage_info["damage"]
+            if next_damage < previous_damage:
+                previous_damage = next_damage
+                critical_list.append([new_atk - hero_atk, initial_damage_info["damage"] - next_damage])
+                # 如果出现无伤或者记录了足够数量的临界点，就停止计算
+                # TODO: 负伤害处理？？
+                if next_damage <= 0 or len(critical_list) >= result_num:
+                    break
+        return critical_list
+    else:
+        return []
+
+
+# next_def_critical 获得防御临界数据
+def next_def_critical(map_object):
+    original_damage = get_damage_info(map_object)
+    next_def_damage = get_damage_info(map_object, PlayerCon.attack, PlayerCon.defend + 1, PlayerCon.mdefend)
+    return original_damage["damage"] - next_def_damage["damage"]
 
 # get_enemy_info 获得怪物数据
 def get_enemy_info(map_object):
@@ -91,7 +134,18 @@ def get_current_enemy(map_data):
         temp_x = 0
     enemy_info_list = []
     for enemy in enemy_list:
+        # 获取怪物战斗伤害和基本信息
         enemy_info = get_damage_info(enemy)
+        # 获取攻击临界点（此处返回数组长度最大为3）
+        critical_info = get_criticals(enemy, 3)
+        if len(critical_info) > 0:
+            enemy_info["next_critical"] = critical_info[0][0]
+            enemy_info["next_critical_decrease"] = critical_info[0][1]
+        else:
+            enemy_info["next_critical"] = 0
+            enemy_info["next_critical_decrease"] = 0
+        # 获取防御临界点
+        enemy_info["next_def_critical"] = next_def_critical(enemy)
         enemy_info_list.append(enemy_info)
     return enemy_info_list
 
@@ -259,55 +313,7 @@ def wait_start_menu():
                 elif event.key == pygame.K_RETURN and index == 1: # K_RETURN就是ENTER键
                     waiting = False
     print("GAME START!")
-    
 
-# draw_enemy_book 绘制怪物手册
-def draw_enemy_book(current_index=0, map_index=None, RootScreen=None):
-    if map_index is None:
-        map_index = PlayerCon.floor
-    if RootScreen is None:
-        RootScreen = global_var.get_value("RootScreen")
-    # UI背景和左侧状态栏
-    RootScreen.fill(SKYBLUE)
-    draw_status_bar(RootScreen)
-    # 获得当前地图中全部的怪物的信息
-    enemy_info_list = get_current_enemy(MAP_DATABASE[map_index])
-    # 如果当前楼层没有怪物
-    if len(enemy_info_list) == 0:
-        RootScreen.draw_text("本层无怪物", 72, BLACK, (17 * BLOCK_UNIT / 2) - (72 * 1.5), (13 * BLOCK_UNIT / 2) - 36, "px")
-        global_var.set_value("index", current_index)
-        pygame.display.update()
-        return
-    current_index = max(0, current_index)
-    current_index = min(current_index, len(enemy_info_list) - 1)
-    global_var.set_value("index", current_index)
-    # 计算分页并从enemy_info_list中提取需要展示的数据
-    item_per_page = 6
-    total_page = math.ceil(len(enemy_info_list) / item_per_page)
-    current_page = math.ceil((current_index + 1) / item_per_page)
-    slice_start = (current_page - 1) * item_per_page
-    slice_end = min(slice_start + 6, len(enemy_info_list))
-    enemy_info_list = enemy_info_list[slice_start:slice_end]
-    # 绘制怪物手册条目
-    i = 0
-    for enemy in enemy_info_list:
-        RootScreen.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-        RootScreen.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-        RootScreen.draw_text("攻击 " + str(enemy["mon_atk"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-        RootScreen.draw_text("防御 " + str(enemy["mon_def"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-        RootScreen.draw_text("金币 " + str(enemy["mon_gold"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-        RootScreen.draw_text("经验 " + str(enemy["mon_exp"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-        RootScreen.draw_text("伤害 " + str(enemy["damage"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-        RootScreen.draw_text("临界 " + "None", 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
-        RootScreen.draw_text("减伤 " + "None", 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
-        RootScreen.draw_text("1防 " + "None", 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
-        i += 1
-    # 根据当前current_index绘制高亮框
-    i = current_index % item_per_page
-    RootScreen.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
-    # pygame.display.update()
-    # print(f"BOOK SHOW! Index = {current_index}")
-    
 # wait_enemy_book 在怪物手册页面等待并执行用户操作
 def wait_enemy_book():
     index = global_var.get_value("index")

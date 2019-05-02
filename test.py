@@ -14,8 +14,7 @@ from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import global_var
-from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu, draw_enemy_book, \
-    wait_enemy_book
+from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu
 
 RootScreen = GroundSurface(mode="copy", surface=screen)
 global StatusBar

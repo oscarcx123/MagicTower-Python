@@ -7,8 +7,6 @@ from sysconf import *
 from lib.utools import *
 from lib import global_var
 
-import cocos
-
 """
     ground 概念说明：
     1. 画布：属于surface功能，相当于一个画板
@@ -89,8 +87,8 @@ class GroundSurface:
                        "bottom": 0,
                        "mid": 0}
         self.priority = 0
-        if 'priority' in kwargs:
-            self.priority = kwargs['priority']
+        if "priority" in kwargs:
+            self.priority = kwargs["priority"]
 
     # 增加子画布 这类画布可以是别的独立画布 也可以给出参数创建
     def add_child(self, *args):
@@ -255,7 +253,8 @@ class GroundSurface:
                                                           (start_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT),
                                                           (start_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT),
                                                           (end_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT)], width)
-
+    
+    # TODO: draw_icon （准备提供一个可以调用Sprite的接口）
     def draw_icon(self, map_element, rect, px=None, py=None):
         # sprite的显示需要接通group
         name = str(map_element)
