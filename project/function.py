@@ -240,7 +240,7 @@ def draw_start_menu(index=1):
         RootScreen.draw_text("->", 36, WHITE, 6, 7)
     pygame.display.flip()
     
-
+# !这个不要了：
 # wait_start_menu 在开始菜单页面等待并执行用户操作
 def wait_start_menu():
     index = global_var.get_value("index")
@@ -262,9 +262,11 @@ def wait_start_menu():
     
 
 # draw_enemy_book 绘制怪物手册
-def draw_enemy_book(current_index=0, map_index=None):
-    if map_index == None:
+def draw_enemy_book(current_index=0, map_index=None, RootScreen=None):
+    if map_index is None:
         map_index = PlayerCon.floor
+    if RootScreen is None:
+        RootScreen = global_var.get_value("RootScreen")
     # UI背景和左侧状态栏
     RootScreen.fill(SKYBLUE)
     draw_status_bar(RootScreen)
@@ -302,9 +304,9 @@ def draw_enemy_book(current_index=0, map_index=None):
         i += 1
     # 根据当前current_index绘制高亮框
     i = current_index % item_per_page
-    RootScreen.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED, "px")
-    pygame.display.update()
-    print(f"BOOK SHOW! Index = {current_index}")
+    RootScreen.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+    # pygame.display.update()
+    # print(f"BOOK SHOW! Index = {current_index}")
     
 # wait_enemy_book 在怪物手册页面等待并执行用户操作
 def wait_enemy_book():

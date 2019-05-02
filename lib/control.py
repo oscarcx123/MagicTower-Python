@@ -4,7 +4,7 @@ from .sprite import EventSprite
 from sysconf import *
 from project.function import *
 
-
+# 玩家控制逻辑：
 class Player(EventSprite):
     def __init__(self):
         from os import path
@@ -16,6 +16,7 @@ class Player(EventSprite):
         self.speedy = 0
         self.pos = [X_COORDINATE, Y_COORDINATE]
         self.floor = PLAYER_FLOOR
+        self.lock = False
         map_pos = CurrentMap.trans_locate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
         self.rect.bottom = map_pos[1]
@@ -68,7 +69,7 @@ class Player(EventSprite):
                    pygame.K_RIGHT: [1, 0],
                    pygame.K_UP: [0, -1],
                    pygame.K_DOWN: [0, 1]}
-        if not self.moving:
+        if not self.moving and not self.lock:
             for k in key_map:
                 op = key_map[k]
                 if keystate[k]:
@@ -88,3 +89,6 @@ class Player(EventSprite):
     def change_hero_loc(self, x, y):
         self.move_directly(CurrentMap.trans_locate(x, y, "down"))
         self.pos = [x, y]
+
+
+#

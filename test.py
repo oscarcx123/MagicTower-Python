@@ -14,18 +14,26 @@ from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import global_var
-from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu, draw_enemy_book, wait_enemy_book
+from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu, draw_enemy_book, \
+    wait_enemy_book
 
-RootScreen = GroundSurface(mode="copy",surface=screen)
+RootScreen = GroundSurface(mode="copy", surface=screen)
 global StatusBar
 running = True
 start_menu = True
+from lib import ui
+from lib import actions
 
-def init(): 
+action_control = actions.ActionControl()
+
+
+def init():
     # 初始化全局变量
     global_var._init()
-    global_var.set_value("font_name",FONT_NAME)
-    global_var.set_value("RootScreen",RootScreen)
+    global_var.set_value("font_name", FONT_NAME)
+    global_var.set_value("RootScreen", RootScreen)
+    global_var.set_value("action_control", action_control)
+
     # 延迟map初始化，避免文件的循环引用
     CurrentMap.lib_map_init()
     # 设置PlayerCon为全局变量（必须要在CurrentMap.set_map之前完成）
@@ -35,15 +43,34 @@ def init():
     CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR])
     CurrentMap.add_sprite(PlayerCon)
     # 状态栏
-    StatusBar = RootScreen.add_child("left", BLOCK_UNIT*4)
-    global_var.set_value("StatusBar",StatusBar)
+    StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
+    global_var.set_value("StatusBar", StatusBar)
     RootScreen.add_child(CurrentMap)
     # 绘制状态栏
     draw_status_bar()
+    # 初始化UI图层
+    # --- UI1 - 手册菜单
+    MENU = ui.Menu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    MENU.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(MENU)
+    global_var.set_value("MENU", MENU)
+
+
+def init_actions():
+    # QUIT:
+    def quit(e):
+        global running
+        running = False
+        return True
+    action_control.register_action('QUIT', pygame.QUIT, quit)
+    action_control.register_action('MENU', pygame.KEYUP, global_var.get_value('MENU').action)
+
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:
     import threading
+
+
     def console():
         while running:
             r = input()
@@ -54,10 +81,13 @@ if DEBUG:
                     exec(r)
                 except Exception as e:
                     print("error:", str(e))
+
+
     t = threading.Thread(target=console)
     t.start()
 
 init()
+init_actions()
 clock = pygame.time.Clock()
 
 # 主程序
@@ -67,19 +97,12 @@ while running:
         draw_start_menu()
         wait_start_menu()
         start_menu = False
-    
+
     pygame.display.update()
     # clock.tick(60)
 
     # 背景
     # RootScreen.fill_surface(load_image("img/ground.png"), mode="repeat")
     RootScreen.fill(GREEN)
-    RootScreen.flush() # 显示刷新
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_x:
-                draw_enemy_book()
-                wait_enemy_book()
+    RootScreen.flush(screen)  # 显示刷新到屏幕
+    action_control.action_render()  # 检查动作消息

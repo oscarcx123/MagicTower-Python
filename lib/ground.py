@@ -7,6 +7,8 @@ from sysconf import *
 from lib.utools import *
 from lib import global_var
 
+import cocos
+
 """
     ground 概念说明：
     1. 画布：属于surface功能，相当于一个画板
@@ -28,26 +30,29 @@ from sprite import EventSprite
 
 from pygame import Rect
 
-
 #  基本绘制区域
 #  x, y（画布左上角位置）, w, h（画布宽高）, scale（放大率）
 #  如果需要逻辑坐标 继承该类 实现trans_locate函数（逻辑转物理）
 #  mode（模式） = auto, copy, custom
 """
 *auto 自动生成屏幕画布
-*copy 传入Surface
+*copy 传入Surface或者 GroundSurface 复制其rect
 *custom 传入w,h 或 x,y,w,h 或 x,y,w,h,scale
 """
+
+
 class GroundSurface:
     def __init__(self, **kwargs):
         scale = 1.0
         if "mode" in kwargs:
             mode = kwargs["mode"]
             if mode == "auto":
-                surface = pygame.display.set_mode((WIDTH, HEIGHT))
+                surface = Surface((WIDTH, HEIGHT))  # pygame.display.set_mode((WIDTH, HEIGHT))
                 self.rect = surface.get_rect()
             elif mode == "copy":
                 surface = kwargs["surface"]
+                if type(surface) is GroundSurface:
+                    surface = surface.surface
                 self.rect = surface.get_rect()
             elif mode == "custom":
                 if "x" not in kwargs:
@@ -61,15 +66,15 @@ class GroundSurface:
                 if "scale" in kwargs:
                     scale = kwargs["scale"]
                 self.rect = rect
-            else:
-                surface = Surface()
+            else: # default：
+                surface = Surface((WIDTH, HEIGHT))
                 print("GroundSurface错误，提供的mode不存在")
                 self.rect = surface.get_rect()
         else:
-            surface = Surface()
+            surface = Surface((WIDTH,HEIGHT))
             print("GroundSurface错误，未提供mode参数")
             self.rect = surface.get_rect()
-            
+
         self.w = self.rect.w
         self.h = self.rect.h
         self.surface = surface
@@ -83,6 +88,9 @@ class GroundSurface:
                        "right": 0,
                        "bottom": 0,
                        "mid": 0}
+        self.priority = 0
+        if 'priority' in kwargs:
+            self.priority = kwargs['priority']
 
     # 增加子画布 这类画布可以是别的独立画布 也可以给出参数创建
     def add_child(self, *args):
@@ -106,6 +114,7 @@ class GroundSurface:
         ground_surface.parent = self
         ground_surface.scale *= self.scale
         self.children.append(ground_surface)
+        self.children.sort(key=lambda it: it.priority, reverse=False)
 
         return ground_surface
 
@@ -132,7 +141,7 @@ class GroundSurface:
         # print(rect)
         # print(rect.w)
         # print(rect.h)
-        ground_surface = GroundSurface(mode="copy",surface=Surface([rect.w, rect.h]))
+        ground_surface = GroundSurface(mode="copy", surface=Surface([rect.w, rect.h]))
         ground_surface.rect.left = rect.left
         ground_surface.rect.top = rect.top
         self.curpos[type] += value
@@ -191,10 +200,13 @@ class GroundSurface:
     def flush(self, screen=None):
         self.group.update(pygame.time.get_ticks())
         self.group.draw(self.surface)
-        if screen is not None:
-            screen.blit(self.surface.convert_alpha(self.surface), self.rect)
+        self.children.sort(key=lambda it: it.priority)
+        # tempSurface = Surface()
         for c in self.children:
             c.flush(screen=self.surface)
+        if screen is not None:
+            screen.blit(self.surface.convert_alpha(self.surface), self.rect)
+
 
     # 填充纯色（debug使用）
     def fill(self, arg):
@@ -215,7 +227,7 @@ class GroundSurface:
             text_rect.left = x * BLOCK_UNIT
             text_rect.top = y * BLOCK_UNIT
         self.surface.blit(text_surface, text_rect)
-        
+
     # draw_lines 在画布上绘制（一条或多条）线段
     # 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
     # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
@@ -229,23 +241,26 @@ class GroundSurface:
                 block_points.append([item[0] * BLOCK_UNIT, item[1] * BLOCK_UNIT])
             pygame.draw.lines(self.surface, color, False, points, width)
 
-    
     # draw_rect 在画布上绘制矩形
     # start_pos（矩形其中一个角的坐标，可为任意角），格式[(x, y)]），end_pos（start_pos所选角的对角）
     # width（线条宽度），color（线条颜色）
     # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
     def draw_rect(self, start_pos, end_pos, width, color, mode=None):
         if mode == "px":
-            pygame.draw.lines(self.surface, color, True, [(end_pos[0],start_pos[1]),(start_pos[0],start_pos[1]),(start_pos[0],end_pos[1]),(end_pos[0],end_pos[1])], width)
+            pygame.draw.lines(self.surface, color, True,
+                              [(end_pos[0], start_pos[1]), (start_pos[0], start_pos[1]), (start_pos[0], end_pos[1]),
+                               (end_pos[0], end_pos[1])], width)
         else:
-            pygame.draw.lines(self.surface, color, True, [(end_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,start_pos[1] * BLOCK_UNIT),(start_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT),(end_pos[0] * BLOCK_UNIT,end_pos[1] * BLOCK_UNIT)], width)
-    
-    
+            pygame.draw.lines(self.surface, color, True, [(end_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT),
+                                                          (start_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT),
+                                                          (start_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT),
+                                                          (end_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT)], width)
+
     def draw_icon(self, map_element, rect, px=None, py=None):
         # sprite的显示需要接通group
         name = str(map_element)
         ret = get_resource(name)
-        if px==None and py==None:
+        if px == None and py == None:
             px, py = self.trans_locate(temp_x, temp_y, "down")
         rect.centerx = px
         rect.bottom = py
@@ -257,4 +272,3 @@ class GroundSurface:
             self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
         elif ret is not None:
             self.fill_surface(ret, fill_rect=rect)
-        
