@@ -1,7 +1,7 @@
 from lib.utools import *
 
 
-ITEMS_START_NUM = 21  # ??我不知道
+ITEMS_START_NUM = 21
 ITEMS_IMG = crop_images(load_image("img/items.png"), ITEMS_START_NUM, create_rect(BLOCK_UNIT, BLOCK_UNIT))
 
 # TODO： 写各个物品的类别或效果

@@ -14,7 +14,7 @@ from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import global_var
-from project.function import function_init, draw_status_bar, draw_start_menu, wait_start_menu
+from project.function import function_init, draw_status_bar
 
 RootScreen = GroundSurface(mode="copy", surface=screen)
 global StatusBar
@@ -48,11 +48,21 @@ def init():
     # 绘制状态栏
     draw_status_bar()
     # 初始化UI图层
-    # --- UI1 - 手册菜单
-    MENU = ui.Menu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    MENU.priority = 5  # 显示的优先级 高于地图 所以在地图上
-    RootScreen.add_child(MENU)
-    global_var.set_value("MENU", MENU)
+    # --- UI1 - 怪物手册
+    BOOK = ui.Book(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    BOOK.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(BOOK)
+    global_var.set_value("BOOK", BOOK)
+    # --- UI2 - 开始界面
+    STARTMENU = ui.StartMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    STARTMENU.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(STARTMENU)
+    global_var.set_value("STARTMENU", STARTMENU)
+    # --- UI3 - 背包界面
+    BACKPACK = ui.Backpack(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    BACKPACK.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(BACKPACK)
+    global_var.set_value("BACKPACK", BACKPACK)
 
 
 def init_actions():
@@ -62,7 +72,9 @@ def init_actions():
         running = False
         return True
     action_control.register_action('QUIT', pygame.QUIT, quit)
-    action_control.register_action('MENU', pygame.KEYUP, global_var.get_value('MENU').action)
+    action_control.register_action('BOOK', pygame.KEYUP, global_var.get_value('BOOK').action)
+    action_control.register_action('STARTMENU', pygame.KEYUP, global_var.get_value('STARTMENU').action)
+    action_control.register_action('BACKPACK', pygame.KEYUP, global_var.get_value('BACKPACK').action)
 
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
@@ -93,8 +105,8 @@ clock = pygame.time.Clock()
 while running:
     # 展示开始菜单
     if start_menu == True:
-        draw_start_menu()
-        wait_start_menu()
+        start = global_var.get_value("STARTMENU")
+        start.open()
         start_menu = False
 
     pygame.display.update()

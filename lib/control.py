@@ -28,11 +28,6 @@ class Player(EventSprite):
         self.mdefend = PLAYER_MDEF
         self.gold = PLAYER_GOLD
         self.exp = PLAYER_EXP
-        self.yellowkey = PLAYER_YELLOWKEY
-        self.bluekey = PLAYER_BLUEKEY
-        self.redkey = PLAYER_REDKEY
-        self.greenkey = PLAYER_GREENKEY
-        self.steelkey = PLAYER_STEELKEY
         self.floor = PLAYER_FLOOR
         self.item = PLAYER_ITEM
 

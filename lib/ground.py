@@ -237,22 +237,18 @@ class GroundSurface:
             block_points = []
             for item in points:
                 block_points.append([item[0] * BLOCK_UNIT, item[1] * BLOCK_UNIT])
-            pygame.draw.lines(self.surface, color, False, points, width)
+            pygame.draw.lines(self.surface, color, False, block_points, width)
 
     # draw_rect 在画布上绘制矩形
-    # start_pos（矩形其中一个角的坐标，可为任意角），格式[(x, y)]），end_pos（start_pos所选角的对角）
+    # start_pos（矩形左上角的坐标），格式[(x, y)]），end_pos（矩形右下角的坐标）
     # width（线条宽度），color（线条颜色）
     # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
     def draw_rect(self, start_pos, end_pos, width, color, mode=None):
         if mode == "px":
-            pygame.draw.lines(self.surface, color, True,
-                              [(end_pos[0], start_pos[1]), (start_pos[0], start_pos[1]), (start_pos[0], end_pos[1]),
-                               (end_pos[0], end_pos[1])], width)
+            Rect = (start_pos[0], start_pos[1], end_pos[0] - start_pos[0], end_pos[1] - start_pos[1])
         else:
-            pygame.draw.lines(self.surface, color, True, [(end_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT),
-                                                          (start_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT),
-                                                          (start_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT),
-                                                          (end_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT)], width)
+            Rect = (start_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT, end_pos[0] * BLOCK_UNIT - start_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT - start_pos[1] * BLOCK_UNIT)
+        pygame.draw.rect(self.surface, color, Rect, width)
     
     # TODO: draw_icon （准备提供一个可以调用Sprite的接口）
     def draw_icon(self, map_element, rect, px=None, py=None):

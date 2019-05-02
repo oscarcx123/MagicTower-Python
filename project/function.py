@@ -170,7 +170,7 @@ def battle(map_object, x, y):
             flush_status()
             return True
 
-# pickup_item 处理物品（直接使用/进入道具栏）
+# pickup_item 玩家捡起物品（直接使用/进入道具栏）
 def pickup_item(map_object, x, y):
     item_name = BlockData[str(map_object)]["id"]
     item_type = ITEMS_DATA["items"][item_name]["cls"]
@@ -178,65 +178,101 @@ def pickup_item(map_object, x, y):
     if item_type == "items":
         exec(ITEMS_DATA["itemEffect"][item_name])
         CurrentMap.remove_block(x, y)
-        CurrentMap.draw_map()
-    # item_type为constants/tools，进入道具栏
-    elif item_type == "constants" or item_type == "tools":
-        try:
+        flush_status()
+    # item_type为constants/tools/keys，进入道具栏
+    elif item_type == "constants" or item_type == "tools" or item_type == "keys":
+        if map_object in PlayerCon.item:
             PlayerCon.item[map_object] += 1
-        except KeyError:
+        else:
             PlayerCon.item[map_object] = 1
-        finally:
-            CurrentMap.remove_block(x, y)
-            CurrentMap.draw_map()
-    # item_type为keys，直接在玩家属性添加（钥匙为玩家属性一部分）
-    elif item_type == "keys":
-        if map_object == 21:
-            PlayerCon.yellowkey += 1
-        elif map_object == 22:
-            PlayerCon.bluekey += 1
-        elif map_object == 23:
-            PlayerCon.redkey += 1
         CurrentMap.remove_block(x, y)
-        CurrentMap.draw_map()
+        flush_status()
     else:
         pass
     # 刷新状态栏显示
     draw_status_bar()
 
-        
-# open_door 处理开门事件（map_object = 85 -> 花门）
-def open_door(map_object, x, y):
-    if map_object == 81 and PlayerCon.yellowkey > 0:
-        PlayerCon.yellowkey -= 1
-        CurrentMap.remove_block(x, y)
-        flush_status()
-        return True
-    elif map_object == 82 and PlayerCon.bluekey > 0:
-        PlayerCon.bluekey -= 1
-        CurrentMap.remove_block(x, y)
-        flush_status()
-        return True
-    elif map_object == 83 and PlayerCon.redkey > 0:
-        PlayerCon.redkey -= 1
-        CurrentMap.remove_block(x, y)
-        flush_status()
-        return True
-    elif map_object == 84 and PlayerCon.greenkey > 0:
-        PlayerCon.greenkey -= 1
-        CurrentMap.remove_block(x, y)
-        flush_status()
-        return True
-    elif map_object == 86:
-        if STEEL_DOOR_NEEDS_KEY:
-            if PlayerCon.steelkey > 0:
-                PlayerCon.steelkey -= 1
-                CurrentMap.remove_block(x, y)
-                flush_status()
-                return True
+# remove_item 从背包移除物品
+def remove_item(map_object, amount):
+    # 判断玩家是否拥有该物品
+    if map_object in PlayerCon.item:
+        # 判断玩家是否拥有足够数量的物品被移除
+        if amount < PlayerCon.item[map_object]:
+            # 玩家拥有足量物品，那么移除指定数量
+            PlayerCon.item[map_object] -= amount
         else:
-            CurrentMap.remove_block(x, y)
-            flush_status()
-            return True
+            # 玩家没有足量物品，直接对该物品进行清零
+            PlayerCon.item.pop(map_object)
+
+# add_item 从背包移除物品
+def add_item(map_object, amount):
+    if map_object in PlayerCon.item:
+        PlayerCon.item[map_object] += amount
+    else:
+        PlayerCon.item[map_object] = amount
+
+# count_item 获取背包中指定物品的数量
+def count_item(map_object):
+    if map_object in PlayerCon.item:
+        return PlayerCon.item[map_object]
+    else:
+        return 0
+
+# sort_item 将玩家当前持有物品分类，传入类别字典，返回字典
+# 数据结构：sort_info[道具类别][道具数字id][道具各种详细信息]
+def sort_item(category):
+    sort_info = category
+    for key in sort_info:
+        sort_info[key] = {}
+    for item in PlayerCon.item:
+        item_id = BlockData[str(item)]["id"]
+        item_cls = ITEMS_DATA["items"][item_id]["cls"]
+        if item_cls in category:
+            item_name = ITEMS_DATA["items"][item_id]["name"]
+            if "text" in ITEMS_DATA["items"][item_id]:
+                item_text = ITEMS_DATA["items"][item_id]["text"]
+            else:
+                item_text = "本物品暂时没有描述"
+            item_amount = count_item(item)
+            sort_info[item_cls][item] = {}
+            sort_info[item_cls][item]["item_id"] = item_id
+            sort_info[item_cls][item]["item_name"] = item_name
+            sort_info[item_cls][item]["item_text"] = item_text
+            sort_info[item_cls][item]["item_amount"] = item_amount
+    return sort_info
+            
+# open_door 处理开门事件
+def open_door(map_object, x, y, no_key=False):
+    # 定义门与钥匙对应关系，默认花门（map_object=85）无法通过钥匙打开
+    door_to_key = {81: 21,
+                   82: 22,
+                   83: 23,
+                   84: 24,
+                   86: 25}
+    # 如果无需钥匙，直接开门
+    if no_key:
+        CurrentMap.remove_block(x, y)
+        flush_status()
+        return True
+    # 如果是铁门而且无需钥匙，直接开门
+    if map_object == 86 and STEEL_DOOR_NEEDS_KEY == False:
+        CurrentMap.remove_block(x, y)
+        flush_status()
+        return True
+    # 从door_to_key找出门对应的钥匙，找不到代表不能用钥匙开
+    if map_object in door_to_key:
+        key = door_to_key[map_object]
+    else:
+        return False
+    # 如果玩家持有钥匙，那么扣除钥匙开门
+    if key in PlayerCon.item:
+        if PlayerCon.item[key] > 1:
+            PlayerCon.item[key] -= 1
+        else:
+            PlayerCon.item.pop(key)
+        CurrentMap.remove_block(x, y)
+        flush_status()
+        return True
     return False
 
 # change_floor 处理切换楼层
@@ -268,76 +304,31 @@ def change_floor(block, x, y):
 def draw_status_bar(StatusBar=None):
     if StatusBar == None:
         StatusBar = global_var.get_value("StatusBar")
+    if 21 in PlayerCon.item:
+        yellowkey = PlayerCon.item[21]
+    else:
+        yellowkey = 0
+    if 22 in PlayerCon.item:
+        bluekey = PlayerCon.item[22]
+    else:
+        bluekey = 0
+    if 23 in PlayerCon.item:
+        redkey = PlayerCon.item[23]
+    else:
+        redkey = 0
     StatusBar.fill(SKYBLUE)
-    StatusBar.draw_text("FLOOR = " + str(PlayerCon.floor), 36, WHITE, 0, 0)
-    StatusBar.draw_text("HP = " + str(PlayerCon.hp), 36, WHITE, 0, 1)
-    StatusBar.draw_text("ATK = " + str(PlayerCon.attack), 36, WHITE, 0, 2)
-    StatusBar.draw_text("DEF = " + str(PlayerCon.defend), 36, WHITE, 0, 3)
-    StatusBar.draw_text("MDEF = " + str(PlayerCon.mdefend), 36, WHITE, 0, 4)
-    StatusBar.draw_text("GOLD = " + str(PlayerCon.gold), 36, WHITE, 0, 5)
-    StatusBar.draw_text("EXP = " + str(PlayerCon.exp), 36, WHITE, 0, 6)
-    StatusBar.draw_text("Y_KEY = " + str(PlayerCon.yellowkey), 36, WHITE, 0, 7)
-    StatusBar.draw_text("B_KEY = " + str(PlayerCon.bluekey), 36, WHITE, 0, 8)
-    StatusBar.draw_text("R_KEY = " + str(PlayerCon.redkey), 36, WHITE, 0, 9)
+    StatusBar.draw_text("FLOOR = " + str(PlayerCon.floor), 36, BLACK, 0, 0)
+    StatusBar.draw_text("HP = " + str(PlayerCon.hp), 36, BLACK, 0, 1)
+    StatusBar.draw_text("ATK = " + str(PlayerCon.attack), 36, BLACK, 0, 2)
+    StatusBar.draw_text("DEF = " + str(PlayerCon.defend), 36, BLACK, 0, 3)
+    StatusBar.draw_text("MDEF = " + str(PlayerCon.mdefend), 36, BLACK, 0, 4)
+    StatusBar.draw_text("GOLD = " + str(PlayerCon.gold), 36, BLACK, 0, 5)
+    StatusBar.draw_text("EXP = " + str(PlayerCon.exp), 36, BLACK, 0, 6)
+    StatusBar.draw_text("Y_KEY = " + str(yellowkey), 36, BLACK, 0, 7)
+    StatusBar.draw_text("B_KEY = " + str(bluekey), 36, BLACK, 0, 8)
+    StatusBar.draw_text("R_KEY = " + str(redkey), 36, BLACK, 0, 9)
 
-# draw_start_menu 绘制开始菜单
-# TODO: 文字居中自适应
-def draw_start_menu(index=1):
-    global_var.set_value("index",index)
-    RootScreen.fill(SKYBLUE)
-    RootScreen.draw_text(TOWER_NAME, 64, WHITE, 6, 0)
-    RootScreen.draw_text("开始游戏", 36, WHITE, 7, 6)
-    RootScreen.draw_text("读取存档", 36, WHITE, 7, 7)
-    if index == 1:
-        RootScreen.draw_text("->", 36, WHITE, 6, 6)
-    if index == 2:
-        RootScreen.draw_text("->", 36, WHITE, 6, 7)
-    pygame.display.flip()
-    
-# !这个不要了：
-# wait_start_menu 在开始菜单页面等待并执行用户操作
-def wait_start_menu():
-    index = global_var.get_value("index")
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_UP and index > 1:
-                    draw_start_menu(index-1)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_DOWN and index < 2:
-                    draw_start_menu(index+1)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_RETURN and index == 1: # K_RETURN就是ENTER键
-                    waiting = False
-    print("GAME START!")
 
-# wait_enemy_book 在怪物手册页面等待并执行用户操作
-def wait_enemy_book():
-    index = global_var.get_value("index")
-    waiting = True
-    while waiting:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_UP:
-                    draw_enemy_book(index-1)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_DOWN:
-                    draw_enemy_book(index+1)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_LEFT:
-                    draw_enemy_book(index-6)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_RIGHT:
-                    draw_enemy_book(index+6)
-                    index = global_var.get_value("index")
-                elif event.key == pygame.K_ESCAPE:
-                    waiting = False
-    print("BOOK CLOSED!")
 '''
 # use_item can use a constant / tool item
 def use_item(item_number):

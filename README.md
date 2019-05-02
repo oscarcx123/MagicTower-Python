@@ -4,13 +4,6 @@
 
 **目前的情况来看，完全不会编程的用户，使用起来可能会有一定难度！**
 
-### 其它语言编写的开源魔塔
-#### HTML5
-* [HTML5样板](https://github.com/ckcz123/mota-js/)
-* [HTML5魔塔游戏列表](https://h5mota.com/)
-#### C++
-* [C++魔塔](https://github.com/ckcz123/mota)
-
 ## 更新说明
 
 ### 2019.0x.xx V0.6.0 （预先记录）
@@ -19,11 +12,13 @@
 * [x] 简陋的开始界面（待完善）
 * [x] 简陋的怪物手册（缺怪物动图，临界计算待优化）
 * [x] 重构ui.py，增加action.py，引入新的注册机制
+* [x] 简陋的背包UI（待完善）
 
 当前待处理工作：
-* 道具 - 背包UI，具体道具效果代码核查
+* 具体道具效果代码核查
 * 音效
 * 存读档 - 界面UI，具体存读档实现
+* UI互相冲突问题
 
 
 ### 2019.04.26 V0.5.1
@@ -98,10 +93,3 @@
 # MagicTower-Python
 ## Intro
 Magic Tower written in Python
-
-### Other Open Source Magic Towers
-#### HTML5
-* [HTML5 Magic Tower Template](https://github.com/ckcz123/mota-js/)
-* [HTML5 Magic Tower Games](https://h5mota.com/)
-#### C++
-* [C++ Magic Tower](https://github.com/ckcz123/mota)

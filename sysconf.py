@@ -5,7 +5,7 @@ from os import path
 # 全塔属性设置
 TOWER_NAME = "Python魔塔"
 FONT_NAME = "resource/simhei.ttf"
-DEBUG = False
+DEBUG = True
 # --- 勇士数据设置 START ---
 # 玩家初始坐标以及楼层
 # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
@@ -19,12 +19,7 @@ PLAYER_DEF = 0
 PLAYER_MDEF = 0
 PLAYER_GOLD = 0
 PLAYER_EXP = 0
-PLAYER_YELLOWKEY = 0
-PLAYER_BLUEKEY = 0
-PLAYER_REDKEY = 0
-PLAYER_GREENKEY = 0
-PLAYER_STEELKEY = 0
-PLAYER_ITEM = {}
+PLAYER_ITEM = {21:5,22:4,23:7,24:10}
 # --- 勇士数据设置 END ---
 
 # --- 物品/道具数据设置 START ---
