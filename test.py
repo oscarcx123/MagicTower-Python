@@ -55,7 +55,7 @@ def init():
     global_var.set_value("BOOK", BOOK)
     # --- UI2 - 开始界面
     STARTMENU = ui.StartMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    STARTMENU.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    STARTMENU.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(STARTMENU)
     global_var.set_value("STARTMENU", STARTMENU)
     # --- UI3 - 背包界面

@@ -48,11 +48,13 @@ class Menu(UIComponent):
             if idx == 'open':
                 if self.active:
                     self.close()
-                else:
+                elif not self.PlayerCon.lock:
                     self.open()
                 idx = 0
             elif idx == 'close':
                 self.close()
+                idx = 0
+            else:
                 idx = 0
             if self.active:
                 self.index += idx
@@ -126,7 +128,13 @@ class StartMenu(Menu):
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
                         pygame.K_RETURN: 'close'}
-    
+
+    def action(self, event):
+        if self.active:
+            return Menu.action(self, event)
+        else:
+            return False
+
     def draw(self, current_index=0):
         # 设置index全局变量，是因为以后复写action函数的时候可以判断选中的项目
         global_var.set_value("index", current_index)
@@ -147,11 +155,12 @@ class StartMenu(Menu):
 class Backpack(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
-        # TODO: 增加“enter”
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
                         pygame.K_t: 'open',
-                        pygame.K_ESCAPE: 'close'}
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter',
+                        }
                         
         self.key_map_detail = {pygame.K_LEFT: -8,
                                pygame.K_RIGHT: +8,
@@ -233,18 +242,18 @@ class Backpack(Menu):
                 if idx == 'open':
                     if self.active:
                         self.close()
-                    else:
+                    elif not self.PlayerCon.lock:
                         self.open()
                     idx = 0
-                elif idx == "enter":
-                    self.mode = "detail"
-                    idx = 0
-                elif idx == 'close':
-                    self.close()
-                    idx = 0
+                if self.active:
+                    if idx == "enter":
+                        self.mode = "detail"
+                        idx = 0
+                    elif idx == 'close':
+                        self.close()
+                        idx = 0
                 if self.active:
                     self.index += idx
-                if self.active:
                     return True
             return False
         if self.mode == "detail":
@@ -253,12 +262,11 @@ class Backpack(Menu):
             if key in key_map:
                 idx = key_map[key]
                 if idx == 'close':
-                    mode = "simple"
+                    self.mode = "simple"
                     self.detail_index = 0
                     idx = 0
                 if self.active:
                     self.detail_index += idx
-                if self.active:
                     return True
             return False
     
