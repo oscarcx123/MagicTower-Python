@@ -232,13 +232,19 @@ class MainWindow(tk.Frame):
         l.event_generate("<<ListboxSelect>>")
         print(l.get(l.curselection()))
         text_field = tk.Text(frame_right, font=self.font)
+
         text_field.insert(tk.END, self.floor_data[floor_index][current_index])
         text_field.pack(side="top", fill=tk.BOTH, expand=1)
-        l.bind('<Button-1>', self.flush_floor_data)
+        l.bind('<ButtonRelease-1>', self.flush_floor_data)
+        self.floor_index = floor_index
+        self.text_field = text_field
+        self.curl = l
         
     # 刷新右侧楼层信息
     def flush_floor_data(self, *args):
-        print("TODO")
+        index = self.curl.get(self.curl.curselection())
+        self.text_field.delete("1.0",tk.END)
+        self.text_field.insert(tk.END, self.floor_data[self.floor_index][index])
     
     # 写入floor_data.json文件
     def save_to_file(self, data):
