@@ -3,16 +3,24 @@ import tkinter.messagebox
 from functools import partial
 import os
 import json
+from editor_function import *
+import global_var
+
+'''
+全局变量列表：
+floor_data = JSON格式的楼层数据
+floor_data_path = 楼层数据文件路径
+floor_listbox = 编辑器主界面左下的楼层列表
+filemenu = 菜单栏的“文件”菜单
+status_text = 状态栏
+'''
 
 class MainWindow(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
         self.font = ("Arial",12)
-        # 地图数据初始化
         self.floor_data = None
-        # “正在编辑”状态（是否开启楼层数据编辑窗口，用于防止窗口多开）
-        self.editing_floor_data = False
-        
+        global_var.set_value("floor_data", self.floor_data)
         # 菜单栏
         # menubar
         self.menubar = tk.Menu(self)
@@ -22,9 +30,11 @@ class MainWindow(tk.Frame):
         self.menubar.add_cascade(label="文件", menu=self.filemenu)
         self.filemenu.add_command(label="新建", command=self.new_ui)
         self.filemenu.add_command(label="加载", command=self.load_ui)
-        self.filemenu.add_command(label="保存", command=partial(self.save_to_file, self.floor_data))
+        self.filemenu.add_command(label="保存", command=save_to_file)
+        self.filemenu.add_command(label="测试", command=self.test_function)
         self.filemenu.add_separator()
         self.filemenu.add_command(label="退出", command=self.quit)
+        global_var.set_value("filemenu", self.filemenu)
         
         # menubar > filemenu > submenu
         # self.submenu = tk.Menu(self.filemenu)
@@ -42,6 +52,7 @@ class MainWindow(tk.Frame):
         
         # 底部状态栏
         self.status_text = tk.StringVar()
+        global_var.set_value("status_text", self.status_text)
         self.status_label = tk.Label(self, textvariable=self.status_text, bg="white", font=("Arial", 12), anchor="w")
         self.status_label.pack(side="bottom", fill=tk.X)
         
@@ -61,103 +72,101 @@ class MainWindow(tk.Frame):
         self.floor_list.set([])
         self.floor_listbox = tk.Listbox(self.frame_left, listvariable=self.floor_list, font=self.font)
         self.floor_listbox.pack(side="top", fill=tk.BOTH, expand=1)
+        self.floor_listbox.bind('<Double-Button-1>', self.edit_floor_data_ui)
+        global_var.set_value("floor_listbox", self.floor_listbox)
         
         # 右侧地图显示
         self.map_area = tk.Text(self.frame_right, font=self.font)
         self.map_area.insert(tk.END, "TODO: 这里用来显示地图")
         self.map_area.pack(side="top", fill=tk.BOTH, expand=1)
         
-        self.floor_listbox.bind('<Double-Button-1>', self.edit_floor_data_ui)
-        
         # 生成默认地图数据文件路径
         self.floor_data_path = os.path.abspath(os.path.join(os.getcwd(), "..", "project", "floor_data.json"))
+        global_var.set_value("floor_data_path", self.floor_data_path)
         
         # 默认禁用编辑，成功读取地图数据文件后会自动解禁
-        self.disable_edit()
+        disable_edit()
         
         # 自动尝试在启动时读取地图数据文件
-        self.read_file()
+        read_file()
         
-    # 创建空白窗口函数，并不实际使用，只是作为模板方便编写其它窗口
-    def create_window(self):
-        t = tk.Toplevel(self)
-        t.title(f"Window")
-        l = tk.Label(t, text=f"This is a new window")
-        l.pack(side="top", fill="both", expand=True, padx=100, pady=100)
-        
-    # Place Holder函数，相当于pass    
+    # 空函数，相当于pass    
     def do_job(self, *args):
         print(*args)
         print("Success!")
-        
-    # 启用编辑功能（加载地图文件成功）
-    def enable_edit(self):
-        self.filemenu.entryconfig("保存", state="normal")
     
-    # 禁用编辑功能（加载地图文件失败）
-    def disable_edit(self):
-        self.filemenu.entryconfig("保存", state="disabled")
-    
-    # UI - 文件 > 新建
-    def new_ui(self):
-        window = tk.Toplevel(self)
-        window.title("新建")
-        window.geometry("500x200")
-        
-        l = tk.Label(window, text="新建地图数据", bg="azure", font=self.font, width=15, height=2)
-        l.pack(side="top", fill=tk.X)
-        
-        l2 = tk.Label(window, text="楼层从", bg="azure", font=self.font, height=2)
-        l2.pack(side="left", expand=True)
-        
-        e1 = tk.Entry(window, font=self.font, width=10)
-        e1.pack(side="left", expand=True)
-        
-        l3 = tk.Label(window, text="到", bg="azure", font=self.font, height=2)
-        l3.pack(side="left", expand=True)
-        
-        e2 = tk.Entry(window, font=self.font, width=10)
-        e2.pack(side="left", expand=True)
-        
-        b = tk.Button(window, text="创建地图", command=partial(self.create_floor_data, e1, e2))
-        b.pack(side="left", expand=True)
-    
-    # UI - 文件 > 加载
-    def load_ui(self):
-        window = tk.Toplevel(self)
-        window.title("加载")
-        window.geometry("500x300")
-        
-        l = tk.Label(window, text="加载地图数据", bg="azure", font=self.font, width=15, height=2)
-        l.pack(side="top", fill=tk.X)
-        
-        l2 = tk.Label(window, text="地图数据文件路径", bg="azure", font=self.font, height=2)
-        l2.pack(side="left", expand=True)
-        
-        e1 = tk.Entry(window, font=self.font, width=30)
-        e1.insert(tk.END, f"{self.floor_data_path}")
-        e1.pack(side="left", expand=True)
-        
-        b = tk.Button(window, text="读取地图", command=partial(self.read_file, e1))
-        b.pack(side="left", expand=True)
-    
-    # UI - 帮助 > 关于    
+    # 助 > 关于    
     def about_ui(self):
-        window = tk.Toplevel(self)
-        window.title("关于")
-        window.geometry("500x300")
-        
-        l = tk.Label(window, text="Python魔塔地图数据编辑器", bg="azure", font=self.font, width=15, height=2)
-        l.pack(side="top", fill=tk.X)
-        
-        l2 = tk.Label(window, text="开发者：Azure", font=self.font, width=15, height=2)
-        l2.pack(side="top", fill=tk.X, expand=True)
+        window = About(self)
     
+    # 文件 > 新建
+    def new_ui(self):
+        window = CreateNewFloor(self)
+    
+    # 文件 > 加载
+    def load_ui(self):
+        window = LoadFloor(self)
+
+    # 编辑楼层信息    
+    def edit_floor_data_ui(self, *args):
+        window = FloorEditor(self)
+
+    # 测试用空窗口
+    def test_function(self):
+        window2 = BaseWindow(self)
+
+# 空白窗口基类
+class BaseWindow():
+    def __init__(self, window):
+        self.t = tk.Toplevel(window)
+        self.font = ("Arial",12)
+        self.drawUI()
+    
+    def drawUI(self):
+        self.t.title(f"Window")
+        self.l = tk.Label(self.t, text=f"This is a new window")
+        self.l.pack(side="top", fill="both", expand=True, padx=100, pady=100)
+       
+# 关于
+class About(BaseWindow):
+    def drawUI(self):
+        self.t.title("关于")
+        self.t.geometry("500x300")
+        
+        self.l = tk.Label(self.t, text="Python魔塔地图数据编辑器", bg="azure", font=self.font, width=15, height=2)
+        self.l.pack(side="top", fill=tk.X)
+        
+        self.l2 = tk.Label(self.t, text="开发者：Azure & dljgs1", font=self.font, width=15, height=2)
+        self.l2.pack(side="top", fill=tk.X, expand=True)
+
+# 新建（楼层数据）
+class CreateNewFloor(BaseWindow):
+    def drawUI(self):
+        self.t.title("新建")
+        self.t.geometry("500x200")
+        
+        self.l = tk.Label(self.t, text="新建楼层数据", bg="azure", font=self.font, width=15, height=2)
+        self.l.pack(side="top", fill=tk.X)
+        
+        self.l2 = tk.Label(self.t, text="楼层从", bg="azure", font=self.font, height=2)
+        self.l2.pack(side="left", expand=True)
+        
+        self.e1 = tk.Entry(self.t, font=self.font, width=10)
+        self.e1.pack(side="left", expand=True)
+        
+        self.l3 = tk.Label(self.t, text="到", bg="azure", font=self.font, height=2)
+        self.l3.pack(side="left", expand=True)
+        
+        self.e2 = tk.Entry(self.t, font=self.font, width=10)
+        self.e2.pack(side="left", expand=True)
+        
+        self.b = tk.Button(self.t, text="创建地图", command=partial(self.create_floor_data, self.e1, self.e2))
+        self.b.pack(side="left", expand=True)
+        
     # 新建地图数据并保存    
     def create_floor_data(self, e1, e2):
         min_floor = e1.get()
         max_floor = e2.get()
-        print(min_floor)
         try:
             min_floor = int(min_floor)
         except ValueError:
@@ -202,85 +211,84 @@ class MainWindow(tk.Frame):
             data[f"MT{floor_num}"]["events"] = None
             data[f"MT{floor_num}"]["bgm"] = None
             floor_num += 1
-        self.save_to_file(data)
-    
-    # UI - 编辑楼层信息    
-    def edit_floor_data_ui(self, *args):
-        self.editing_floor_data = True
-        window = tk.Toplevel(self)
-        window.title("编辑楼层信息")
-        window.geometry("500x300")
+        
+        save_to_file(data)
+
+# 读取（楼层数据）
+class LoadFloor(BaseWindow):
+    def drawUI(self):
+        self.t.title("加载")
+        self.t.geometry("500x300")
+        
+        self.l = tk.Label(self.t, text="加载地图数据", bg="azure", font=self.font, width=15, height=2)
+        self.l.pack(side="top", fill=tk.X)
+        
+        self.l2 = tk.Label(self.t, text="地图数据文件路径", bg="azure", font=self.font, height=2)
+        self.l2.pack(side="left", expand=True)
+        
+        self.e1 = tk.Entry(self.t, font=self.font, width=30)
+        self.floor_data_path = global_var.get_value("floor_data_path")
+        self.e1.insert(tk.END, f"{self.floor_data_path}")
+        self.e1.pack(side="left", expand=True)
+        
+        self.b = tk.Button(self.t, text="读取地图", command=partial(read_file, self.e1))
+        self.b.pack(side="left", expand=True)
+
+# 楼层数据编辑界面
+class FloorEditor(BaseWindow):
+    def drawUI(self):
+        self.t.title("编辑楼层信息")
+        self.t.geometry("500x300")
+        self.floor_listbox = global_var.get_value("floor_listbox")
+        self.floor_data = global_var.get_value("floor_data")
         
         # 获取当前选中的楼层
-        floor_index = self.floor_listbox.get(self.floor_listbox.curselection())
+        self.floor_index = self.floor_listbox.get(self.floor_listbox.curselection())
         
         # 显示界面分区
-        frame_left = tk.Frame(window)
-        frame_right = tk.Frame(window)
-        frame_left.pack(side="left", fill=tk.BOTH, expand=1)
-        frame_right.pack(side="right", fill=tk.BOTH, expand=1)
+        self.frame_left = tk.Frame(self.t)
+        self.frame_right = tk.Frame(self.t)
+        self.frame_left.pack(side="left", fill=tk.BOTH, expand=1)
+        self.frame_right.pack(side="right", fill=tk.BOTH, expand=1)
         
         # 楼层属性列表
-        l = tk.StringVar()
-        l.set([])
-        l = tk.Listbox(frame_left, listvariable=l, font=self.font)
-        l.pack(side="top", fill=tk.BOTH, expand=1)
-        for key in self.floor_data[floor_index]:
-            l.insert("end", key)
-        l.select_set(0)
-        current_index = l.get(l.curselection())
-        l.event_generate("<<ListboxSelect>>")
-        print(l.get(l.curselection()))
-        text_field = tk.Text(frame_right, font=self.font)
+        self.l = tk.StringVar()
+        self.l.set([])
+        self.l = tk.Listbox(self.frame_left, listvariable=self.l, font=self.font)
+        self.l.pack(side="top", fill=tk.BOTH, expand=1)
+        for key in self.floor_data[self.floor_index]:
+            self.l.insert("end", key)
+        self.l.select_set(0)
+        self.current_index = self.l.get(self.l.curselection())
+        print(f"new_index: {self.current_index}")
+        self.text_field = tk.Text(self.frame_right, font=self.font)
 
-        text_field.insert(tk.END, self.floor_data[floor_index][current_index])
-        text_field.pack(side="top", fill=tk.BOTH, expand=1)
-        l.bind('<ButtonRelease-1>', self.flush_floor_data)
-        self.floor_index = floor_index
-        self.text_field = text_field
-        self.curl = l
+        self.text_field.insert(tk.END, json.dumps(self.floor_data[self.floor_index][self.current_index], ensure_ascii=False))
+        self.text_field.pack(side="top", fill=tk.BOTH, expand=1)
+        self.l.bind('<ButtonRelease-1>', self.flush_floor_data)
         
     # 刷新右侧楼层信息
     def flush_floor_data(self, *args):
-        index = self.curl.get(self.curl.curselection())
+        self.check_diff()
+        self.current_index = self.l.get(self.l.curselection())
+        print(f"new index: {self.current_index}")
+        print(f"data: {self.floor_data[self.floor_index][self.current_index]}")
         self.text_field.delete("1.0",tk.END)
-        self.text_field.insert(tk.END, self.floor_data[self.floor_index][index])
-    
-    # 写入floor_data.json文件
-    def save_to_file(self, data):
-        with open((self.floor_data_path), "w") as f:
-            json.dump(data, f)
-        self.status_text.set(f"成功保存到{self.floor_data_path}！")
-    
-    # 读取floor_data.json文件
-    def read_file(self, e1=None):
-        if e1 is None:
-            path = self.floor_data_path
-        else:
-            path = e1.get()
-        try:
-            with open(path) as f:
-                self.floor_data = json.load(f)
-            print(self.floor_data) # 查看读取到的地图数据
-            self.enable_edit()
-            self.flush_floor_list()
-            self.status_text.set(f"成功读取{path}！")
-        except json.decoder.JSONDecodeError:
-            self.status_text.set(f"读取失败，{path}文件为空或者格式不是JSON！")
-        except FileNotFoundError:
-            self.status_text.set(f"读取失败，{path}文件不存在！")
-        except TypeError:
-            self.status_text.set(f"读取失败，{path} not iterable！")
-        except:
-            self.status_text.set(f"读取失败，未知错误！")
-
-    # 刷新左侧楼层列表
-    def flush_floor_list(self):
-        self.floor_listbox.delete(0,tk.END)
-        for key in self.floor_data:
-            self.floor_listbox.insert("end", key)
+        self.text_field.insert(tk.END, json.dumps(self.floor_data[self.floor_index][self.current_index], ensure_ascii=False))
+        
+    # 检查选中数据内容变化
+    def check_diff(self):
+        original = json.dumps(self.floor_data[self.floor_index][self.current_index], ensure_ascii=False)
+        new = self.text_field.get("1.0",'end-1c')
+        print(f"original {original} new {new}")
+        if original != new:
+            diff = json.loads(new)
+            self.floor_data[self.floor_index][self.current_index] = diff
+            status_text = global_var.get_value("status_text")
+            status_text.set(f"成功修改[{self.floor_index}][{self.current_index}]！")
 
 if __name__ == "__main__":
+    global_var._init()
     root = tk.Tk()
     root.title("地图数据编辑器")
     root.geometry("854x480")
