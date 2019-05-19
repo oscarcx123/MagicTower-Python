@@ -1,39 +1,37 @@
 import global_var
 import json
+import os
 import tkinter as tk
 
 # 写入floor_data.json文件
-def save_to_file(data=None):
-    if data == None:
-        data = global_var.get_value("floor_data")
+def save_to_file(**kwargs):
+    data = kwargs["data"]
     path = global_var.get_value("floor_data_path")
-    with open((path), "w") as f:
+    file_name = kwargs["file"] + ".json"
+    full_path = os.path.join(path, file_name)
+    with open((full_path), "w") as f:
         json.dump(data, f)
     status_text = global_var.get_value("status_text")
-    status_text.set(f"成功保存到{path}！")
+    if "show_status" in kwargs:
+        if kwargs["show_status"] == True:
+            status_text.set(f"成功保存到{full_path}！")
 
-# 读取floor_data.json文件
-def read_file(path_entry=None):
-    if path_entry is None:
+# 读取floor_index.json
+def read_floor_index(path=None):
+    if path == None:
         path = global_var.get_value("floor_data_path")
+        floor_index_path = os.path.join(path, "..", "floor_index.json")
     else:
-        path = path_entry.get()
+        floor_index_path = path.get()
     status_text = global_var.get_value("status_text")
     try:
-        with open(path) as f:
-            floor_data = json.load(f)
-        global_var.set_value("floor_data", floor_data)
-        flush_floor_list()
-        status_text.set(f"成功读取{path}！")
+        with open(floor_index_path) as f:
+            floor_index = json.load(f)
+        flush_floor_list(floor_index["index"])
         enable_edit()
-    except json.decoder.JSONDecodeError:
-        status_text.set(f"读取失败，{path}文件为空或者格式不是JSON！")
-    except FileNotFoundError:
-        status_text.set(f"读取失败，{path}文件不存在！")
-    except TypeError:
-        status_text.set(f"读取失败，{path} not iterable！")
+        status_text.set(f"读取{floor_index_path}成功！")
     except:
-        status_text.set(f"读取失败，未知错误！")
+        status_text.set(f"读取{floor_index_path}失败！")
 
 # 启用编辑功能（加载地图文件成功）
 def enable_edit():
@@ -46,9 +44,8 @@ def disable_edit():
     filemenu.entryconfig("保存", state="disabled")
 
 # 刷新左侧楼层列表
-def flush_floor_list():
+def flush_floor_list(floor_list):
     floor_listbox = global_var.get_value("floor_listbox")
-    floor_data = global_var.get_value("floor_data")
     floor_listbox.delete(0,tk.END)
-    for key in floor_data:
-        floor_listbox.insert("end", key)
+    for item in floor_list:
+        floor_listbox.insert("end", item)
