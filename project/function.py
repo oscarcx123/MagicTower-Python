@@ -4,7 +4,6 @@ from lib import CurrentMap
 from project.enemy import *
 from project.block import BlockData
 from project.items import ITEMS_DATA
-from project.floors import MAP_DATABASE
 from lib import global_var
 
 
@@ -107,8 +106,10 @@ def get_criticals(map_object, result_num):
 def next_def_critical(map_object):
     original_damage = get_damage_info(map_object)
     next_def_damage = get_damage_info(map_object, PlayerCon.attack, PlayerCon.defend + 1, PlayerCon.mdefend)
-    return original_damage["damage"] - next_def_damage["damage"]
-
+    if original_damage["damage"] != "???" and next_def_damage["damage"] != "???":
+        return original_damage["damage"] - next_def_damage["damage"]
+    else:
+        return "???"
 # get_enemy_info 获得怪物数据
 def get_enemy_info(map_object):
     # 从/project/block.py获取怪物id
@@ -277,10 +278,12 @@ def open_door(map_object, x, y, no_key=False):
 
 # change_floor 处理切换楼层
 def change_floor(block, x, y):
+    MAP_DATABASE = global_var.get_value("MAP_DATABASE")
+    floor_index = global_var.get_value("floor_index")
     # 上楼处理
     if block == 87:
-        CurrentMap.set_map(MAP_DATABASE[PlayerCon.floor + 1])
         PlayerCon.floor += 1
+        CurrentMap.set_map(PlayerCon.floor)
         check_map_result = CurrentMap.check_block(88)
         print(f"check_map_result:{check_map_result}")
         if len(check_map_result) == 1:
@@ -289,8 +292,8 @@ def change_floor(block, x, y):
             PlayerCon.change_hero_loc(x_coordinate, y_coordinate)
     # 下楼处理
     elif block == 88:
-        CurrentMap.set_map(MAP_DATABASE[PlayerCon.floor - 1])
         PlayerCon.floor -= 1
+        CurrentMap.set_map(PlayerCon.floor)
         check_map_result = CurrentMap.check_block(87)
         print(f"check_map_result:{check_map_result}")
         if len(check_map_result) == 1:

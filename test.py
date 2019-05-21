@@ -1,6 +1,8 @@
 # 作为新框架测试用
 
 import pygame
+import os
+import json
 from sysconf import *
 
 pygame.init()
@@ -10,7 +12,6 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption(TOWER_NAME)
 
 from lib.utools import *
-from project.floors import MAP_DATABASE
 from lib import CurrentMap, PlayerCon
 from lib.ground import GroundSurface
 from lib import global_var
@@ -38,9 +39,11 @@ def init():
     # 设置PlayerCon为全局变量（必须要在CurrentMap.set_map之前完成）
     global_var.set_value("PlayerCon", PlayerCon)
     function_init()
+    
     # 初始化地图
-    CurrentMap.set_map(MAP_DATABASE[PLAYER_FLOOR])
+    CurrentMap.set_map(PLAYER_FLOOR)
     CurrentMap.add_sprite(PlayerCon)
+    global_var.set_value("CurrentMap", CurrentMap)
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
     global_var.set_value("StatusBar", StatusBar)

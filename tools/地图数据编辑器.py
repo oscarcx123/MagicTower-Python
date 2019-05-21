@@ -44,8 +44,13 @@ class MainWindow(tk.Frame):
 
         # menubar > editmenu
         self.editmenu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="帮助", menu=self.editmenu)
-        self.editmenu.add_command(label="关于", command=self.about_ui)
+        self.menubar.add_cascade(label="没想好名字", menu=self.editmenu)
+        self.editmenu.add_command(label="全塔属性", command=self.tower_property)
+
+        # menubar > helpmenu
+        self.helpmenu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="帮助", menu=self.helpmenu)
+        self.helpmenu.add_command(label="关于", command=self.about_ui)
         
         # 显示menubar
         global root
@@ -101,10 +106,6 @@ class MainWindow(tk.Frame):
         print(*args)
         print("Success!")
     
-    # 帮助 > 关于    
-    def about_ui(self):
-        window = About(self)
-    
     # 文件 > 新建
     def new_ui(self):
         window = CreateNewFloor(self)
@@ -112,6 +113,14 @@ class MainWindow(tk.Frame):
     # 文件 > 加载
     def load_ui(self):
         window = LoadFloor(self)
+
+    # 帮助 > 关于    
+    def tower_property(self):
+        window = TowerProperty(self)
+
+    # 帮助 > 关于    
+    def about_ui(self):
+        window = About(self)
 
     # 编辑楼层信息    
     def edit_floor_data_ui(self, *args):
@@ -133,7 +142,61 @@ class BaseWindow():
         self.t.title(f"Window")
         self.l = tk.Label(self.t, text=f"This is a new window")
         self.l.pack(side="top", fill="both", expand=True, padx=100, pady=100)
-       
+
+# 编辑器基类
+'''
+EditorWindow 提供了编辑json数据的UI跟逻辑操作
+【使用方法】
+在draw_UI函数中需要提供的self.xx参数如下：
+:param full_path: JSON文件的路径
+:param data: JSON文件dump之后的数据
+最后加上self.draw_editor()即可
+'''
+class EditorWindow(BaseWindow):
+    def draw_editor(self):
+        # 显示界面分区
+        self.frame_left = tk.Frame(self.t)
+        self.frame_right = tk.Frame(self.t)
+        self.frame_left.pack(side="left", fill=tk.BOTH, expand=1)
+        self.frame_right.pack(side="right", fill=tk.BOTH, expand=1)
+        
+        # 楼层属性列表
+        self.l = tk.StringVar()
+        self.l.set([])
+        self.l = tk.Listbox(self.frame_left, listvariable=self.l, font=self.font)
+        self.l.pack(side="top", fill=tk.BOTH, expand=1)
+        for key in self.data:
+            self.l.insert("end", key)
+        self.l.select_set(0)
+        self.current_index = self.l.get(self.l.curselection())
+        print(f"new_index: {self.current_index}")
+        self.text_field = tk.Text(self.frame_right, font=self.font)
+
+        self.text_field.insert(tk.END, json.dumps(self.data[self.current_index], ensure_ascii=False))
+        self.text_field.pack(side="top", fill=tk.BOTH, expand=1)
+        self.l.bind('<ButtonRelease-1>', self.flush_data)
+
+    # 刷新右侧楼层信息
+    def flush_data(self, *args):
+        self.check_diff()
+        self.current_index = self.l.get(self.l.curselection())
+        print(f"new index: {self.current_index}")
+        print(f"data: {self.data[self.current_index]}")
+        self.text_field.delete("1.0",tk.END)
+        self.text_field.insert(tk.END, json.dumps(self.data[self.current_index], ensure_ascii=False))
+        
+    # 检查选中数据内容变化
+    def check_diff(self):
+        original = json.dumps(self.data[self.current_index], ensure_ascii=False)
+        new = self.text_field.get("1.0",'end-1c')
+        print(f"original {original} new {new}")
+        if original != new:
+            diff = json.loads(new)
+            self.data[self.current_index] = diff
+            with open((self.full_path), "w") as f:
+                json.dump(self.data, f)
+            self.status_text.set(f"成功修改[{self.current_index}]！")
+
 # 关于
 class About(BaseWindow):
     def drawUI(self):
@@ -272,7 +335,7 @@ class LoadFloor(BaseWindow):
         self.b.pack(side="left", expand=True)
 
 # 楼层数据编辑界面
-class FloorEditor(BaseWindow):
+class FloorEditor(EditorWindow):
     def drawUI(self):
         self.t.title("编辑楼层信息")
         self.t.geometry("500x300")
@@ -287,48 +350,23 @@ class FloorEditor(BaseWindow):
                 self.floor_data = json.load(f)
         except:
             self.status_text.set(f"读取{self.floor_index}失败，请检查文件是否存在于/project/floors！")
-        # 显示界面分区
-        self.frame_left = tk.Frame(self.t)
-        self.frame_right = tk.Frame(self.t)
-        self.frame_left.pack(side="left", fill=tk.BOTH, expand=1)
-        self.frame_right.pack(side="right", fill=tk.BOTH, expand=1)
-        
-        # 楼层属性列表
-        self.l = tk.StringVar()
-        self.l.set([])
-        self.l = tk.Listbox(self.frame_left, listvariable=self.l, font=self.font)
-        self.l.pack(side="top", fill=tk.BOTH, expand=1)
-        for key in self.floor_data:
-            self.l.insert("end", key)
-        self.l.select_set(0)
-        self.current_index = self.l.get(self.l.curselection())
-        print(f"new_index: {self.current_index}")
-        self.text_field = tk.Text(self.frame_right, font=self.font)
+        self.data = self.floor_data
+        self.draw_editor()
+    
 
-        self.text_field.insert(tk.END, json.dumps(self.floor_data[self.current_index], ensure_ascii=False))
-        self.text_field.pack(side="top", fill=tk.BOTH, expand=1)
-        self.l.bind('<ButtonRelease-1>', self.flush_floor_data)
-        
-    # 刷新右侧楼层信息
-    def flush_floor_data(self, *args):
-        self.check_diff()
-        self.current_index = self.l.get(self.l.curselection())
-        print(f"new index: {self.current_index}")
-        print(f"data: {self.floor_data[self.current_index]}")
-        self.text_field.delete("1.0",tk.END)
-        self.text_field.insert(tk.END, json.dumps(self.floor_data[self.current_index], ensure_ascii=False))
-        
-    # 检查选中数据内容变化
-    def check_diff(self):
-        original = json.dumps(self.floor_data[self.current_index], ensure_ascii=False)
-        new = self.text_field.get("1.0",'end-1c')
-        print(f"original {original} new {new}")
-        if original != new:
-            diff = json.loads(new)
-            self.floor_data[self.current_index] = diff
-            with open((self.full_path), "w") as f:
-                json.dump(self.floor_data, f)
-            self.status_text.set(f"成功修改[{self.current_index}]！")
+class TowerProperty(EditorWindow):
+    def drawUI(self):
+        self.t.title("编辑全塔属性")
+        self.t.geometry("500x300")
+        self.path = global_var.get_value("floor_data_path")
+        try:
+            self.full_path =  os.path.join(self.path, "..", "floor_index.json")
+            with open(self.full_path) as f:
+                self.tower_property_data = json.load(f)
+        except:
+            self.status_text.set(f"读取{self.full_path}失败，请检查文件是否存在！")
+        self.data = self.tower_property_data
+        self.draw_editor()
 
 if __name__ == "__main__":
     global_var._init()

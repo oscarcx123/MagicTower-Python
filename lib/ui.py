@@ -3,7 +3,6 @@ import pygame
 from lib import ground
 from sysconf import *
 from project.function import draw_status_bar, get_current_enemy, sort_item
-from project.floors import MAP_DATABASE
 import math
 
 # TODO: 所有UI继承自UI组件 UI组件是集通用显示与操作响应的接口类
@@ -84,7 +83,8 @@ class Book(Menu):
         self.fill(SKYBLUE)
         draw_status_bar(self)
         # 获得当前地图中全部的怪物的信息
-        enemy_info_list = get_current_enemy(MAP_DATABASE[map_index])
+        CurrentMap = global_var.get_value("CurrentMap")
+        enemy_info_list = get_current_enemy(CurrentMap.get_map(self.PlayerCon.floor))
         # 如果当前楼层没有怪物
         if len(enemy_info_list) == 0:
             self.draw_text("本层无怪物", 72, BLACK, (17 * BLOCK_UNIT / 2) - (72 * 1.5), (13 * BLOCK_UNIT / 2) - 36, "px")
@@ -141,6 +141,7 @@ class StartMenu(Menu):
         self.draw_text(TOWER_NAME, 64, WHITE, 6, 0)
         self.draw_text("开始游戏", 36, WHITE, 7, 6)
         self.draw_text("读取存档", 36, WHITE, 7, 7)
+        print("Currentindex", current_index)
         if current_index == 0:
             self.draw_text("=>", 36, WHITE, 6, 6)
         if current_index == 1:

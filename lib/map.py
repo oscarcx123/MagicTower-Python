@@ -20,6 +20,8 @@ from .sprite import EventSprite
 from lib.utools import *
 from sysconf import *
 from lib import global_var
+import os
+import json
 
 class MapGround(GroundSurface):
     def __init__(self, w, h, block_size=32):
@@ -28,7 +30,23 @@ class MapGround(GroundSurface):
         self.height = h
         self.map_data = None
         self.temp_srufcae = None
+        self.map_database_init()
         super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
+
+    def map_database_init(self):
+        # 从/project/floors读取地图
+        try:
+            with open(os.path.join(os.getcwd(),"project", "floor_index.json")) as f:
+                self.floor_index = json.load(f)
+        except:
+            print("读取地图index错误")
+        self.MAP_DATABASE = {}
+        for floor in self.floor_index["index"]:
+            try:
+                with open(os.path.join(os.getcwd(),"project", "floors", f"{floor}.json")) as f:
+                    self.MAP_DATABASE[f"{floor}"] = json.load(f)
+            except:
+                print(f"读取{floor}错误")
 
     def trans_locate(self, *args):
         """
@@ -50,10 +68,14 @@ class MapGround(GroundSurface):
 
         return x * self.block_size, y * self.block_size
 
-    def set_map(self, map_data):
+    def set_map(self, floor):
         self.clear_map()
-        self.map_data = map_data
+        self.map_data = self.get_map(floor)
         self.draw_map()
+
+    def get_map(self, floor):
+        data = self.MAP_DATABASE[self.floor_index["index"][floor]]["map"]
+        return data
 
     def clear_map(self):
         # self.group.clear()
