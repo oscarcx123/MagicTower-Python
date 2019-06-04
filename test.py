@@ -78,7 +78,7 @@ def init_actions():
     action_control.register_action('BOOK', pygame.KEYUP, global_var.get_value('BOOK').action)
     action_control.register_action('STARTMENU', pygame.KEYUP, global_var.get_value('STARTMENU').action)
     action_control.register_action('BACKPACK', pygame.KEYUP, global_var.get_value('BACKPACK').action)
-
+    print("register done")
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:

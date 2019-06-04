@@ -42,6 +42,7 @@ class Menu(UIComponent):
     def action(self, event):
         key_map = self.key_map
         key = event.key
+        print("menue",key,key_map)
         if key in key_map:
             idx = key_map[key]
             if idx == 'open':
@@ -53,7 +54,7 @@ class Menu(UIComponent):
             elif idx == 'close':
                 self.close()
                 idx = 0
-            else:
+            elif type(idx) is not int:
                 idx = 0
             if self.active:
                 self.current_index += idx
@@ -135,13 +136,14 @@ class StartMenu(Menu):
 
     def draw(self, current_index=0):
         # 此处人为指定index上下限，因为已知仅有两个选项
+
         self.current_index = max(0, self.current_index)
         self.current_index = min(1, self.current_index)
         self.fill(SKYBLUE)
         self.draw_text(TOWER_NAME, 64, WHITE, 6, 0)
         self.draw_text("开始游戏", 36, WHITE, 7, 6)
         self.draw_text("读取存档", 36, WHITE, 7, 7)
-        print("Currentindex", current_index)
+        #print("Currentindex", self.active)
         if current_index == 0:
             self.draw_text("=>", 36, WHITE, 6, 6)
         if current_index == 1:
