@@ -4,6 +4,7 @@ from lib import ground
 from sysconf import *
 from project.function import draw_status_bar, get_current_enemy, sort_item
 import math
+import os
 
 # TODO: 所有UI继承自UI组件 UI组件是集通用显示与操作响应的接口类
 # UI首先是一个ground，然后具有action（需要手动注册到action_control TODO:自动注册
@@ -271,10 +272,105 @@ class Backpack(Menu):
                     self.detail_index += idx
                     return True
             return False
-    
-    # 刷新显示
-    def flush(self, screen=None):
-        if self.active:
-            self.draw(self.current_index)
-        super().flush(screen)
+
+
+# 存读档菜单，通过继承Menu得到
+class SaveLoadMenu(Menu):
+    def __init__(self, **kwargs):
+        Menu.__init__(self, **kwargs)
+        # 启动菜单的按键写在继承SaveLoadMenu的类中
+        # 写法为：self.key_map[pygame.K_s] = 'open'
+        self.key_map = {pygame.K_UP: -1,
+                        pygame.K_DOWN: +1,
+                        pygame.K_LEFT: -4,
+                        pygame.K_RIGHT: +4,
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter',}
+        self.save_path = os.path.join(os.getcwd(), "save")
+
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        print("menue",key,key_map)
+        if key in key_map:
+            idx = key_map[key]
+            if idx == 'open':
+                if self.active:
+                    self.close()
+                elif not self.PlayerCon.lock:
+                    self.open()
+                idx = 0
+            elif idx == 'close':
+                self.close()
+                idx = 0
+            elif idx == 'enter':
+                self.close()
+                idx = 0
+                # self.function为进行存读档（文件读写）的函数
+                self.function(self.current_index)
+            elif type(idx) is not int:
+                idx = 0
+            if self.active:
+                self.current_index += idx
+            if self.active:
+                return True
+        return False
+
+
+# 存档菜单，通过继承Menu得到
+class SaveMenu(SaveLoadMenu):
+    def __init__(self, **kwargs):
+        SaveLoadMenu.__init__(self, **kwargs)
+        self.key_map[pygame.K_s] = 'open'
+
+    def check_save_file(self, slice_start, slice_end):
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        file_list = []
+        check_result = {}
+        for i in range(slice_start, slice_end + 1):
+            file_list.append(file_name_1 + str(i) + file_name_2)
+        for item in file_list:
+            check_result[item] = {}
+            if os.path.isfile(os.path.join(self.save_path, item)):
+                check_result[item]["file_exist"] = True
+            else:
+                check_result[item]["file_exist"] = False
+        return check_result
+                
+
+    def draw(self, current_index=0):
+        # 
+        self.current_index = max(0, self.current_index)
+        self.current_index = min(self.current_index, SAVE_MAX_AMOUNT - 1)
+        # 计算分页并提取需要展示的数据
+        item_per_page = 4
+        total_page = math.ceil(SAVE_MAX_AMOUNT / item_per_page)
+        current_page = math.ceil((self.current_index + 1) / item_per_page)
+        slice_start = (current_page - 1) * item_per_page
+        slice_end = min(slice_start + item_per_page - 1, SAVE_MAX_AMOUNT)
+
+        # 让存档index跟实际非0自然数对应
+        slice_start += 1
+        slice_end += 1
         
+        check_result = self.check_save_file(slice_start, slice_end)
+
+        self.fill(SKYBLUE)
+        
+        # 绘制存档条目
+        i = 0
+        for item in check_result:
+            save_number = (current_page - 1) * item_per_page + i + 1
+            self.draw_text("#" + str(save_number), 30, BLACK, 4 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            if check_result[item]["file_exist"]:
+                self.draw_text("存在！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            else:
+                self.draw_text("不存在！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            i += 1
+        # 根据当前current_index绘制高亮框
+        i = current_index % item_per_page
+        self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+
+    def function(self, current_index):
+        print("TODO:进行存档操作")

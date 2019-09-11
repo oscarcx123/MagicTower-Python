@@ -6,6 +6,8 @@ from os import path
 TOWER_NAME = "Python魔塔"
 FONT_NAME = "resource/simhei.ttf"
 DEBUG = False
+# SAVE_MAX_AMOUNT为最大允许存档数量
+SAVE_MAX_AMOUNT = 100
 # --- 勇士数据设置 START ---
 # 玩家初始坐标以及楼层
 # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
