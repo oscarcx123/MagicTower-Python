@@ -71,13 +71,11 @@ def init():
     SAVE.priority = 5  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(SAVE)
     global_var.set_value("SAVE", SAVE)
-    '''
     # --- UI5 - 读档界面
-    LOAD = ui.LOAD(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    LOAD = ui.LoadMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
     LOAD.priority = 5  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(LOAD)
     global_var.set_value("LOAD", LOAD)
-    '''
 
 
 def init_actions():
@@ -92,8 +90,8 @@ def init_actions():
     action_control.register_action('STARTMENU', pygame.KEYUP, global_var.get_value('STARTMENU').action)
     action_control.register_action('BACKPACK', pygame.KEYUP, global_var.get_value('BACKPACK').action)
     action_control.register_action('SAVE', pygame.KEYUP, global_var.get_value('SAVE').action)
-    # action_control.register_action('LOAD', pygame.KEYUP, global_var.get_value('LOAD').action)
-    print("register done")
+    action_control.register_action('LOAD', pygame.KEYUP, global_var.get_value('LOAD').action)
+    print("事件全部注册完成！")
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:

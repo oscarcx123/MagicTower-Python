@@ -5,6 +5,7 @@ from sysconf import *
 from project.function import draw_status_bar, get_current_enemy, sort_item
 import math
 import os
+import json
 
 # TODO: 所有UI继承自UI组件 UI组件是集通用显示与操作响应的接口类
 # UI首先是一个ground，然后具有action（需要手动注册到action_control TODO:自动注册
@@ -31,6 +32,7 @@ class UIComponent(ground.GroundSurface):
 class Menu(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
+        self.name = "菜单"
         self.current_index = 0
         self.key_map = {pygame.K_LEFT: -6,
                         pygame.K_RIGHT: +6,
@@ -43,24 +45,27 @@ class Menu(UIComponent):
     def action(self, event):
         key_map = self.key_map
         key = event.key
-        print("menue",key,key_map)
         if key in key_map:
             idx = key_map[key]
-            if idx == 'open':
-                if self.active:
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'open':
                     self.close()
-                elif not self.PlayerCon.lock:
-                    self.open()
-                idx = 0
-            elif idx == 'close':
-                self.close()
-                idx = 0
-            elif type(idx) is not int:
-                idx = 0
-            if self.active:
-                self.current_index += idx
-            if self.active:
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                elif type(idx) is not int:
+                    idx = 0
+                if self.active:
+                    self.current_index += idx
                 return True
+            else:
+                if idx == 'open':
+                    print(self.name,key,key_map)
+                    if not self.PlayerCon.lock:
+                        self.open()
+                    idx = 0
         return False
         # if self.active:
         #    self.draw(self.current_index)
@@ -75,6 +80,7 @@ class Menu(UIComponent):
 class Book(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
+        self.name = "怪物手册"
     
     # 绘制怪物手册
     # TODO： 绘制动态的怪物——把sprite添加到对应位置即可 和map是一样的 在发生改变时用类似draw_map的方式更新sprite
@@ -125,6 +131,7 @@ class Book(Menu):
 class StartMenu(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
+        self.name = "开始菜单"
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
                         pygame.K_RETURN: 'close'}
@@ -155,6 +162,7 @@ class StartMenu(Menu):
 class Backpack(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
+        self.name = "背包"
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
                         pygame.K_t: 'open',
@@ -242,28 +250,32 @@ class Backpack(Menu):
             key = event.key
             if key in key_map:
                 idx = key_map[key]
-                if idx == 'open':
-                    if self.active:
-                        self.close()
-                    elif not self.PlayerCon.lock:
-                        self.open()
-                    idx = 0
                 if self.active:
+                    print(self.name,key,key_map)
+                    if idx == 'open':
+                        self.close()
+                        idx = 0
                     if idx == "enter":
                         self.mode = "detail"
                         idx = 0
                     elif idx == 'close':
                         self.close()
                         idx = 0
-                if self.active:
                     self.current_index += idx
                     return True
+                else:
+                    if idx == 'open':
+                        print(self.name,key,key_map)
+                        if not self.PlayerCon.lock:
+                            self.open()
+                        idx = 0
             return False
         if self.mode == "detail":
             key_map = self.key_map_detail
             key = event.key
             if key in key_map:
                 idx = key_map[key]
+                print(self.name,key,key_map)
                 if idx == 'close':
                     self.mode = "simple"
                     self.detail_index = 0
@@ -291,56 +303,38 @@ class SaveLoadMenu(Menu):
     def action(self, event):
         key_map = self.key_map
         key = event.key
-        print("menue",key,key_map)
         if key in key_map:
             idx = key_map[key]
-            if idx == 'open':
-                if self.active:
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'open':
                     self.close()
-                elif not self.PlayerCon.lock:
-                    self.open()
-                idx = 0
-            elif idx == 'close':
-                self.close()
-                idx = 0
-            elif idx == 'enter':
-                self.close()
-                idx = 0
-                # self.function为进行存读档（文件读写）的函数
-                self.function(self.current_index)
-            elif type(idx) is not int:
-                idx = 0
-            if self.active:
-                self.current_index += idx
-            if self.active:
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                elif idx == 'enter':
+                    # self.function为进行存读档（文件读写）的函数
+                    save_status = self.function(self.current_index)
+                    if save_status:
+                        self.close()
+                        idx = 0
+                    else:
+                        print("存读档错误！")
+                elif type(idx) is not int:
+                    idx = 0
+                else:
+                    self.current_index += idx
                 return True
+            else:
+                if idx == 'open':
+                    print(self.name,key,key_map)
+                    if not self.PlayerCon.lock:
+                        self.open()
+                    idx = 0
         return False
 
-
-# 存档菜单，通过继承Menu得到
-class SaveMenu(SaveLoadMenu):
-    def __init__(self, **kwargs):
-        SaveLoadMenu.__init__(self, **kwargs)
-        self.key_map[pygame.K_s] = 'open'
-
-    def check_save_file(self, slice_start, slice_end):
-        file_name_1 = "save_"
-        file_name_2 = ".json"
-        file_list = []
-        check_result = {}
-        for i in range(slice_start, slice_end + 1):
-            file_list.append(file_name_1 + str(i) + file_name_2)
-        for item in file_list:
-            check_result[item] = {}
-            if os.path.isfile(os.path.join(self.save_path, item)):
-                check_result[item]["file_exist"] = True
-            else:
-                check_result[item]["file_exist"] = False
-        return check_result
-                
-
     def draw(self, current_index=0):
-        # 
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, SAVE_MAX_AMOUNT - 1)
         # 计算分页并提取需要展示的数据
@@ -364,13 +358,97 @@ class SaveMenu(SaveLoadMenu):
             save_number = (current_page - 1) * item_per_page + i + 1
             self.draw_text("#" + str(save_number), 30, BLACK, 4 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             if check_result[item]["file_exist"]:
-                self.draw_text("存在！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+                self.draw_text("存在存档！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             else:
-                self.draw_text("不存在！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+                self.draw_text("不存在存档！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             i += 1
         # 根据当前current_index绘制高亮框
         i = current_index % item_per_page
         self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
 
+    def check_save_file(self, slice_start, slice_end):
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        file_list = []
+        check_result = {}
+        for i in range(slice_start, slice_end + 1):
+            file_list.append(file_name_1 + str(i) + file_name_2)
+        for item in file_list:
+            check_result[item] = {}
+            if os.path.isfile(os.path.join(self.save_path, item)):
+                check_result[item]["file_exist"] = True
+            else:
+                check_result[item]["file_exist"] = False
+        return check_result
+
+
+# 存档菜单，通过继承SaveLoadMenu得到
+class SaveMenu(SaveLoadMenu):
+    def __init__(self, **kwargs):
+        SaveLoadMenu.__init__(self, **kwargs)
+        self.name = "存档菜单"
+        self.key_map[pygame.K_s] = 'open'
+
     def function(self, current_index):
-        print("TODO:进行存档操作")
+        CurrentMap = global_var.get_value("CurrentMap")
+        save_file = {}
+        save_file["hero"] = {}
+        save_file["hero"]["hp"] = self.PlayerCon.hp
+        save_file["hero"]["attack"] = self.PlayerCon.attack
+        save_file["hero"]["defend"] = self.PlayerCon.defend
+        save_file["hero"]["mdefend"] = self.PlayerCon.mdefend
+        save_file["hero"]["gold"] = self.PlayerCon.gold
+        save_file["hero"]["exp"] = self.PlayerCon.exp
+        save_file["hero"]["floor"] = self.PlayerCon.floor
+        save_file["hero"]["item"] = self.PlayerCon.item
+        save_file["hero"]["pos"] = self.PlayerCon.pos
+        save_file["map"] = CurrentMap.MAP_DATABASE
+
+        current_index += 1
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        full_file_name = file_name_1 + str(current_index) + file_name_2
+        full_path = os.path.join(self.save_path, full_file_name)
+        with open((full_path), "w") as f:
+            json.dump(save_file, f)
+        print("存档成功！")
+        return True
+
+
+# 读档菜单，通过继承SaveLoadMenu得到
+class LoadMenu(SaveLoadMenu):
+    def __init__(self, **kwargs):
+        SaveLoadMenu.__init__(self, **kwargs)
+        self.name = "读档菜单"
+        self.key_map[pygame.K_d] = 'open'
+
+    def function(self, current_index):
+        current_index += 1
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        full_file_name = file_name_1 + str(current_index) + file_name_2
+        full_path = os.path.join(self.save_path, full_file_name)
+        if os.path.isfile(full_path):
+            with open(full_path) as f:
+                save_file = json.load(f)
+            CurrentMap = global_var.get_value("CurrentMap")
+            self.PlayerCon.hp = save_file["hero"]["hp"]
+            self.PlayerCon.attack = save_file["hero"]["attack"]
+            self.PlayerCon.defend = save_file["hero"]["defend"]
+            self.PlayerCon.mdefend = save_file["hero"]["mdefend"]
+            self.PlayerCon.gold = save_file["hero"]["gold"]
+            self.PlayerCon.exp = save_file["hero"]["exp"]
+            self.PlayerCon.floor = save_file["hero"]["floor"]
+            self.PlayerCon.item = save_file["hero"]["item"]
+            self.PlayerCon.pos = save_file["hero"]["pos"]
+            CurrentMap.MAP_DATABASE = save_file["map"]
+            CurrentMap.set_map(self.PlayerCon.floor)
+            global_var.set_value("CurrentMap", CurrentMap)
+            draw_status_bar()
+            self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
+            print("读档成功！")
+            return True
+        else:
+            print("读取了不存在的存档!")
+            return False
+        

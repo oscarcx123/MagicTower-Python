@@ -40,6 +40,6 @@ class ActionControl:
         for event in pygame.event.get():
             if event.type in self.listen_list:
                 for action in self.listen_list[event.type]:
-                    print(action.name)
+                    # print(action.name)
                     if action.do_fun(event):
                         break
