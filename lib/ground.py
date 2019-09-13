@@ -73,6 +73,8 @@ class GroundSurface:
             print("GroundSurface错误，未提供mode参数")
             self.rect = surface.get_rect()
 
+        self.block_size = BLOCK_UNIT
+
         self.w = self.rect.w
         self.h = self.rect.h
         self.surface = surface
@@ -191,7 +193,24 @@ class GroundSurface:
 
     # 需要被实现 逻辑坐标到物理坐标的转换:
     def trans_locate(self, *args):
-        return args
+        """
+        逻辑转物理，默认为top left
+        :param args:
+        :arg[3]: "up":top centerx "down": bottom centerx
+
+        exmaple 1: map.trans_locate(12,12,'down') # 获取坐标 然后在该位置绘制敌人
+        example 2: event.move(map.trans_locate(12,12,'down')) # 移动事件到12，12位置
+
+        :return:
+        """
+        x, y = args[0], args[1]
+        if len(args) > 2:
+            if args[2] == "up":
+                return int((x + 0.5) * self.block_size), y * self.block_size
+            elif args[2] == "down":
+                return int((x + 0.5) * self.block_size), (y + 1) * self.block_size
+
+        return x * self.block_size, y * self.block_size
 
     #  刷新函数： 可以根据变化层级刷新部分内容而不是全部一起刷新
     #  !不同画布不能有不同的刷新率，刷新率以最快为准，控制动画频率在sprite的update中自行控制
@@ -251,12 +270,13 @@ class GroundSurface:
         pygame.draw.rect(self.surface, color, Rect, width)
     
     # TODO: draw_icon （准备提供一个可以调用Sprite的接口）
-    def draw_icon(self, map_element, rect, px=None, py=None):
+    def draw_icon(self, map_element, x, y):
+        px, py = self.trans_locate(0, 0)
+        rect = Rect(px, py, self.block_size, self.block_size)
         # sprite的显示需要接通group
         name = str(map_element)
         ret = get_resource(name)
-        if px == None and py == None:
-            px, py = self.trans_locate(temp_x, temp_y, "down")
+        px, py = self.trans_locate(x, y, "down")
         rect.centerx = px
         rect.bottom = py
         if type(ret) is tuple:  # 属于精灵 (注意：此时不能直接导入精灵，因为先有map后有精灵）

@@ -137,6 +137,8 @@ def get_current_enemy(map_data):
     for enemy in enemy_list:
         # 获取怪物战斗伤害和基本信息
         enemy_info = get_damage_info(enemy)
+        # 往enemy_info写入怪物数字id
+        enemy_info["mon_num_id"] = enemy
         # 获取攻击临界点（此处返回数组长度最大为3）
         critical_info = get_criticals(enemy, 3)
         if len(critical_info) > 0:

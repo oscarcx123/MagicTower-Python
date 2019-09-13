@@ -53,9 +53,11 @@ class Menu(UIComponent):
                 print(self.name,key,key_map)
                 if idx == 'open':
                     self.close()
+                    self.group.empty()
                     idx = 0
                 elif idx == 'close':
                     self.close()
+                    self.group.empty()
                     idx = 0
                 elif type(idx) is not int:
                     idx = 0
@@ -111,6 +113,8 @@ class Book(Menu):
         # 绘制怪物手册条目
         i = 0
         for enemy in enemy_info_list:
+            self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
+
             self.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             self.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             self.draw_text("攻击 " + str(enemy["mon_atk"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
