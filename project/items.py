@@ -1,4 +1,5 @@
 from lib.utools import *
+from lib import global_var
 
 
 ITEMS_START_NUM = 21
@@ -386,7 +387,7 @@ ITEMS_DATA = {
 		"poisonWine": "poisonWine()",
 		"weakWine": "weakWine()",
 		"curseWine": "curseWine()",
-		"superWine": "superWine()",
+		"superPotion": "superPotion()",
 		"lifeWand": "lifeWand()",
 		"jumpShoes": "jumpShoes()",
 		"skill1": "skill1()",
@@ -403,13 +404,13 @@ def fly():
 
 # 地震卷轴，可以破坏当前层的所有墙
 def earthquake():
+	CurrentMap = global_var.get_value("CurrentMap")
 	temp_x = 0
 	temp_y = 0
-	map_read(PlayerCon.floor)
 	while temp_y < HEIGHT / BLOCK_UNIT:
 		while temp_x < WIDTH / BLOCK_UNIT - 4:
-			if map_temp[temp_y][temp_x] == 1: # Only Yellow Wall by default
-				map_write(PlayerCon.floor, temp_x, temp_y, 0)
+			if CurrentMap.get_block(temp_x, temp_y) == 1: # 默认可破坏的是黄墙
+				CurrentMap.remove_block(temp_x, temp_y)
 			temp_x += 1
 		temp_y += 1
 		temp_x = 0
@@ -417,29 +418,31 @@ def earthquake():
 
 # 破墙镐，可以破坏勇士面前的墙
 def pickaxe():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
 	y_coord = PlayerCon.pos[1]
 	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
-		if mapdata[y_coord][x_coord] == 1:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 1:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 1 and x_coord - 1 >= 0:
 		x_coord -= 1
-		if mapdata[y_coord][x_coord] == 1:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
+		if CurrentMap.get_block(x_coord, y_coord) == 1:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
-		if mapdata[y_coord][x_coord] == 1:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 1:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 3 and y_coord - 1 >= 0:
 		y_coord -= 1
-		if mapdata[y_coord][x_coord] == 1:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	return {"result": False, "msg": "The target is not a wall"}
+		if CurrentMap.get_block(x_coord, y_coord) == 1:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	return {"result": False, "msg": "玩家面对的不是墙！"}
 
 def icePickaxe():
 	pass
@@ -447,114 +450,131 @@ def icePickaxe():
 def snow():
 	pass
 
-# 大钥匙，默认全钥匙+1，在全塔属性提供启用另一效果的开关
-# 另一效果为开启当前层所有黄门
+# 大钥匙，默认开启当前层所有黄门
+# 另一效果为全钥匙+1，在全塔属性提供启用另一效果的开关
+# 启用另一效果只需将“BIG_KEY_OPEN_YELLOW_DOORS”从True改为False即可
 def bigKey():
+	from project.function import add_item, remove_item
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	if BIG_KEY_OPEN_YELLOW_DOORS:
 		temp_x = 0
 		temp_y = 0
-		map_read(PlayerCon.floor)
 		while temp_y < HEIGHT / BLOCK_UNIT:
 			while temp_x < WIDTH / BLOCK_UNIT - 4:
-				if map_temp[temp_y][temp_x] == 81:  # 81 = Yellow Door
-					map_write(PlayerCon.floor, temp_x, temp_y, 0)
+				# 81 = Yellow Door
+				if CurrentMap.get_block(temp_x, temp_y) == 81:
+					CurrentMap.remove_block(temp_x, temp_y)
 				temp_x += 1
 			temp_y += 1
 			temp_x = 0
 	else:
-		PlayerCon.yellowkey += 1
-		PlayerCon.bluekey += 1
-		PlayerCon.redkey += 1
+		add_item(21, 1)
+		add_item(22, 1)
+		add_item(23, 1)
 	return {"result": True}
 
 # 炸弹，可以炸掉勇士面前的怪物
 def bomb():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
 	y_coord = PlayerCon.pos[1]
 	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 1 and x_coord - 1 >= 0:
 		x_coord -= 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 3 and y_coord - 1 >= 0:
 		y_coord -= 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	return {"result": False, "msg": "The target is not a monster"}
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	return {"result": False, "msg": "玩家面对的不是怪物！"}
 
 # 圣锤，在样板中的作用跟炸弹完全一样
 def hammer():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
 	y_coord = PlayerCon.pos[1]
 	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 1 and x_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 1 and x_coord - 1 >= 0:
 		x_coord -= 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	elif PlayerCon.face[0] == 3 and y_coord - 1 > 0:
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	elif PlayerCon.face[0] == 3 and y_coord - 1 >= 0:
 		y_coord -= 1
-		if mapdata[y_coord][x_coord] > 200:
-			map_write(PlayerCon.floor, x_coord, y_coord, 0)
-			return True
-	return {"result": False, "msg": "The target is not a monster"}
+		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			CurrentMap.remove_block(x_coord, y_coord)
+			return {"result": True}
+	return {"result": False, "msg": "玩家面对的不是怪物！"}
 
 # 中心对称飞行器，可以飞向当前楼层中心对称的位置
 def centerFly():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	x_coordinate = PlayerCon.pos[0]
 	y_coordinate = PlayerCon.pos[1]
 	x_max_index = int(WIDTH / BLOCK_UNIT) - 5
 	y_max_index = int(HEIGHT / BLOCK_UNIT) - 1
 	x_center = x_max_index / 2
 	y_center = y_max_index / 2
-	x_after_fly = x_coordinate - (2 * (x_coordinate - x_center))
-	y_after_fly = y_coordinate - (2 * (y_coordinate - y_center))
-	if check_map(PlayerCon.floor, 0):
+	x_after_fly = int(x_coordinate - (2 * (x_coordinate - x_center)))
+	y_after_fly = int(y_coordinate - (2 * (y_coordinate - y_center)))
+	if CurrentMap.get_block(x_after_fly, y_after_fly) == 0:
 		PlayerCon.pos[0] = x_after_fly
 		PlayerCon.pos[1] = y_after_fly
+		PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
 		return {"result": True}
 	else:
-		return {"result": False, "msg": "Obstacle blocking"}
+		return {"result": False, "msg": "落点有障碍物！"}
 
 # 上楼器，可以飞往楼上的相同位置
 def upFly():
-	if PlayerCon.floor + 1 > len(map_database):
-		return {"result": False, "msg": "You are on top floor"}
-	elif check_map(PlayerCon.floor + 1, 0):
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
+	if PlayerCon.floor + 1 > len(CurrentMap.floor_index["index"]):
+		return {"result": False, "msg": "玩家已经在最高层"}
+	elif CurrentMap.get_block(PlayerCon.pos[0], PlayerCon.pos[1], floor=PlayerCon.floor + 1) == 0:
 		PlayerCon.floor += 1
+		CurrentMap.set_map(PlayerCon.floor)
 		return {"result": True}
 	else:
-		return {"result": False, "msg": "Obstacle blocking"}
+		return {"result": False, "msg": "落点有障碍物！"}
 
 # 下楼器，可以飞往楼下的相同位置
 def downFly():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	if PlayerCon.floor - 1 < 0:
-		return {"result": False, "msg": "You are on bottom floor"}
-	elif check_map(PlayerCon.floor - 1, 0):
+		return {"result": False, "msg": "玩家已经在最低层"}
+	elif CurrentMap.get_block(PlayerCon.pos[0], PlayerCon.pos[1], floor=PlayerCon.floor - 1) == 0:
 		PlayerCon.floor -= 1
+		CurrentMap.set_map(PlayerCon.floor)
 		return {"result": True}
 	else:
-		return {"result": False, "msg": "Obstacle blocking"}
+		return {"result": False, "msg": "落点有障碍物！"}
 
 def poisonWine():
 	pass
@@ -566,40 +586,48 @@ def curseWine():
 	pass
 
 # 圣水，使用后生命翻倍
-def superWine():
+def superPotion():
+	PlayerCon = global_var.get_value("PlayerCon")
 	PlayerCon.hp *= 2
-	return True
+	return {"result": True}
 
 # 生命魔杖，可以恢复100点生命值
 def lifeWand():
+	PlayerCon = global_var.get_value("PlayerCon")
 	PlayerCon.hp += 100
-	return True
+	return {"result": True}
 
 # 跳跃靴，能跳跃到前方两格处
 def jumpShoes():
+	PlayerCon = global_var.get_value("PlayerCon")
+	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
 	y_coord = PlayerCon.pos[1]
 	if PlayerCon.face[0] == 0 and y_coord + 2 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 2
-		if mapdata[y_coord][x_coord] == 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 0:
 			PlayerCon.pos[1] += 2
-			return True
-	elif PlayerCon.face[0] == 1 and x_coord - 2 > 0:
+			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
+			return {"result": True}
+	elif PlayerCon.face[0] == 1 and x_coord - 2 >= 0:
 		x_coord -= 2
-		if mapdata[y_coord][x_coord] == 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 0:
 			PlayerCon.pos[0] -= 2
-			return True
+			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
+			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 2 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 2
-		if mapdata[y_coord][x_coord] == 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 0:
 			PlayerCon.pos[0] += 2
-			return True
-	elif PlayerCon.face[0] == 3 and y_coord - 2 > 0:
+			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
+			return {"result": True}
+	elif PlayerCon.face[0] == 3 and y_coord - 2 >= 0:
 		y_coord -= 2
-		if mapdata[y_coord][x_coord] == 0:
+		if CurrentMap.get_block(x_coord, y_coord) == 0:
 			PlayerCon.pos[1] -= 2
-			return True
-	return {"result": False, "msg": "The destination is not empty"}
+			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
+			return {"result": True}
+	return {"result": False, "msg": "落点有障碍物！"}
 
 def skill1():
 	pass

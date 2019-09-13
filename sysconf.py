@@ -21,7 +21,7 @@ PLAYER_DEF = 0
 PLAYER_MDEF = 0
 PLAYER_GOLD = 0
 PLAYER_EXP = 0
-PLAYER_ITEM = {21:5,22:4,23:7,24:10}
+PLAYER_ITEM = {21:5,22:4,23:7,24:10,47:10,57:2,26:1,49:3,50:3,51:2,52:2,56:5,68:5,69:3}
 # --- 勇士数据设置 END ---
 
 # --- 物品/道具数据设置 START ---
@@ -49,12 +49,13 @@ SHIELD_5 = 160
 
 # 【可选】设置
 STEEL_DOOR_NEEDS_KEY = True
-BIG_KEY_OPEN_YELLOW_DOORS = False
+BIG_KEY_OPEN_YELLOW_DOORS = True
 # --- 道具数据设置 END ---
 
 
 # --- 基本常数 START ---
 # 定义游戏属性
+SIDE_BLOCK_COUNT = 13
 WIDTH = (13 + 4) * 64  # 1088  # (13 + 4) * 64
 HEIGHT = 13 * 64  # 832  # 13 * 64
 # BLOCK_UNIT 定义每格大小

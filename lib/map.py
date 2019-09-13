@@ -136,9 +136,17 @@ class MapGround(GroundSurface):
             self.temp_srufcae = self.surface.copy()
     
     # get_block 获取指定地点的图块
-    def get_block(self, x, y):
-        if self.map_data is not None:
-            return self.map_data[y][x]
+    def get_block(self, x, y, floor=None):
+        if floor == None:
+            temp_map_data = self.map_data
+        else:
+            temp_map_data = self.get_map(floor)
+        if temp_map_data is not None:
+            if x >= 0 and x <= SIDE_BLOCK_COUNT - 1 and y >= 0 and y <= SIDE_BLOCK_COUNT - 1:
+                return temp_map_data[y][x]
+            else:
+                print("[DEBUG]尝试读取地图边界外数据！")
+                return None
         else:
             return []
     

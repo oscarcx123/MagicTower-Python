@@ -2,7 +2,9 @@ from lib import global_var
 import pygame
 from lib import ground
 from sysconf import *
-from project.function import draw_status_bar, get_current_enemy, sort_item
+from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item
+from project.items import *
+from project import block
 import math
 import os
 import json
@@ -126,21 +128,35 @@ class Book(Menu):
 
 
 # 开始菜单，通过继承Menu得到
-# TODO: 目前并没有对index进行判断，因为还没有实现读档功能
-#       目前UI极其简陋，需要进行美化
 class StartMenu(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
         self.name = "开始菜单"
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
-                        pygame.K_RETURN: 'close'}
+                        pygame.K_RETURN: 'enter',}
 
     def action(self, event):
-        if self.active:
-            return Menu.action(self, event)
-        else:
-            return False
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'enter':
+                    if self.current_index == 0:
+                        self.close()
+                        idx = 0
+                    elif self.current_index == 1:
+                        self.close()
+                        idx = 0
+                        load = global_var.get_value("LOAD")
+                        load.open()
+                elif type(idx) is not int:
+                    idx = 0
+                if self.active:
+                    self.current_index += idx
+                return True
 
     def draw(self, current_index=0):
         # 此处人为指定index上下限，因为已知仅有两个选项
@@ -174,12 +190,16 @@ class Backpack(Menu):
                                pygame.K_RIGHT: +8,
                                pygame.K_UP: -1,
                                pygame.K_DOWN: +1,
+                               pygame.K_RETURN: 'enter',
                                pygame.K_ESCAPE: 'close'}
 
         # 通过simple和detail区分场景
         self.mode = "simple"
+        # 每页道具数量
+        self.item_per_page = 8
         self.detail_index = 0
         self.cls_index = []
+        self.current_sort_list = []
     
     # 绘制背包
     def draw(self, current_index=0):
@@ -216,32 +236,31 @@ class Backpack(Menu):
             self.draw_text("你没有该分类下的物品", 36, BLACK, 4, 3)
         else:
             # 生成当前类型下的物品数组
-            current_sort_list = []
+            self.current_sort_list = []
             for item in current_sort_info:
-                current_sort_list.append(item)
+                self.current_sort_list.append(item)
             # 检测index是否超出范围
             self.detail_index = max(0, self.detail_index)
-            self.detail_index = min(self.detail_index, len(current_sort_list) - 1)
-            # 计算分页并从current_sort_list中提取需要展示的数据
-            item_per_page = 8
-            total_page = math.ceil(len(current_sort_list) / item_per_page)
-            current_page = math.ceil((self.detail_index + 1) / item_per_page)
-            slice_start = (current_page - 1) * item_per_page
-            slice_end = min(slice_start + item_per_page, len(current_sort_list))
-            current_sort_list = current_sort_list[slice_start:slice_end]
+            self.detail_index = min(self.detail_index, len(self.current_sort_list) - 1)
+            # 计算分页并从self.current_sort_list中提取需要展示的数据
+            total_page = math.ceil(len(self.current_sort_list) / self.item_per_page)
+            current_page = math.ceil((self.detail_index + 1) / self.item_per_page)
+            slice_start = (current_page - 1) * self.item_per_page
+            slice_end = min(slice_start + self.item_per_page, len(self.current_sort_list))
+            self.current_sort_list = self.current_sort_list[slice_start:slice_end]
             # 绘制物品条目
             i = 0
-            for item in current_sort_list:
+            for item in self.current_sort_list:
                 self.draw_text(str(current_sort_info[item]["item_name"]), 36, BLACK, 4, 3 + i)
                 self.draw_text("数量：" + str(current_sort_info[item]["item_amount"]), 36, BLACK, 7, 3 + i)
                 i += 1
             if self.mode == "simple":
                 self.draw_rect((4, 3), (17, 4), 3, RED)
-                self.draw_text("描述：" + current_sort_info[current_sort_list[0]]["item_text"], 36, BLACK, 4, 0)
+                self.draw_text("描述：" + current_sort_info[self.current_sort_list[0]]["item_text"], 36, BLACK, 4, 0)
             elif self.mode == "detail":
-                k = self.detail_index % item_per_page
+                k = self.detail_index % self.item_per_page
                 self.draw_rect((4, 3 + k), (17, 4 + k), 3, RED)
-                self.draw_text("描述：" + current_sort_info[current_sort_list[k]]["item_text"], 36, BLACK, 4, 0)
+                self.draw_text("描述：" + current_sort_info[self.current_sort_list[k]]["item_text"], 36, BLACK, 4, 0)
         
     # 注册到action_control的函数
     def action(self, event):
@@ -276,6 +295,15 @@ class Backpack(Menu):
             if key in key_map:
                 idx = key_map[key]
                 print(self.name,key,key_map)
+                if idx == "enter":
+                    self.mode = "simple"
+                    self.close()
+                    idx = 0
+                    use_result = self.use_item()
+                    if use_result:
+                        print("[DEBUG]道具使用成功！")
+                    else:
+                        print("[DEBUG]该道具不可被使用！")
                 if idx == 'close':
                     self.mode = "simple"
                     self.detail_index = 0
@@ -284,6 +312,27 @@ class Backpack(Menu):
                     self.detail_index += idx
                     return True
             return False
+
+    def use_item(self):
+        k = self.detail_index % self.item_per_page
+        item = self.current_sort_list[k]
+        try:
+            item_name_id = block.BlockData[str(item)]["id"]
+            item_function = ITEMS_DATA["useItemEffect"][item_name_id]
+        except KeyError:
+            return False
+        command = (
+                f"item_result = {item_function}\n"
+                f"if item_result['result'] == True:\n"
+                f"    remove_item(item, 1)\n"
+                f"else:\n"
+                f"    print(item_result['msg'])\n"
+            )
+        exec(command)
+        CurrentMap = global_var.get_value("CurrentMap")
+        CurrentMap.set_map(self.PlayerCon.floor)
+        draw_status_bar()
+        return True
 
 
 # 存读档菜单，通过继承Menu得到
@@ -439,7 +488,9 @@ class LoadMenu(SaveLoadMenu):
             self.PlayerCon.gold = save_file["hero"]["gold"]
             self.PlayerCon.exp = save_file["hero"]["exp"]
             self.PlayerCon.floor = save_file["hero"]["floor"]
-            self.PlayerCon.item = save_file["hero"]["item"]
+            self.PlayerCon.item = {}
+            for item_num_id in save_file["hero"]["item"]:
+                self.PlayerCon.item[int(item_num_id)] = save_file["hero"]["item"][item_num_id]
             self.PlayerCon.pos = save_file["hero"]["pos"]
             CurrentMap.MAP_DATABASE = save_file["map"]
             CurrentMap.set_map(self.PlayerCon.floor)

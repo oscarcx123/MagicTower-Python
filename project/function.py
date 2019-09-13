@@ -205,7 +205,7 @@ def remove_item(map_object, amount):
             # 玩家没有足量物品，直接对该物品进行清零
             PlayerCon.item.pop(map_object)
 
-# add_item 从背包移除物品
+# add_item 向背包增加物品
 def add_item(map_object, amount):
     if map_object in PlayerCon.item:
         PlayerCon.item[map_object] += amount
