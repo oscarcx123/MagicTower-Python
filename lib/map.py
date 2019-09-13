@@ -146,7 +146,7 @@ class MapGround(GroundSurface):
                 return temp_map_data[y][x]
             else:
                 print("[DEBUG]尝试读取地图边界外数据！")
-                return None
+                return "onSide"
         else:
             return []
     

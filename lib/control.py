@@ -33,8 +33,7 @@ class Player(EventSprite):
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
-        # 碰到地图边界的情况
-        if block_id == None:
+        if block_id == "onSide":
             return False
         # block_id = 1 -> 墙
         if int(block_id) == 1:
@@ -71,11 +70,12 @@ class Player(EventSprite):
             for k in key_map:
                 op = key_map[k]
                 if keystate[k]:
-                    x = op[0] + self.pos[0]
-                    y = op[1] + self.pos[1]
-                    if not self.proc_block(CurrentMap.get_block(x, y), x, y):
+                    if not self.proc_block(CurrentMap.get_block(self.pos[0] + op[0], self.pos[1] + op[1]), self.pos[0] + op[0], self.pos[1] + op[1]):
                         self.change_face(*op)
                     else:
+                        x = op[0] + self.pos[0]
+                        y = op[1] + self.pos[1]
+
                         def temp_fun():
                             self.pos = [x, y]
 
@@ -86,3 +86,6 @@ class Player(EventSprite):
     def change_hero_loc(self, x, y):
         self.move_directly(CurrentMap.trans_locate(x, y, "down"))
         self.pos = [x, y]
+
+
+#
