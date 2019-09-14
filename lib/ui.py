@@ -112,8 +112,9 @@ class Book(Menu):
         enemy_info_list = enemy_info_list[slice_start:slice_end]
         # 绘制怪物手册条目
         i = 0
+        drawSprite = len(self.group.spritedict) == 0
         for enemy in enemy_info_list:
-            self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
+            if drawSprite : self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
 
             self.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             self.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
