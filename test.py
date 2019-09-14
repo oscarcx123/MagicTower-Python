@@ -6,7 +6,6 @@ import json
 from sysconf import *
 
 pygame.init()
-pygame.mixer.init()
 # 设置游戏窗口大小
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 # 设置窗口标题
@@ -27,6 +26,7 @@ from lib import actions
 
 action_control = actions.ActionControl()
 
+from lib import music
 
 def init():
     # 初始化全局变量
@@ -96,13 +96,8 @@ def init_actions():
 
 
 def init_sound():
-    # 在这里加载全部音乐
-    pygame.mixer.music.load(path.join(snd_dir, "xingxingdiandeng.ogg"))
-    # some_sound = pygame.mixer.Sound(path.join(snd_dir, "some.wav"))
-    # 背景音乐的音量（0-1）
-    pygame.mixer.music.set_volume(0.5)
-    # 让背景音乐循环播放
-    pygame.mixer.music.play(loops=-1)
+    Music = music.MusicWrapper()
+    global_var.set_value("Music", Music)
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:

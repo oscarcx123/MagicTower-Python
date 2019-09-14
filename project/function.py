@@ -21,12 +21,27 @@ def flush_status():
     # 刷新状态栏显示
     draw_status_bar()
 
+# 检测怪物是否有指定特殊能力
+def has_ability(mon_ability, ability_num):
+    if type(mon_ability) is int:
+        if ability_num == mon_ability:
+            return True
+        else:
+            return False
+    else:
+        if ability_num in mon_ability:
+            return True
+        else:
+            return False
+
+
 # get_damage_info 获取战斗伤害（模拟战斗）
 def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
     if hero_atk == None and hero_def == None and hero_mdef == None:
         hero_atk = PlayerCon.attack
         hero_def = PlayerCon.defend
         hero_mdef = PlayerCon.mdefend
+    
     # 通过get_enemy_info获得怪物数据
     monster_stats = get_enemy_info(map_object)
     mon_name = monster_stats["name"]
@@ -35,6 +50,12 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
     mon_def = monster_stats["def"]
     mon_gold = monster_stats["money"]
     mon_exp = monster_stats["experience"]
+    mon_ability = monster_stats["special"]
+
+    # 初始化一些辅助计算数值
+    # 初始伤害（战前额外伤害，先攻等等都使用这个计算）
+    init_damage = 0
+
     # 检测勇士能否破怪物防御
     if hero_atk <= mon_def:
         return {"status": False,
@@ -44,18 +65,46 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
                 "mon_def": mon_def,
                 "mon_gold": mon_gold,
                 "mon_exp": mon_exp,
-                "damage": "???"}
-    # 计算每回合勇士受到的伤害
+                "damage": "???",
+                "mon_ability": mon_ability}
+
+    # TODO:吸血（ability=11）
+
+    # 计算每回合怪物对勇士造成的伤害
     damage_from_mon_per_turn = mon_atk - hero_def
+
+    # 魔攻检测（怪物无视勇士的防御）
+    if has_ability(mon_ability, 2):
+        damage_from_mon_per_turn = mon_atk
+
     # 勇士受到伤害是否 < 0
     if damage_from_mon_per_turn < 0:
         damage_from_mon_per_turn = 0
+
+    # 2连击（怪物每回合攻击2次）
+    if has_ability(mon_ability, 4):
+        damage_from_mon_per_turn *= 2
+
+    # 3连击（怪物每回合攻击3次）
+    if has_ability(mon_ability, 5):
+        damage_from_mon_per_turn *= 3
+
+    # TODO:N连击（ability=6）
+
+    # TODO:反击（ability=8）
+
+    # 先攻（怪物首先攻击）
+    if has_ability(mon_ability, 1):
+        init_damage += damage_from_mon_per_turn
+
+    # TODO:N连击（ability=6）
+
     # 计算每回合勇士对怪物造成的伤害
     damage_from_hero_per_turn = hero_atk - mon_def
     # 计算勇士击杀怪物所需的回合数
     turn = math.ceil(mon_hp / damage_from_hero_per_turn)
     # 计算勇士本次战斗所受到的伤害
-    damage = damage_from_mon_per_turn * (turn - 1) - hero_mdef
+    damage = init_damage + damage_from_mon_per_turn * (turn - 1) - hero_mdef
     # 勇士不允许受到负数伤害（治疗）
     if damage < 0:
         damage = 0
@@ -66,7 +115,8 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
                 "mon_def": mon_def,
                 "mon_gold": mon_gold,
                 "mon_exp": mon_exp,
-                "damage": damage}
+                "damage": damage,
+                "mon_ability": mon_ability}
     return result
 
 # get_criticals 获得攻击临界数据
@@ -134,6 +184,7 @@ def get_current_enemy(map_data):
         temp_y += 1
         temp_x = 0
     enemy_info_list = []
+    strong_enemy_info_list = []
     for enemy in enemy_list:
         # 获取怪物战斗伤害和基本信息
         enemy_info = get_damage_info(enemy)
@@ -149,6 +200,12 @@ def get_current_enemy(map_data):
             enemy_info["next_critical_decrease"] = 0
         # 获取防御临界点
         enemy_info["next_def_critical"] = next_def_critical(enemy)
+        if enemy_info["damage"] == "???":
+            strong_enemy_info_list.append(enemy_info)
+        else:
+            enemy_info_list.append(enemy_info)
+    enemy_info_list = sorted(enemy_info_list, key = lambda i: i["damage"])
+    for enemy_info in strong_enemy_info_list:
         enemy_info_list.append(enemy_info)
     return enemy_info_list
 
@@ -164,6 +221,9 @@ def battle(map_object, x, y):
         if result["damage"] >= PlayerCon.hp:
             return False
         else:
+            # 播放战斗音效
+            Music = global_var.get_value("Music")
+            Music.play_SE("attack.ogg")
             # 战后勇士数据结算
             PlayerCon.hp -= result["damage"]
             PlayerCon.gold += result["mon_gold"]
@@ -175,6 +235,8 @@ def battle(map_object, x, y):
 
 # pickup_item 玩家捡起物品（直接使用/进入道具栏）
 def pickup_item(map_object, x, y):
+    Music = global_var.get_value("Music")
+    Music.play_SE("item.ogg")
     item_name = BlockData[str(map_object)]["id"]
     item_type = ITEMS_DATA["items"][item_name]["cls"]
     # item_type为items，直接使用
@@ -246,19 +308,16 @@ def sort_item(category):
             
 # open_door 处理开门事件
 def open_door(map_object, x, y, no_key=False):
+    Music = global_var.get_value("Music")
     # 定义门与钥匙对应关系，默认花门（map_object=85）无法通过钥匙打开
     door_to_key = {81: 21,
                    82: 22,
                    83: 23,
                    84: 24,
                    86: 25}
-    # 如果无需钥匙，直接开门
-    if no_key:
-        CurrentMap.remove_block(x, y)
-        flush_status()
-        return True
-    # 如果是铁门而且无需钥匙，直接开门
-    if map_object == 86 and STEEL_DOOR_NEEDS_KEY == False:
+    # ”无需钥匙“或者”是铁门而且无需钥匙“，直接开门
+    if no_key or (map_object == 86 and STEEL_DOOR_NEEDS_KEY == False):
+        Music.play_SE("door.ogg")
         CurrentMap.remove_block(x, y)
         flush_status()
         return True
@@ -269,6 +328,7 @@ def open_door(map_object, x, y, no_key=False):
         return False
     # 如果玩家持有钥匙，那么扣除钥匙开门
     if key in PlayerCon.item:
+        Music.play_SE("door.ogg")
         if PlayerCon.item[key] > 1:
             PlayerCon.item[key] -= 1
         else:
@@ -282,6 +342,8 @@ def open_door(map_object, x, y, no_key=False):
 def change_floor(block, x, y):
     MAP_DATABASE = global_var.get_value("MAP_DATABASE")
     floor_index = global_var.get_value("floor_index")
+    Music = global_var.get_value("Music")
+    Music.play_SE("floor.ogg")
     # 上楼处理
     if block == 87:
         PlayerCon.floor += 1
@@ -333,13 +395,33 @@ def draw_status_bar(StatusBar=None):
     StatusBar.draw_text("B_KEY = " + str(bluekey), 36, BLACK, 0, 8)
     StatusBar.draw_text("R_KEY = " + str(redkey), 36, BLACK, 0, 9)
 
+# 获取怪物特殊能力的相关文字
+def get_ability_text(mon_ability):
+    check_result = {}
+    ability_dict = {
+        1:["先攻", "怪物首先攻击"],
+		2:["魔攻", "怪物无视勇士的防御"],
+		3:["坚固", "勇士每回合最多只能对怪物造成1点伤害"],
+		4:["2连击", "怪物每回合攻击2次"],
+		5:["3连击", "怪物每回合攻击3次"],
+        6:["N连击", "怪物每回合攻击N次"],
+		7:["破甲", "战斗前，怪物附加角色防御的X%作为伤害"],
+		8:["反击", "战斗时，怪物每回合附加角色攻击的X%作为伤害，无视角色防御"],
+		9:["净化", "战斗前，怪物附加勇士魔防的X倍作为伤害"],
+		10:["模仿", "怪物的攻防和勇士攻防相等"],
+		11:["吸血", "战斗前，怪物首先吸取角色的X%生命（约X点）作为伤害，并把伤害数值加到自身生命上"],
+		12:["中毒", "战斗后，勇士陷入中毒状态，每一步损失生命X点"],
+		13:["衰弱", "战斗后，勇士陷入衰弱状态，攻防暂时下降X点 / X%"],
+		14:["诅咒", "战斗后，勇士陷入诅咒状态，战斗无法获得金币和经验"],
+		15:["领域", "经过怪物周围自动减生命X点"],
+		16:["夹击", "经过两只相同的怪物中间，勇士生命值变成一半"],
+    }
+    if type(mon_ability) is list:
+        for item in mon_ability:
+            check_result[ability_dict[item][0]] = ability_dict[item][1]
+    elif mon_ability != 0:
+        check_result[ability_dict[mon_ability][0]] = ability_dict[mon_ability][1]
+    return check_result
+        
+		
 
-'''
-# use_item can use a constant / tool item
-def use_item(item_number):
-    item_name = RELATIONSHIP_DICT[str(item_number)]["id"]
-    results = exec(ITEM_PROPERTY["useItemEffect"][item_name])
-    if results["result"] == False:
-        print(results["msg"])  # Will put it in a msg box in the future
-
-'''

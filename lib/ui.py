@@ -2,7 +2,7 @@ from lib import global_var
 import pygame
 from lib import ground
 from sysconf import *
-from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item
+from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item, get_ability_text
 from project.items import *
 from project import block
 import math
@@ -63,6 +63,7 @@ class Menu(UIComponent):
                     idx = 0
                 if self.active:
                     self.current_index += idx
+                    self.group.empty()
                 return True
             else:
                 if idx == 'open':
@@ -117,6 +118,22 @@ class Book(Menu):
             if drawSprite : self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
 
             self.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            
+            # 显示怪物特殊能力
+            ability_text = get_ability_text(enemy["mon_ability"])
+            if len(ability_text) == 0:
+                pass
+            elif len(ability_text) == 1:
+                for item in ability_text:
+                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+            elif len(ability_text) == 2:
+                temp_index = 1
+                for item in ability_text:
+                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10 + 36 * temp_index, "px")
+                    temp_index += 1
+            else:
+                self.draw_text("能力太多", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+
             self.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             self.draw_text("攻击 " + str(enemy["mon_atk"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             self.draw_text("防御 " + str(enemy["mon_def"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")

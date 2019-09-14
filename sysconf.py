@@ -8,6 +8,8 @@ FONT_NAME = "resource/simhei.ttf"
 DEBUG = False
 # SAVE_MAX_AMOUNT为最大允许存档数量
 SAVE_MAX_AMOUNT = 100
+# 玩家移动速度（移动一格所需要的毫秒数 & 换腿所需时间的两倍）
+PLAYER_SPEED = 125
 # --- 勇士数据设置 START ---
 # 玩家初始坐标以及楼层
 # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
@@ -15,24 +17,24 @@ X_COORDINATE = 6
 Y_COORDINATE = 10
 PLAYER_FLOOR = 0
 # 玩家初始属性
-PLAYER_HP = 100
-PLAYER_ATK = 1
-PLAYER_DEF = 0
+PLAYER_HP = 815
+PLAYER_ATK = 10
+PLAYER_DEF = 8
 PLAYER_MDEF = 0
 PLAYER_GOLD = 0
 PLAYER_EXP = 0
-PLAYER_ITEM = {21:5,22:4,23:7,24:10,47:10,57:2,26:1,49:3,50:3,51:2,52:2,56:5,68:5,69:3}
+PLAYER_ITEM = {21:2,23:2,24:10,47:10,57:2,26:1,49:3,50:3,51:2,52:2,56:5,68:5,69:3}
 # --- 勇士数据设置 END ---
 
 # --- 物品/道具数据设置 START ---
 # 宝石
-RED_JEWEL = 1
-BLUE_JEWEL = 1
+RED_JEWEL = 2
+BLUE_JEWEL = 2
 GREEN_JEWEL = 4
 YELLOW_JEWEL = 1
 # 血瓶
-RED_POTION = 40
-BLUE_POTION = 80
+RED_POTION = 100
+BLUE_POTION = 200
 GREEN_POTION = 400
 YELLOW_POTION = 800
 # 装备
@@ -73,6 +75,8 @@ null = None
 # 定义图片，音乐的路径
 img_dir = path.join(path.dirname(__file__), "img")
 snd_dir = path.join(path.dirname(__file__), "sound")
+bgm_dir = path.join(snd_dir, "BGM")
+se_dir = path.join(snd_dir, "SE")
 
 ## 定义颜色
 # 红色系

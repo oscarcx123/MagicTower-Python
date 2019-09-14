@@ -20,7 +20,7 @@ class Player(EventSprite):
         map_pos = CurrentMap.trans_locate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
         self.rect.bottom = map_pos[1]
-        self.animate_speed = 250  # 移动一格所需要的毫秒数 & 换腿所需时间的两倍
+        self.animate_speed = PLAYER_SPEED  # 移动一格所需要的毫秒数 & 换腿所需时间的两倍
         self.animate = False
         self.hp = PLAYER_HP
         self.attack = PLAYER_ATK
@@ -35,15 +35,15 @@ class Player(EventSprite):
     def proc_block(self, block_id, x, y):
         if block_id == "onSide":
             return False
-        # block_id = 1 -> 墙
-        if int(block_id) == 1:
+        # block_id = 1-5 -> 各类墙
+        if int(block_id) >= 1 and int(block_id) <= 5:
             return False
         # block_id = 21~69 -> 道具
         elif int(block_id) >= 21 and int(block_id) <= 69:
             pickup_item(block_id, x, y)
             return True
         # block_id = 81~86 -> 门
-        elif int(block_id) >= 81 and int(block_id) <= 84 or int(block_id) == 86:
+        elif int(block_id) >= 81 and int(block_id) <= 86:
             result = open_door(block_id, x, y)
             if result == False:
                 return False
@@ -65,23 +65,39 @@ class Player(EventSprite):
         key_map = {pygame.K_LEFT: [-1, 0],
                    pygame.K_RIGHT: [1, 0],
                    pygame.K_UP: [0, -1],
-                   pygame.K_DOWN: [0, 1]}
+                   pygame.K_DOWN: [0, 1],
+                   pygame.K_z: "change_face"}
         if not self.moving and not self.lock:
             for k in key_map:
                 op = key_map[k]
                 if keystate[k]:
-                    if not self.proc_block(CurrentMap.get_block(self.pos[0] + op[0], self.pos[1] + op[1]), self.pos[0] + op[0], self.pos[1] + op[1]):
-                        self.change_face(*op)
-                    else:
-                        x = op[0] + self.pos[0]
-                        y = op[1] + self.pos[1]
+                    if type(op) is list:
+                        if not self.proc_block(CurrentMap.get_block(self.pos[0] + op[0], self.pos[1] + op[1]), self.pos[0] + op[0], self.pos[1] + op[1]):
+                            self.change_face(*op)
+                        else:
+                            x = op[0] + self.pos[0]
+                            y = op[1] + self.pos[1]
 
-                        def temp_fun():
-                            self.pos = [x, y]
+                            def temp_fun():
+                                self.pos = [x, y]
 
-                        self.move(CurrentMap.trans_locate(x, y, "down"), callback=temp_fun)
+                            self.move(CurrentMap.trans_locate(x, y, "down"), callback=temp_fun)
+                    elif type(op) is str:
+                        # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
+                        face = self.get_face()
+                        face_map = {
+                            0:1,
+                            1:3,
+                            3:2,
+                            2:0
+                        }
+                        self.face[0] = face_map[face]
+                        pygame.time.wait(self.animate_speed)
 
         super().update(*args)
+
+    def get_face(self):
+        return self.face[0]
 
     def change_hero_loc(self, x, y):
         self.move_directly(CurrentMap.trans_locate(x, y, "down"))

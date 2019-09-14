@@ -19,7 +19,7 @@ class BlockUnit:
 BlockData = {
     "1": {"cls": "terrains", "id": "yellowWall", "canBreak": true},
     "2": {"cls": "terrains", "id": "whiteWall", "canBreak": true},
-    "3": {"cls": "terrains", "id": "blueWall", "canBreak": false},
+    "3": {"cls": "terrains", "id": "blueWall", "canBreak": true},
     "4": {"cls": "animates", "id": "star", "noPass": true},
     "5": {"cls": "animates", "id": "lava", "noPass": true},
     "6": {"cls": "terrains", "id": "ice"},

@@ -1,5 +1,6 @@
 from lib.utools import *
 from lib import global_var
+from project.block import BlockData
 
 
 ITEMS_START_NUM = 21
@@ -409,8 +410,11 @@ def earthquake():
 	temp_y = 0
 	while temp_y < HEIGHT / BLOCK_UNIT:
 		while temp_x < WIDTH / BLOCK_UNIT - 4:
-			if CurrentMap.get_block(temp_x, temp_y) == 1: # 默认可破坏的是黄墙
-				CurrentMap.remove_block(temp_x, temp_y)
+			temp_block = CurrentMap.get_block(temp_x, temp_y)
+			 # 可能破坏的是三种墙，编号是1-3
+			if temp_block in range(1,4):
+				if BlockData[str(temp_block)]["canBreak"]:
+					CurrentMap.remove_block(temp_x, temp_y)
 			temp_x += 1
 		temp_y += 1
 		temp_x = 0
@@ -418,30 +422,47 @@ def earthquake():
 
 # 破墙镐，可以破坏勇士面前的墙
 def pickaxe():
+	Music = global_var.get_value("Music")
 	PlayerCon = global_var.get_value("PlayerCon")
 	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
 	y_coord = PlayerCon.pos[1]
 	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
-		if CurrentMap.get_block(x_coord, y_coord) == 1:
-			CurrentMap.remove_block(x_coord, y_coord)
-			return {"result": True}
+		temp_block = CurrentMap.get_block(x_coord, y_coord)
+		# 可能破坏的是三种墙，编号是1-3
+		if temp_block in range(1,4):
+			if BlockData[str(temp_block)]["canBreak"]:
+				Music.play_SE("pickaxe.ogg")
+				CurrentMap.remove_block(x_coord, y_coord)
+				return {"result": True}
 	elif PlayerCon.face[0] == 1 and x_coord - 1 >= 0:
 		x_coord -= 1
-		if CurrentMap.get_block(x_coord, y_coord) == 1:
-			CurrentMap.remove_block(x_coord, y_coord)
-			return {"result": True}
+		temp_block = CurrentMap.get_block(x_coord, y_coord)
+		# 可能破坏的是三种墙，编号是1-3
+		if temp_block in range(1,4):
+			if BlockData[str(temp_block)]["canBreak"]:
+				Music.play_SE("pickaxe.ogg")
+				CurrentMap.remove_block(x_coord, y_coord)
+				return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
-		if CurrentMap.get_block(x_coord, y_coord) == 1:
-			CurrentMap.remove_block(x_coord, y_coord)
-			return {"result": True}
+		temp_block = CurrentMap.get_block(x_coord, y_coord)
+		# 可能破坏的是三种墙，编号是1-3
+		if temp_block in range(1,4):
+			if BlockData[str(temp_block)]["canBreak"]:
+				Music.play_SE("pickaxe.ogg")
+				CurrentMap.remove_block(x_coord, y_coord)
+				return {"result": True}
 	elif PlayerCon.face[0] == 3 and y_coord - 1 >= 0:
 		y_coord -= 1
-		if CurrentMap.get_block(x_coord, y_coord) == 1:
-			CurrentMap.remove_block(x_coord, y_coord)
-			return {"result": True}
+		temp_block = CurrentMap.get_block(x_coord, y_coord)
+		# 可能破坏的是三种墙，编号是1-3
+		if temp_block in range(1,4):
+			if BlockData[str(temp_block)]["canBreak"]:
+				Music.play_SE("pickaxe.ogg")
+				CurrentMap.remove_block(x_coord, y_coord)
+				return {"result": True}
 	return {"result": False, "msg": "玩家面对的不是墙！"}
 
 def icePickaxe():
@@ -476,6 +497,7 @@ def bigKey():
 
 # 炸弹，可以炸掉勇士面前的怪物
 def bomb():
+	Music = global_var.get_value("Music")
 	PlayerCon = global_var.get_value("PlayerCon")
 	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
@@ -483,21 +505,25 @@ def bomb():
 	if PlayerCon.face[0] == 0 and y_coord + 1 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 1
 		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			Music.play_SE("bomb.ogg")
 			CurrentMap.remove_block(x_coord, y_coord)
 			return {"result": True}
 	elif PlayerCon.face[0] == 1 and x_coord - 1 >= 0:
 		x_coord -= 1
 		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			Music.play_SE("bomb.ogg")
 			CurrentMap.remove_block(x_coord, y_coord)
 			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 1 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 1
 		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			Music.play_SE("bomb.ogg")
 			CurrentMap.remove_block(x_coord, y_coord)
 			return {"result": True}
 	elif PlayerCon.face[0] == 3 and y_coord - 1 >= 0:
 		y_coord -= 1
 		if CurrentMap.get_block(x_coord, y_coord) > 200:
+			Music.play_SE("bomb.ogg")
 			CurrentMap.remove_block(x_coord, y_coord)
 			return {"result": True}
 	return {"result": False, "msg": "玩家面对的不是怪物！"}
@@ -532,6 +558,7 @@ def hammer():
 
 # 中心对称飞行器，可以飞向当前楼层中心对称的位置
 def centerFly():
+	Music = global_var.get_value("Music")
 	PlayerCon = global_var.get_value("PlayerCon")
 	CurrentMap = global_var.get_value("CurrentMap")
 	x_coordinate = PlayerCon.pos[0]
@@ -543,6 +570,7 @@ def centerFly():
 	x_after_fly = int(x_coordinate - (2 * (x_coordinate - x_center)))
 	y_after_fly = int(y_coordinate - (2 * (y_coordinate - y_center)))
 	if CurrentMap.get_block(x_after_fly, y_after_fly) == 0:
+		Music.play_SE("centerFly.ogg")
 		PlayerCon.pos[0] = x_after_fly
 		PlayerCon.pos[1] = y_after_fly
 		PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
@@ -599,6 +627,7 @@ def lifeWand():
 
 # 跳跃靴，能跳跃到前方两格处
 def jumpShoes():
+	Music = global_var.get_value("Music")
 	PlayerCon = global_var.get_value("PlayerCon")
 	CurrentMap = global_var.get_value("CurrentMap")
 	x_coord = PlayerCon.pos[0]
@@ -606,24 +635,28 @@ def jumpShoes():
 	if PlayerCon.face[0] == 0 and y_coord + 2 < int(HEIGHT / BLOCK_UNIT):
 		y_coord += 2
 		if CurrentMap.get_block(x_coord, y_coord) == 0:
+			Music.play_SE("jump.ogg")
 			PlayerCon.pos[1] += 2
 			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
 			return {"result": True}
 	elif PlayerCon.face[0] == 1 and x_coord - 2 >= 0:
 		x_coord -= 2
 		if CurrentMap.get_block(x_coord, y_coord) == 0:
+			Music.play_SE("jump.ogg")
 			PlayerCon.pos[0] -= 2
 			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
 			return {"result": True}
 	elif PlayerCon.face[0] == 2 and x_coord + 2 < int(WIDTH / BLOCK_UNIT):
 		x_coord += 2
 		if CurrentMap.get_block(x_coord, y_coord) == 0:
+			Music.play_SE("jump.ogg")
 			PlayerCon.pos[0] += 2
 			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
 			return {"result": True}
 	elif PlayerCon.face[0] == 3 and y_coord - 2 >= 0:
 		y_coord -= 2
 		if CurrentMap.get_block(x_coord, y_coord) == 0:
+			Music.play_SE("jump.ogg")
 			PlayerCon.pos[1] -= 2
 			PlayerCon.change_hero_loc(PlayerCon.pos[0], PlayerCon.pos[1])
 			return {"result": True}
