@@ -1,5 +1,6 @@
 # 这里放各种独立的工具
 import pygame
+import time
 from sysconf import *
 
 
@@ -49,5 +50,9 @@ def get_resource(sid):
         return ICON_IMG[sid]
     if sid in ITEMS_IMG:
         return ITEMS_IMG[sid]
+
+
+def get_time():
+    return time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 
 # !insert! === 在这里编写自定义工具函数 ===

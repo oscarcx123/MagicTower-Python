@@ -5,6 +5,7 @@ from sysconf import *
 from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item, get_ability_text
 from project.items import *
 from project import block
+from lib.utools import get_time
 import math
 import os
 import json
@@ -88,7 +89,6 @@ class Book(Menu):
         self.name = "怪物手册"
     
     # 绘制怪物手册
-    # TODO： 绘制动态的怪物——把sprite添加到对应位置即可 和map是一样的 在发生改变时用类似draw_map的方式更新sprite
     def draw(self, current_index=0, map_index=None):
         if map_index is None:
             map_index = self.PlayerCon.floor
@@ -365,8 +365,8 @@ class SaveLoadMenu(Menu):
         # 写法为：self.key_map[pygame.K_s] = 'open'
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
-                        pygame.K_LEFT: -4,
-                        pygame.K_RIGHT: +4,
+                        pygame.K_LEFT: -6,
+                        pygame.K_RIGHT: +6,
                         pygame.K_ESCAPE: 'close',
                         pygame.K_RETURN: 'enter',}
         self.save_path = os.path.join(os.getcwd(), "save")
@@ -409,7 +409,7 @@ class SaveLoadMenu(Menu):
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, SAVE_MAX_AMOUNT - 1)
         # 计算分页并提取需要展示的数据
-        item_per_page = 4
+        item_per_page = 6
         total_page = math.ceil(SAVE_MAX_AMOUNT / item_per_page)
         current_page = math.ceil((self.current_index + 1) / item_per_page)
         slice_start = (current_page - 1) * item_per_page
@@ -428,8 +428,13 @@ class SaveLoadMenu(Menu):
         for item in check_result:
             save_number = (current_page - 1) * item_per_page + i + 1
             self.draw_text("#" + str(save_number), 30, BLACK, 4 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-            if check_result[item]["file_exist"]:
-                self.draw_text("存在存档！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            if len(check_result[item]) > 0:
+                # 显示勇士基础数值（HP/ATK/DEF/MDEF）
+                self.draw_text("HP " + str(check_result[item]["hp"]) + " / ATK " + str(check_result[item]["attack"]) + " / DEF " + str(check_result[item]["defend"]) + " / MDEF " + str(check_result[item]["mdefend"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+                # 显示勇士位置（楼层 & 坐标）
+                self.draw_text(str(check_result[item]["floor"]) + "F @ " + str((check_result[item]["pos"][0], check_result[item]["pos"][1])), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+                # 显示存档时间（格式YYYY-MM-DD HH:MM:SS）
+                self.draw_text(str(check_result[item]["time"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
             else:
                 self.draw_text("不存在存档！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             i += 1
@@ -446,10 +451,17 @@ class SaveLoadMenu(Menu):
             file_list.append(file_name_1 + str(i) + file_name_2)
         for item in file_list:
             check_result[item] = {}
-            if os.path.isfile(os.path.join(self.save_path, item)):
-                check_result[item]["file_exist"] = True
-            else:
-                check_result[item]["file_exist"] = False
+            full_path = os.path.join(self.save_path, item)
+            if os.path.isfile(full_path):
+                with open(full_path) as f:
+                    save_file = json.load(f)
+                check_result[item]["hp"] = save_file["hero"]["hp"]
+                check_result[item]["attack"] = save_file["hero"]["attack"]
+                check_result[item]["defend"] = save_file["hero"]["defend"]
+                check_result[item]["mdefend"] = save_file["hero"]["mdefend"]
+                check_result[item]["floor"] = save_file["hero"]["floor"]
+                check_result[item]["pos"] = save_file["hero"]["pos"]
+                check_result[item]["time"] = save_file["time"]
         return check_result
 
 
@@ -473,8 +485,10 @@ class SaveMenu(SaveLoadMenu):
         save_file["hero"]["floor"] = self.PlayerCon.floor
         save_file["hero"]["item"] = self.PlayerCon.item
         save_file["hero"]["pos"] = self.PlayerCon.pos
+        save_file["hero"]["face"] = self.PlayerCon.face[0]
         save_file["map"] = CurrentMap.MAP_DATABASE
-
+        save_file["time"] = get_time()
+        # 这里current_index += 1的原因是，index从0开始计算，但是我们希望存档从1开始计算，需要处理这个偏移。
         current_index += 1
         file_name_1 = "save_"
         file_name_2 = ".json"
@@ -494,6 +508,7 @@ class LoadMenu(SaveLoadMenu):
         self.key_map[pygame.K_d] = 'open'
 
     def function(self, current_index):
+        # 同理，这里current_index += 1也是处理index跟存档编号的偏移
         current_index += 1
         file_name_1 = "save_"
         file_name_2 = ".json"
@@ -514,6 +529,7 @@ class LoadMenu(SaveLoadMenu):
             for item_num_id in save_file["hero"]["item"]:
                 self.PlayerCon.item[int(item_num_id)] = save_file["hero"]["item"][item_num_id]
             self.PlayerCon.pos = save_file["hero"]["pos"]
+            self.PlayerCon.face[0] = save_file["hero"]["face"]
             CurrentMap.MAP_DATABASE = save_file["map"]
             CurrentMap.set_map(self.PlayerCon.floor)
             global_var.set_value("CurrentMap", CurrentMap)
