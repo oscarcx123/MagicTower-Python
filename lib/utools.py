@@ -40,12 +40,15 @@ def create_rect(w, h):
 from project.enemy import MONSTER_IMG
 from project.icons import ICON_IMG
 from project.items import ITEMS_IMG
+from project.npc import NPC_IMG
 
 
 # 资源接口 根据配置设置返回值
 def get_resource(sid):
     if sid in MONSTER_IMG:
         return MONSTER_IMG[sid], MONSTER_IMG[sid].get_rect(), (1, 2)
+    if sid in NPC_IMG:
+        return NPC_IMG[sid], NPC_IMG[sid].get_rect(), (1, 2)
     if sid in ICON_IMG:
         return ICON_IMG[sid]
     if sid in ITEMS_IMG:

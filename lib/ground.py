@@ -269,7 +269,7 @@ class GroundSurface:
             Rect = (start_pos[0] * BLOCK_UNIT, start_pos[1] * BLOCK_UNIT, end_pos[0] * BLOCK_UNIT - start_pos[0] * BLOCK_UNIT, end_pos[1] * BLOCK_UNIT - start_pos[1] * BLOCK_UNIT)
         pygame.draw.rect(self.surface, color, Rect, width)
     
-    # TODO: draw_icon （准备提供一个可以调用Sprite的接口）
+    # draw_icon 提供一个可以调用Sprite的接口
     def draw_icon(self, map_element, x, y):
         px, py = self.trans_locate(0, 0)
         rect = Rect(px, py, self.block_size, self.block_size)

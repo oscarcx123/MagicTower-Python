@@ -401,7 +401,11 @@ def book():
 	pass
 	
 def fly():
-	pass
+	FLY = global_var.get_value("FLY")
+	FLY.open()
+	FLY.current_index = FLY.floor_index.index(FLY.floor_index[FLY.PlayerCon.floor])
+	return {"result": True}
+	
 
 # 地震卷轴，可以破坏当前层的所有墙
 def earthquake():

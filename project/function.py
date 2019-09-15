@@ -37,10 +37,36 @@ def has_ability(mon_ability, ability_num):
 
 # get_damage_info 获取战斗伤害（模拟战斗）
 def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
+    # 勇士可以对怪物造成伤害的情况
+    def return_good():
+        return {"status": True,
+                "mon_name": mon_name,
+                "mon_hp": mon_hp,
+                "mon_atk": mon_atk,
+                "mon_def": mon_def,
+                "mon_gold": mon_gold,
+                "mon_exp": mon_exp,
+                "damage": damage,
+                "mon_ability": mon_ability}
+    
+    # 勇士无法对怪物造成伤害
+    def return_bad():
+        return {"status": False,
+                "mon_name": mon_name,
+                "mon_hp": mon_hp,
+                "mon_atk": mon_atk,
+                "mon_def": mon_def,
+                "mon_gold": mon_gold,
+                "mon_exp": mon_exp,
+                "damage": "???",
+                "mon_ability": mon_ability}
+    
     if hero_atk == None and hero_def == None and hero_mdef == None:
         hero_atk = PlayerCon.attack
         hero_def = PlayerCon.defend
         hero_mdef = PlayerCon.mdefend
+    
+    hero_hp = PlayerCon.hp
     
     # 通过get_enemy_info获得怪物数据
     monster_stats = get_enemy_info(map_object)
@@ -55,20 +81,27 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
     # 初始化一些辅助计算数值
     # 初始伤害（战前额外伤害，先攻等等都使用这个计算）
     init_damage = 0
+    # 单回合反击伤害（反击使用这个计算）
+    counter_damage = 0
 
     # 检测勇士能否破怪物防御
     if hero_atk <= mon_def:
-        return {"status": False,
-                "mon_name": mon_name,
-                "mon_hp": mon_hp,
-                "mon_atk": mon_atk,
-                "mon_def": mon_def,
-                "mon_gold": mon_gold,
-                "mon_exp": mon_exp,
-                "damage": "???",
-                "mon_ability": mon_ability}
+        return return_bad()
 
-    # TODO:吸血（ability=11）
+    # 无敌（勇士无法打败怪物，除非拥有十字架（id=55））
+    if has_ability(mon_ability, 20) and has_item(55):
+        return return_bad()
+
+    # 吸血（战斗前，怪物首先吸取角色的%生命，根据add的值决定是否加到怪物身上）
+    if has_ability(mon_ability, 11):
+        try:
+            vampire_rate = monster_stats["value"]
+        except:
+            vampire_rate = 0.2
+        vampire_damage = math.floor(hero_hp * vampire_rate)
+        if monster_stats["add"]:
+            mon_hp += vampire_damage
+        init_damage += vampire_damage
 
     # 计算每回合怪物对勇士造成的伤害
     damage_from_mon_per_turn = mon_atk - hero_def
@@ -89,35 +122,51 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
     if has_ability(mon_ability, 5):
         damage_from_mon_per_turn *= 3
 
-    # TODO:N连击（ability=6）
+    # N连击（怪物每回合攻击N次）
+    if has_ability(mon_ability, 6):
+        try:
+            attack_count = monster_stats["n"]
+        except:
+            attack_count = 4
+        damage_from_mon_per_turn *= attack_count
 
-    # TODO:反击（ability=8）
+    # 反击（战斗时，怪物每回合附加角色攻击的counterAttack%作为伤害，无视角色防御）
+    # 每回合的反击伤害；反击是按照勇士的攻击次数来计算回合
+    if has_ability(mon_ability, 8):
+        counter_damage += math.floor(MON_ABILITY_VALUE["counterAttack"] * hero_atk)
 
     # 先攻（怪物首先攻击）
     if has_ability(mon_ability, 1):
         init_damage += damage_from_mon_per_turn
 
-    # TODO:N连击（ability=6）
+    # 破甲（战斗前，怪物附加角色防御的breakArmor%作为伤害）
+    if has_ability(mon_ability, 7):
+        init_damage += math.floor(MON_ABILITY_VALUE["breakArmor"] * hero_def)
+
+    # 净化（战斗前，怪物附加勇士魔防的purify倍作为伤害）
+    if has_ability(mon_ability, 9):
+        init_damage += math.floor(MON_ABILITY_VALUE["purify"] * hero_mdef)
 
     # 计算每回合勇士对怪物造成的伤害
     damage_from_hero_per_turn = hero_atk - mon_def
     # 计算勇士击杀怪物所需的回合数
     turn = math.ceil(mon_hp / damage_from_hero_per_turn)
     # 计算勇士本次战斗所受到的伤害
-    damage = init_damage + damage_from_mon_per_turn * (turn - 1) - hero_mdef
+    damage = init_damage + damage_from_mon_per_turn * (turn - 1) + counter_damage * turn - hero_mdef
     # 勇士不允许受到负数伤害（治疗）
     if damage < 0:
         damage = 0
-    result = {"status": True,
-                "mon_name": mon_name,
-                "mon_hp": mon_hp,
-                "mon_atk": mon_atk,
-                "mon_def": mon_def,
-                "mon_gold": mon_gold,
-                "mon_exp": mon_exp,
-                "damage": damage,
-                "mon_ability": mon_ability}
-    return result
+    # 计算一些不可被魔法抵消的伤害
+    # 固伤（战斗前，怪物对勇士造成damage点固定伤害，无视勇士魔防）
+    if has_ability(mon_ability, 22):
+        try:
+            extra_damage = monster_stats["damage"]
+        except:
+            print("获取怪物的固伤数值（damage）错误！")
+            extra_damage = 10
+        damage += extra_damage
+
+    return return_good()
 
 # get_criticals 获得攻击临界数据
 # map_object（怪物数字id），result_num（临界结果数量）
@@ -166,6 +215,17 @@ def get_enemy_info(map_object):
     monster_id = BlockData[str(map_object)]["id"]
     # 从/project/enemy.py获取怪物详细数据
     monster_stats = MONSTER_DATA[monster_id]
+    mon_ability = monster_stats["special"]
+
+    # 模仿（怪物的攻防和勇士攻防相等）
+    if has_ability(mon_ability, 10):
+        monster_stats["atk"] = PlayerCon.attack
+        monster_stats["def"] = PlayerCon.defend
+
+    # 坚固（勇士每回合最多只能对怪物造成1点伤害）
+    if has_ability(mon_ability, 3) and monster_stats["def"] < PlayerCon.attack - 1:
+        monster_stats["def"] = PlayerCon.attack - 1
+
     return monster_stats
 
 # get_current_enemy 获得当前地图中全部的怪物的信息（包括伤害）
@@ -224,10 +284,63 @@ def battle(map_object, x, y):
             # 播放战斗音效
             Music = global_var.get_value("Music")
             Music.play_SE("attack.ogg")
+            
             # 战后勇士数据结算
             PlayerCon.hp -= result["damage"]
             PlayerCon.gold += result["mon_gold"]
             PlayerCon.exp += result["mon_exp"]
+
+            # 战后生效的怪物属性处理
+            # 获取怪物数据用于处理战后生效的属性
+            monster_id = BlockData[str(map_object)]["id"]
+            monster_stats = MONSTER_DATA[monster_id]
+            mon_ability = monster_stats["special"]
+
+            # TODO:中毒
+
+
+            # TODO:衰弱
+
+
+            # TODO:诅咒
+
+
+            # TODO:仇恨（击杀仇恨怪物，仇恨值减半）
+
+
+            # 自爆（战斗后勇士的生命值变成1）
+            if has_ability(mon_ability, 19):
+                PlayerCon.hp = 1
+
+            # 退化
+            if has_ability(mon_ability, 21):
+                try:
+                    atkValue = monster_stats["atkValue"]
+                except:
+                    print("退化怪物未设置atkValue！")
+                    atkValue = 1
+                try:
+                    defValue = monster_stats["defValue"]
+                except:
+                    print("退化怪物未设置defValue！")
+                    defValue = 1
+                PlayerCon.attack -= atkValue
+                PlayerCon.defend -= defValue
+                if PlayerCon.attack < 0:
+                    PlayerCon.attack = 0
+                if PlayerCon.defend < 0:
+                    PlayerCon.defend = 0
+
+            # TODO:增加仇恨值
+
+
+            # TODO:战后技能处理
+
+
+            # TODO:加点
+
+
+
             # 将怪物从地图中删去
             CurrentMap.remove_block(x, y)
             flush_status()
@@ -282,6 +395,13 @@ def count_item(map_object):
         return PlayerCon.item[map_object]
     else:
         return 0
+
+# has_item 检测背包中是否有指定物品
+def has_item(map_object):
+    if map_object in PlayerCon.item:
+        return True
+    else:
+        return False
 
 # sort_item 将玩家当前持有物品分类，传入类别字典，返回字典
 # 数据结构：sort_info[道具类别][道具数字id][道具各种详细信息]
@@ -339,14 +459,26 @@ def open_door(map_object, x, y, no_key=False):
     return False
 
 # change_floor 处理切换楼层
-def change_floor(block, x, y):
+def change_floor(block, floor=None, loc=None):
+    # 使用楼层传送器，直接递归调用change_floor
+    if block == "fly":
+        if floor >= PlayerCon.floor:
+            change_floor(87, floor=floor)
+        elif floor < PlayerCon.floor:
+            change_floor(88, floor=floor)
+        return True
+
     MAP_DATABASE = global_var.get_value("MAP_DATABASE")
     floor_index = global_var.get_value("floor_index")
     Music = global_var.get_value("Music")
     Music.play_SE("floor.ogg")
+    
     # 上楼处理
     if block == 87:
-        PlayerCon.floor += 1
+        if floor is not None:
+            PlayerCon.floor = floor
+        else:
+            PlayerCon.floor += 1
         CurrentMap.set_map(PlayerCon.floor)
         check_map_result = CurrentMap.check_block(88)
         print(f"check_map_result:{check_map_result}")
@@ -354,9 +486,13 @@ def change_floor(block, x, y):
             x_coordinate = check_map_result[0][0]
             y_coordinate = check_map_result[0][1]
             PlayerCon.change_hero_loc(x_coordinate, y_coordinate)
+    
     # 下楼处理
     elif block == 88:
-        PlayerCon.floor -= 1
+        if floor is not None:
+            PlayerCon.floor = floor
+        else:
+            PlayerCon.floor -= 1
         CurrentMap.set_map(PlayerCon.floor)
         check_map_result = CurrentMap.check_block(87)
         print(f"check_map_result:{check_map_result}")
@@ -364,7 +500,18 @@ def change_floor(block, x, y):
             x_coordinate = check_map_result[0][0]
             y_coordinate = check_map_result[0][1]
             PlayerCon.change_hero_loc(x_coordinate, y_coordinate)
-    # TODO: 事件调用（不指定楼梯）
+
+    # 事件调用（不通过楼梯触发）
+    else:
+        if floor != None:
+            PlayerCon.floor = floor
+            CurrentMap.set_map(PlayerCon.floor)
+        if loc != None:
+            PlayerCon.change_hero_loc(loc[0], loc[1])
+    
+    # 检查玩家是否去过目标楼层
+    if CurrentMap.floor_index["index"][PlayerCon.floor] not in PlayerCon.visited:
+        PlayerCon.visited.append(CurrentMap.floor_index["index"][PlayerCon.floor])
     flush_status()
 
 # draw_status_bar 绘制状态栏（默认绘制在StatusBar图层）
@@ -415,6 +562,17 @@ def get_ability_text(mon_ability):
 		14:["诅咒", "战斗后，勇士陷入诅咒状态，战斗无法获得金币和经验"],
 		15:["领域", "经过怪物周围自动减生命X点"],
 		16:["夹击", "经过两只相同的怪物中间，勇士生命值变成一半"],
+        17:["仇恨", "战斗前，怪物附加之前积累的仇恨值作为伤害"],
+		18:["阻击", "经过怪物的十字领域时自动减生命X点，同时怪物后退一格"],
+		19:["自爆", "战斗后勇士的生命值变成1"],
+		20:["无敌", "勇士无法打败怪物，除非拥有十字架"],
+		21:["退化", "战斗后勇士永久下降X点攻击和X点防御"],
+		22:["固伤", "战斗前，怪物对勇士造成X点固定伤害，无视勇士魔防。"],
+		23:["重生", "怪物被击败后，角色转换楼层则怪物将再次出现"],
+		24:["激光", "经过怪物同行或同列时自动减生命X点"],
+		25:["光环", "同楼层所有怪物生命提升X%，攻击提升X%，防御提升X%"],
+		26:["支援", "当周围一圈的怪物受到攻击时将上前支援，并组成小队战斗。"],
+		27:["捕捉", "当走到怪物周围十字时会强制进行战斗。"]
     }
     if type(mon_ability) is list:
         for item in mon_ability:

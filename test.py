@@ -37,6 +37,7 @@ def init():
 
     # 延迟map初始化，避免文件的循环引用
     CurrentMap.lib_map_init()
+    
     # 设置PlayerCon为全局变量（必须要在CurrentMap.set_map之前完成）
     global_var.set_value("PlayerCon", PlayerCon)
     function_init()
@@ -45,12 +46,15 @@ def init():
     CurrentMap.set_map(PLAYER_FLOOR)
     CurrentMap.add_sprite(PlayerCon)
     global_var.set_value("CurrentMap", CurrentMap)
+    
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
     global_var.set_value("StatusBar", StatusBar)
     RootScreen.add_child(CurrentMap)
+    
     # 绘制状态栏
     draw_status_bar()
+    
     # 初始化UI图层
     # --- UI1 - 怪物手册
     BOOK = ui.Book(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
@@ -77,6 +81,26 @@ def init():
     LOAD.priority = 5  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(LOAD)
     global_var.set_value("LOAD", LOAD)
+    # --- UI6 - 楼层传送器界面
+    FLY = ui.Fly(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    FLY.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(FLY)
+    global_var.set_value("FLY", FLY)
+    # --- UI7 - 帮助界面
+    HELP = ui.Help(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    HELP.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(HELP)
+    global_var.set_value("HELP", HELP)
+    # --- UI8 - 商店1界面
+    SHOP1 = ui.Shop1(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    SHOP1.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(SHOP1)
+    global_var.set_value("SHOP1", SHOP1)
+    # --- UI9 - 商店2界面
+    SHOP2 = ui.Shop2(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    SHOP2.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(SHOP2)
+    global_var.set_value("SHOP2", SHOP2)
 
 
 def init_actions():
@@ -85,6 +109,7 @@ def init_actions():
         global running
         running = False
         return True
+    
     # 注册事件
     action_control.register_action('QUIT', pygame.QUIT, quit)
     action_control.register_action('BOOK', pygame.KEYUP, global_var.get_value('BOOK').action)
@@ -92,6 +117,10 @@ def init_actions():
     action_control.register_action('BACKPACK', pygame.KEYUP, global_var.get_value('BACKPACK').action)
     action_control.register_action('SAVE', pygame.KEYUP, global_var.get_value('SAVE').action)
     action_control.register_action('LOAD', pygame.KEYUP, global_var.get_value('LOAD').action)
+    action_control.register_action('FLY', pygame.KEYUP, global_var.get_value('FLY').action)
+    action_control.register_action('HELP', pygame.KEYUP, global_var.get_value('HELP').action)
+    action_control.register_action('SHOP1', pygame.KEYUP, global_var.get_value('SHOP1').action)
+    action_control.register_action('SHOP2', pygame.KEYUP, global_var.get_value('SHOP2').action)
     print("事件全部注册完成！")
 
 

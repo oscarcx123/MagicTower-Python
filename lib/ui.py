@@ -2,7 +2,7 @@ from lib import global_var
 import pygame
 from lib import ground
 from sysconf import *
-from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item, get_ability_text
+from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item, has_item,  get_ability_text, change_floor
 from project.items import *
 from project import block
 from lib.utools import get_time
@@ -62,7 +62,7 @@ class Menu(UIComponent):
                     idx = 0
                 elif type(idx) is not int:
                     idx = 0
-                if self.active:
+                else:
                     self.current_index += idx
                     self.group.empty()
                 return True
@@ -80,6 +80,45 @@ class Menu(UIComponent):
     def flush(self, screen=None):
         if self.active:
             self.draw(self.current_index)
+        super().flush(screen)
+
+# BlankPage （全屏空白页）
+# 空白页类提供基础的单页展示
+# Menu类已经提供默认的key_map，action，flush，继承后需要编写draw函数
+class BlankPage(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "空白页"
+        self.key_map = {pygame.K_h: 'open',
+                        pygame.K_ESCAPE: 'close'}
+    
+    # 注册到action_control的函数
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'open':
+                    self.close()
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                return True
+            else:
+                if idx == 'open':
+                    print(self.name,key,key_map)
+                    if not self.PlayerCon.lock:
+                        self.open()
+                    idx = 0
+        return False
+    
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.active:
+            self.draw()
         super().flush(screen)
 
 # 怪物手册，通过继承Menu得到
@@ -176,7 +215,7 @@ class StartMenu(Menu):
                         load.open()
                 elif type(idx) is not int:
                     idx = 0
-                if self.active:
+                else:
                     self.current_index += idx
                 return True
 
@@ -274,7 +313,7 @@ class Backpack(Menu):
             i = 0
             for item in self.current_sort_list:
                 self.draw_text(str(current_sort_info[item]["item_name"]), 36, BLACK, 4, 3 + i)
-                self.draw_text("数量：" + str(current_sort_info[item]["item_amount"]), 36, BLACK, 7, 3 + i)
+                self.draw_text("数量：" + str(current_sort_info[item]["item_amount"]), 36, BLACK, 10, 3 + i)
                 i += 1
             if self.mode == "simple":
                 self.draw_rect((4, 3), (17, 4), 3, RED)
@@ -326,6 +365,7 @@ class Backpack(Menu):
                         print("[DEBUG]道具使用成功！")
                     else:
                         print("[DEBUG]该道具不可被使用！")
+                    return True
                 if idx == 'close':
                     self.mode = "simple"
                     self.detail_index = 0
@@ -340,13 +380,15 @@ class Backpack(Menu):
         item = self.current_sort_list[k]
         try:
             item_name_id = block.BlockData[str(item)]["id"]
+            item_type = ITEMS_DATA["items"][item_name_id]["cls"]
             item_function = ITEMS_DATA["useItemEffect"][item_name_id]
         except KeyError:
             return False
         command = (
                 f"item_result = {item_function}\n"
                 f"if item_result['result'] == True:\n"
-                f"    remove_item(item, 1)\n"
+                f"    if '{item_type}' != 'constants':\n"
+                f"        remove_item(item, 1)\n"
                 f"else:\n"
                 f"    print(item_result['msg'])\n"
             )
@@ -483,6 +525,7 @@ class SaveMenu(SaveLoadMenu):
         save_file["hero"]["gold"] = self.PlayerCon.gold
         save_file["hero"]["exp"] = self.PlayerCon.exp
         save_file["hero"]["floor"] = self.PlayerCon.floor
+        save_file["hero"]["visited"] = self.PlayerCon.visited
         save_file["hero"]["item"] = self.PlayerCon.item
         save_file["hero"]["pos"] = self.PlayerCon.pos
         save_file["hero"]["face"] = self.PlayerCon.face[0]
@@ -525,6 +568,7 @@ class LoadMenu(SaveLoadMenu):
             self.PlayerCon.gold = save_file["hero"]["gold"]
             self.PlayerCon.exp = save_file["hero"]["exp"]
             self.PlayerCon.floor = save_file["hero"]["floor"]
+            self.PlayerCon.visited = save_file["hero"]["visited"]
             self.PlayerCon.item = {}
             for item_num_id in save_file["hero"]["item"]:
                 self.PlayerCon.item[int(item_num_id)] = save_file["hero"]["item"][item_num_id]
@@ -540,4 +584,217 @@ class LoadMenu(SaveLoadMenu):
         else:
             print("读取了不存在的存档!")
             return False
+
+
+# 楼层传送器，通过继承Menu得到
+class Fly(Menu):
+    def __init__(self, **kwargs):
+        Menu.__init__(self, **kwargs)
+        self.name = "楼层传送器"
+        self.key_map = {pygame.K_LEFT: -1,
+                        pygame.K_RIGHT: +1,
+                        pygame.K_UP: -4,
+                        pygame.K_DOWN: +4,
+                        pygame.K_g: 'open',
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter'}
         
+        CurrentMap = global_var.get_value("CurrentMap")
+        self.floor_index = CurrentMap.floor_index["index"]
+        self.max_floor_index = len(self.floor_index) - 1
+        self.floor_per_row = 4
+    
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'enter':
+                    if self.floor_index[self.current_index] in self.PlayerCon.visited:
+                        change_floor("fly", floor=self.current_index)
+                        self.close()
+                        idx = 0
+                    else:
+                        print(f"你还没去过{self.floor_index[self.current_index]}！")
+                elif idx == 'open':
+                    self.close()
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                elif type(idx) is not int:
+                    idx = 0
+                else:
+                    self.current_index += idx
+                return True
+            else:
+                if idx == 'open':
+                    print(self.name,key,key_map)
+                    if not self.PlayerCon.lock:
+                        if has_item(46):
+                            self.open()
+                            self.current_index = self.floor_index.index(self.floor_index[self.PlayerCon.floor])
+                        else:
+                            print("你还没有楼层传送器！")
+                    idx = 0
+        return False
+
+    # 绘制楼层传送器
+    def draw(self, current_index=0):
+        self.current_index = max(0, self.current_index)
+        self.current_index = min(self.current_index, self.max_floor_index)
+        # UI背景和左侧状态栏
+        self.fill(SKYBLUE)
+        draw_status_bar(self)
+        # 绘制楼层传送器条目
+        cnt = 0
+        for floor in self.floor_index:
+            self.draw_floor(floor, cnt)
+            cnt += 1
+ 
+        # 根据当前current_index绘制高亮框
+        temp_x = current_index % self.floor_per_row
+        temp_y = current_index // self.floor_per_row
+        self.draw_rect(((4 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT), ((4 + 3 * (temp_x + 1)) * BLOCK_UNIT, (temp_y + 1) * BLOCK_UNIT), 3, RED,"px")
+
+    # 绘制楼层传送器中的楼层
+    def draw_floor(self, floor, cnt):
+        temp_x = cnt % self.floor_per_row
+        temp_y = cnt // self.floor_per_row
+        if floor in self.PlayerCon.visited:
+            floor_color = BLACK
+        else:
+            floor_color = GRAY
+        self.draw_text(str(floor), 30, floor_color, (5 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT + 10, "px")
+
+
+# 帮助页面，通过继承BlankPage得到
+class Help(BlankPage):
+    def __init__(self, **kwargs):
+        BlankPage.__init__(self, **kwargs)
+        self.name = "楼层传送器"
+        self.contents = [
+            "X = 怪物手册",
+            "G = 楼层传送器",
+            "T = 玩家背包（带二级菜单）",
+            "S = 存档界面",
+            "D = 读档界面",
+            "Z = 勇士转身（顺时针）"
+        ]
+
+    def draw(self):
+        cnt = 0
+        self.fill(SKYBLUE)
+        draw_status_bar(self)
+        for text in self.contents:
+            self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT, (cnt * BLOCK_UNIT), "px")
+            cnt += 1
+
+
+# 商店基类，通过继承Menu得到
+class Shop(Menu):
+    def __init__(self, **kwargs):
+        Menu.__init__(self, **kwargs)
+        self.name = "商店"
+        self.price = 0
+        self.price_increment = 0
+        self.text = ""
+        self.key_map = {pygame.K_UP: -1,
+                        pygame.K_DOWN: +1,
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter'}
+        self.choices = {}
+
+    # 继承之后，可以通过复写，把任何需要动态更新的文字放这个函数    
+    def update_text(self):
+        pass
+
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'enter':
+                    self.purchase()
+                    self.close()
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                elif type(idx) is not int:
+                    idx = 0
+                else:
+                    self.current_index += idx
+                return True
+        return False
+
+    # 绘制商店
+    def draw(self, current_index=0):
+        self.current_index = max(0, self.current_index)
+        self.current_index = min(self.current_index, len(self.choices) - 1)
+        # UI背景和左侧状态栏
+        self.fill(SKYBLUE)
+        draw_status_bar(self)
+        # 绘制商店条目
+        cnt = 0
+        self.draw_text(self.name, 30, BLACK, 5 * BLOCK_UNIT, 0, "px")
+        self.draw_text(self.text, 30, BLACK, 5 * BLOCK_UNIT, BLOCK_UNIT, "px")
+        for choice in self.choices:
+            self.draw_text(choice, 30, BLACK, 5 * BLOCK_UNIT, (cnt + 2) * BLOCK_UNIT, "px")
+            cnt += 1
+ 
+        # 根据当前current_index绘制高亮框
+        self.draw_rect((5 * BLOCK_UNIT, (self.current_index + 2) * BLOCK_UNIT), (14 * BLOCK_UNIT, (self.current_index + 3) * BLOCK_UNIT), 3, RED,"px")
+
+    # 进行对应的购买操作
+    def purchase(self):
+        command = list(self.choices.items())[self.current_index][1]
+        if command != "self.close()":
+            if self.PlayerCon.gold >= self.price:
+                self.PlayerCon.gold -= self.price
+                self.price += self.price_increment
+                exec(command)
+                self.update_text()
+                draw_status_bar()
+                print("购买成功！")
+            else:
+                print("你不够钱！")
+
+
+# 商店1，通过继承商店基类得到
+class Shop1(Shop):
+    def __init__(self, **kwargs):
+        Shop.__init__(self, **kwargs)
+        self.name = "无情的恰饼机器"
+        self.price = 16
+        self.update_text()
+        self.choices = {
+            "生命+175": "self.PlayerCon.hp += 175",
+            "攻击+2": "self.PlayerCon.attack += 2",
+            "防御+2": "self.PlayerCon.defend += 2",
+            "离开": "self.close()",
+        }
+
+    def update_text(self):
+        self.text = f"给我{self.price}月饼就可以："
+
+# 商店1，通过继承商店基类得到
+class Shop2(Shop):
+    def __init__(self, **kwargs):
+        Shop.__init__(self, **kwargs)
+        self.name = "有爱的蹭饭星人"
+        self.price = 40
+        self.update_text()
+        self.choices = {
+            "生命+520": "self.PlayerCon.hp += 520",
+            "攻击+6": "self.PlayerCon.attack += 6",
+            "防御+6": "self.PlayerCon.defend += 6",
+            "离开": "self.close()",
+        }
+
+    def update_text(self):
+        self.text = f"给我{self.price}月饼就可以："

@@ -26,7 +26,9 @@ def register_icon_crops(image, rect=None, start_num=None):
 
 
 # !insert! === 在这里注册额外素材 ===
-register_icon_crops(load_image("img/walls.png"), start_num=1)
 register_icon(load_image("img/ground.png"), idnum=0)
+register_icon_crops(load_image("img/walls.png"), start_num=1)
+register_icon_crops(load_image("img/shop_LR.png"), start_num=7)
 register_icon_crops(load_image("img/doors.png"), start_num=81)
 register_icon_crops(load_image("img/stairs.png"), start_num=87)
+

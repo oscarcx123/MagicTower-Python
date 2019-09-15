@@ -16,6 +16,7 @@ class Player(EventSprite):
         self.speedy = 0
         self.pos = [X_COORDINATE, Y_COORDINATE]
         self.floor = PLAYER_FLOOR
+        self.visited = [CurrentMap.floor_index["index"][self.floor]] # 玩家已经去过的楼层，默认去过起始楼层
         self.lock = False
         map_pos = CurrentMap.trans_locate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
@@ -33,6 +34,9 @@ class Player(EventSprite):
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
+        # block_id = 0 -> 空地
+        if int(block_id) == 0:
+            return True
         if block_id == "onSide":
             return False
         # block_id = 1-5 -> 各类墙
@@ -49,14 +53,24 @@ class Player(EventSprite):
                 return False
         # block_id = 87~88 -> 楼梯
         elif int(block_id) == 87 or int(block_id) == 88:
-            result = change_floor(block_id, x, y)
+            result = change_floor(block_id)
+            return False
+        # block_id = 131 -> 蓝色商店（商店1）
+        elif int(block_id) == 131:
+            SHOP1 = global_var.get_value("SHOP1")
+            SHOP1.open()
+            return False
+        # block_id = 130 -> 粉色商店（商店2）
+        elif int(block_id) == 130:
+            SHOP2 = global_var.get_value("SHOP2")
+            SHOP2.open()
             return False
         # block_id = 201+ -> 怪物
         elif int(block_id) >= 201:
             result = battle(block_id, x, y)
             if result == False:
                 return False
-        return True
+        return False
 
     def update(self, *args):
         self.speedx = 0

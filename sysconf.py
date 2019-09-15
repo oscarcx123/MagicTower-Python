@@ -26,6 +26,18 @@ PLAYER_EXP = 0
 PLAYER_ITEM = {21:2,23:2,24:10,47:10,57:2,26:1,49:3,50:3,51:2,52:2,56:5,68:5,69:3}
 # --- 勇士数据设置 END ---
 
+# 怪物特殊属性参数
+
+MON_ABILITY_VALUE = {
+    "poisonDamage": 10,
+    "weakValue": 20,
+    "breakArmor": 0.9,
+    "counterAttack": 0.1,
+    "purify": 3,
+    "hatred": 2,
+}
+
+
 # --- 物品/道具数据设置 START ---
 # 宝石
 RED_JEWEL = 2
@@ -38,12 +50,12 @@ BLUE_POTION = 200
 GREEN_POTION = 400
 YELLOW_POTION = 800
 # 装备
-SWORD_1 = 10
-SHIELD_1 = 10
+SWORD_1 = 7
+SHIELD_1 = 7
 SWORD_2 = 20
 SHIELD_2 = 20
-SWORD_3 = 40
-SHIELD_3 = 40
+SWORD_3 = 14
+SHIELD_3 = 14
 SWORD_4 = 80
 SHIELD_4 = 80
 SWORD_5 = 160
