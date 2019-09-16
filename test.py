@@ -101,6 +101,11 @@ def init():
     SHOP2.priority = 5  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(SHOP2)
     global_var.set_value("SHOP2", SHOP2)
+    # --- UI10 - 文本框界面
+    TEXTBOX = ui.TextBox(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    TEXTBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(TEXTBOX)
+    global_var.set_value("TEXTBOX", TEXTBOX)
 
 
 def init_actions():
@@ -121,6 +126,7 @@ def init_actions():
     action_control.register_action('HELP', pygame.KEYUP, global_var.get_value('HELP').action)
     action_control.register_action('SHOP1', pygame.KEYUP, global_var.get_value('SHOP1').action)
     action_control.register_action('SHOP2', pygame.KEYUP, global_var.get_value('SHOP2').action)
+    action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
     print("事件全部注册完成！")
 
 

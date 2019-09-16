@@ -200,8 +200,10 @@ class TextWin(WinBase):
             self.res_content = None
             self.flush_skin()
             self.drawText()
+            return True
         else:
             self.show_off()
+            return False
 
     def update(self, *args):
         super().update(args)

@@ -6,6 +6,7 @@ from project.function import draw_status_bar, get_current_enemy, sort_item, remo
 from project.items import *
 from project import block
 from lib.utools import get_time
+from lib.winbase import TextWin
 import math
 import os
 import json
@@ -798,3 +799,48 @@ class Shop2(Shop):
 
     def update_text(self):
         self.text = f"给我{self.price}月饼就可以："
+
+
+class TextBox(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "文本框"
+        self.key_map = {pygame.K_RETURN: 'enter'}
+    
+    # 注册到action_control的函数
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                print(self.name,key,key_map)
+                if idx == 'enter':
+                    status = self.next()
+                    if status == False:
+                        self.close()
+                        idx = 0
+                return True
+        return False
+    
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.active:
+            self.draw()
+        super().flush(screen)
+
+    def show(self):
+        if not self.PlayerCon.lock:
+            self.text_win_obj = TextWin("mid",
+                        "欢迎来到python魔塔样板v0.8\n1. 本窗口使用TextBox包装，内部调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n3. 事件触发可以考虑用列表\n4. 文本解析也许比较费时？可以考虑先解析\n5. 更多乱七八糟的功能还在开发中。。。。。。\n by Azure（蓝皮鼠） & dljgs1（君浪）")
+            self.text_win_obj.show_on()
+            self.add_sprite(self.text_win_obj)
+            self.open()
+
+    def draw(self):
+        pass
+
+    def next(self):
+        status = self.text_win_obj.updateText()
+        return status
+

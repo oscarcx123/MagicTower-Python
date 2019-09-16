@@ -3,6 +3,7 @@ from lib import CurrentMap
 from .sprite import EventSprite
 from sysconf import *
 from project.function import *
+from lib import global_var
 
 # 玩家控制逻辑：
 class Player(EventSprite):
@@ -80,7 +81,8 @@ class Player(EventSprite):
                    pygame.K_RIGHT: [1, 0],
                    pygame.K_UP: [0, -1],
                    pygame.K_DOWN: [0, 1],
-                   pygame.K_z: "change_face"}
+                   pygame.K_z: "change_face",
+                   pygame.K_b: "text_demo"} # text_demo暂时跟B键绑定在一起，方便测试文本框
         if not self.moving and not self.lock:
             for k in key_map:
                 op = key_map[k]
@@ -97,16 +99,21 @@ class Player(EventSprite):
 
                             self.move(CurrentMap.trans_locate(x, y, "down"), callback=temp_fun)
                     elif type(op) is str:
-                        # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
-                        face = self.get_face()
-                        face_map = {
-                            0:1,
-                            1:3,
-                            3:2,
-                            2:0
-                        }
-                        self.face[0] = face_map[face]
-                        pygame.time.wait(self.animate_speed)
+                        if op == "change_face":
+                            # face[0]调用勇士朝向 0=下，1=左，2=右，3=上
+                            face = self.get_face()
+                            face_map = {
+                                0:1,
+                                1:3,
+                                3:2,
+                                2:0
+                            }
+                            self.face[0] = face_map[face]
+                            pygame.time.wait(self.animate_speed)
+                        # 文本框测试（B键触发）
+                        elif op == "text_demo":
+                            TEXTBOX = global_var.get_value("TEXTBOX")
+                            TEXTBOX.show()
 
         super().update(*args)
 
