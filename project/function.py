@@ -99,7 +99,11 @@ def get_damage_info(map_object,hero_atk=None,hero_def=None,hero_mdef=None):
         except:
             vampire_rate = 0.2
         vampire_damage = math.floor(hero_hp * vampire_rate)
-        if monster_stats["add"]:
+        try:
+            vampire_add = monster_stats["add"]
+        except:
+            vampire_add = False
+        if vampire_add:
             mon_hp += vampire_damage
         init_damage += vampire_damage
 
