@@ -34,13 +34,13 @@ class Player(EventSprite):
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
-        # block_id = 0 -> 空地
-        if int(block_id) == 0:
-            return True
         if block_id == "onSide":
             return False
+        # block_id = 0 -> 空地
+        elif int(block_id) == 0:
+            return True
         # block_id = 1-5 -> 各类墙
-        if int(block_id) >= 1 and int(block_id) <= 5:
+        elif int(block_id) >= 1 and int(block_id) <= 5:
             return False
         # block_id = 21~69 -> 道具
         elif int(block_id) >= 21 and int(block_id) <= 69:
