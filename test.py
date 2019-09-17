@@ -3,11 +3,23 @@
 import pygame
 import os
 import json
+import platform
+import ctypes
 from sysconf import *
 
 pygame.init()
+
+# 如果是Windows系统，在游戏中禁用显示缩放
+# 注：通常高分屏用户在使用Windows系统时，都会把缩放调到100%以上，否则会瞎眼。
+# 例如1920*1080屏幕，Windows推荐的缩放率就是125%。
+# 这样会导致游戏窗口被严重放大，造成一部分游戏画面处在任务栏下方。
+# 然而，在Linux系统下并没有这问题，所以这里只判定是否为Windows。
+if platform.system == "Windows":
+    ctypes.windll.user32.SetProcessDPIAware()
+
 # 设置游戏窗口大小
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
+
 # 设置窗口标题
 pygame.display.set_caption(TOWER_NAME)
 

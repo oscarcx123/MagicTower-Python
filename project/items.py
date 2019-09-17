@@ -398,7 +398,10 @@ ITEMS_DATA = {
 }
 
 def book():
-	pass
+	BOOK = global_var.get_value("BOOK")
+	BOOK.open()
+	return {"result": True}
+
 	
 def fly():
 	FLY = global_var.get_value("FLY")

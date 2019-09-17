@@ -829,10 +829,14 @@ class TextBox(UIComponent):
             self.draw()
         super().flush(screen)
 
-    def show(self):
+    def show(self, text):
         if not self.PlayerCon.lock:
-            self.text_win_obj = TextWin("mid",
-                        "欢迎来到python魔塔样板v0.8\n1. 本窗口使用TextBox包装，内部调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n3. 事件触发可以考虑用列表\n4. 文本解析也许比较费时？可以考虑先解析\n5. 更多乱七八糟的功能还在开发中。。。。。。\n by Azure（蓝皮鼠） & dljgs1（君浪）")
+            self.text_win_obj = TextWin("mid", text)
+            if len(self.text_win_obj.line_list) > self.text_win_obj.line_num:
+                self.text_win_obj.res_content = self.text_win_obj.line_list[self.text_win_obj.line_num:]
+                print("res", self.text_win_obj.res_content)
+                self.text_win_obj.line_list = self.text_win_obj.line_list[:self.text_win_obj.line_num]
+            self.text_win_obj.drawText()
             self.text_win_obj.show_on()
             self.add_sprite(self.text_win_obj)
             self.open()
@@ -841,6 +845,23 @@ class TextBox(UIComponent):
         pass
 
     def next(self):
-        status = self.text_win_obj.updateText()
-        return status
+        if self.text_win_obj.res_content is None:
+            status = self.text_win_obj.updateText()
+            return status
+        elif len(self.text_win_obj.res_content) > self.text_win_obj.line_num:
+            self.text_win_obj.line_list = self.text_win_obj.res_content[:self.text_win_obj.line_num]
+            self.text_win_obj.res_content = self.text_win_obj.res_content[self.text_win_obj.line_num:]
+            print("res", self.text_win_obj.res_content)
+            status = self.text_win_obj.updateText()
+            return status
+        elif len(self.text_win_obj.res_content) >= 1:
+            h = len(self.text_win_obj.res_content) * self.text_win_obj.dh + 2 * self.text_win_obj.TEXT_TOP_BOARD
+            res_content = self.text_win_obj.res_content
+            res_content.insert(0, h)
+            self.group.empty()
+            self.text_win_obj = TextWin("mid", res_content)
+            self.add_sprite(self.text_win_obj)
+            self.text_win_obj.drawText()
+            self.text_win_obj.show_on()
+            
 
