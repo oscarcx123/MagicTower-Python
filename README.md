@@ -1,4 +1,6 @@
-# Python 魔塔样板
+# Python 魔塔样板 （Magic Tower Python）
+
+[Click here for English Version](./README_EN.md)
 
 ## 简介
 
@@ -179,9 +181,3 @@ Demo的游戏内容取自《中秋2019：桂魄》的咸鱼难度，应该挺容
 ### 2019.01.28 V0.0.1
 
 * [x] 发布初版Python魔塔样板的雏形
-
----------------------------
-
-# MagicTower-Python
-## Intro
-Magic Tower written in Python
