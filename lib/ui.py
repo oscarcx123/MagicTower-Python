@@ -1,4 +1,4 @@
-from lib import global_var
+from lib import global_var, WriteLog
 import pygame
 from lib import ground
 from sysconf import *
@@ -52,7 +52,7 @@ class Menu(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'open':
                     self.close()
                     self.group.empty()
@@ -69,7 +69,7 @@ class Menu(UIComponent):
                 return True
             else:
                 if idx == 'open':
-                    print(self.name,key,key_map)
+                    WriteLog.debug(__name__, (self.name,key,key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
@@ -100,7 +100,7 @@ class BlankPage(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'open':
                     self.close()
                     idx = 0
@@ -110,7 +110,7 @@ class BlankPage(UIComponent):
                 return True
             else:
                 if idx == 'open':
-                    print(self.name,key,key_map)
+                    WriteLog.debug(__name__, (self.name,key,key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
@@ -204,7 +204,7 @@ class StartMenu(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     if self.current_index == 0:
                         self.close()
@@ -332,7 +332,7 @@ class Backpack(Menu):
             if key in key_map:
                 idx = key_map[key]
                 if self.active:
-                    print(self.name,key,key_map)
+                    WriteLog.debug(__name__, (self.name,key,key_map))
                     if idx == 'open':
                         self.close()
                         idx = 0
@@ -346,7 +346,7 @@ class Backpack(Menu):
                     return True
                 else:
                     if idx == 'open':
-                        print(self.name,key,key_map)
+                        WriteLog.debug(__name__, (self.name,key,key_map))
                         if not self.PlayerCon.lock:
                             self.open()
                         idx = 0
@@ -356,16 +356,16 @@ class Backpack(Menu):
             key = event.key
             if key in key_map:
                 idx = key_map[key]
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == "enter":
                     self.mode = "simple"
                     self.close()
                     idx = 0
                     use_result = self.use_item()
                     if use_result:
-                        print("[DEBUG]道具使用成功！")
+                        WriteLog.debug(__name__, "道具使用成功！")
                     else:
-                        print("[DEBUG]该道具不可被使用！")
+                        WriteLog.debug(__name__, "该道具不可被使用！")
                     return True
                 if idx == 'close':
                     self.mode = "simple"
@@ -420,7 +420,7 @@ class SaveLoadMenu(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'open':
                     self.close()
                     idx = 0
@@ -434,7 +434,7 @@ class SaveLoadMenu(Menu):
                         self.close()
                         idx = 0
                     else:
-                        print("存读档错误！")
+                        WriteLog.debug(__name__, "存读档错误！")
                 elif type(idx) is not int:
                     idx = 0
                 else:
@@ -442,7 +442,7 @@ class SaveLoadMenu(Menu):
                 return True
             else:
                 if idx == 'open':
-                    print(self.name,key,key_map)
+                    WriteLog.debug(__name__, (self.name,key,key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
@@ -531,6 +531,7 @@ class SaveMenu(SaveLoadMenu):
         save_file["hero"]["pos"] = self.PlayerCon.pos
         save_file["hero"]["face"] = self.PlayerCon.face[0]
         save_file["map"] = CurrentMap.MAP_DATABASE
+        save_file["event"] = CurrentMap.event_database
         save_file["time"] = get_time()
         # 这里current_index += 1的原因是，index从0开始计算，但是我们希望存档从1开始计算，需要处理这个偏移。
         current_index += 1
@@ -540,7 +541,7 @@ class SaveMenu(SaveLoadMenu):
         full_path = os.path.join(self.save_path, full_file_name)
         with open((full_path), "w") as f:
             json.dump(save_file, f)
-        print("存档成功！")
+        WriteLog.debug(__name__, "存档成功！")
         return True
 
 
@@ -576,14 +577,15 @@ class LoadMenu(SaveLoadMenu):
             self.PlayerCon.pos = save_file["hero"]["pos"]
             self.PlayerCon.face[0] = save_file["hero"]["face"]
             CurrentMap.MAP_DATABASE = save_file["map"]
+            CurrentMap.event_database = save_file["event"]
             CurrentMap.set_map(self.PlayerCon.floor)
             global_var.set_value("CurrentMap", CurrentMap)
             draw_status_bar()
             self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
-            print("读档成功！")
+            WriteLog.debug(__name__, "读档成功！")
             return True
         else:
-            print("读取了不存在的存档!")
+            WriteLog.debug(__name__, "读取了不存在的存档")
             return False
 
 
@@ -611,7 +613,7 @@ class Fly(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     if self.floor_index[self.current_index] in self.PlayerCon.visited:
                         change_floor("fly", floor=self.current_index)
@@ -632,7 +634,7 @@ class Fly(Menu):
                 return True
             else:
                 if idx == 'open':
-                    print(self.name,key,key_map)
+                    WriteLog.debug(__name__, (self.name,key,key_map))
                     if not self.PlayerCon.lock:
                         if has_item(46):
                             self.open()
@@ -718,7 +720,7 @@ class Shop(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     self.purchase()
                     self.close()
@@ -814,7 +816,7 @@ class TextBox(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                print(self.name,key,key_map)
+                WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     status = self.next()
                     if status == False:

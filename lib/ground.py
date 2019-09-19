@@ -5,7 +5,7 @@ from pygame.sprite import Group
 from sprite import EventSprite
 from sysconf import *
 from lib.utools import *
-from lib import global_var
+from lib import global_var, WriteLog
 
 """
     ground 概念说明：
@@ -66,11 +66,11 @@ class GroundSurface:
                 self.rect = rect
             else: # default：
                 surface = Surface((WIDTH, HEIGHT))
-                print("GroundSurface错误，提供的mode不存在")
+                WriteLog.error(__name__, "GroundSurface错误，提供的mode不存在")
                 self.rect = surface.get_rect()
         else:
             surface = Surface((WIDTH,HEIGHT))
-            print("GroundSurface错误，未提供mode参数")
+            WriteLog.error(__name__, "GroundSurface错误，未提供mode参数")
             self.rect = surface.get_rect()
 
         self.block_size = BLOCK_UNIT
@@ -121,7 +121,7 @@ class GroundSurface:
     # 自适应矩形
     def create_adaptive_surface(self, type, value):
         if type not in self.curpos:
-            print("error type of ground")
+            WriteLog.error(__name__, "错误的ground类型")
             return
         w = self.rect.w
         h = self.rect.h
@@ -138,9 +138,6 @@ class GroundSurface:
                           min(w - l - r, value), min(h - t - b, value))
               }
         rect = op[type]
-        # print(rect)
-        # print(rect.w)
-        # print(rect.h)
         ground_surface = GroundSurface(mode="copy", surface=Surface([rect.w, rect.h]))
         ground_surface.rect.left = rect.left
         ground_surface.rect.top = rect.top
@@ -159,7 +156,6 @@ class GroundSurface:
             rect.top = fill_rect.top
 
         if mode == "scale":
-            # print(self.rect.w,self.rect.h)
             self.surface.blit(scale(surface, (fill_rect.w, fill_rect.h)), fill_rect)
         elif mode == "repeat":
             while rect.bottom <= fill_rect.bottom:

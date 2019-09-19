@@ -19,7 +19,7 @@ from pygame import Rect, Surface
 from .sprite import EventSprite
 from lib.utools import *
 from sysconf import *
-from lib import global_var
+from lib import global_var, WriteLog
 import os
 import json
 
@@ -29,8 +29,11 @@ class MapGround(GroundSurface):
         self.width = w
         self.height = h
         self.map_data = None
+        self.event_data = None
+        self.event_database = {}
         self.temp_srufcae = None
         self.map_database_init()
+        self.event_database_init()
         super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
 
     def map_database_init(self):
@@ -39,14 +42,27 @@ class MapGround(GroundSurface):
             with open(os.path.join(os.getcwd(),"project", "floor_index.json")) as f:
                 self.floor_index = json.load(f)
         except:
-            print("读取地图index错误")
+            WriteLog.critical(__name__, "读取地图index错误！")
         self.MAP_DATABASE = {}
         for floor in self.floor_index["index"]:
             try:
                 with open(os.path.join(os.getcwd(),"project", "floors", f"{floor}.json")) as f:
                     self.MAP_DATABASE[f"{floor}"] = json.load(f)
             except:
-                print(f"读取{floor}错误")
+                WriteLog.critical(__name__, f"读取{floor}错误!")
+
+    def event_database_init(self):
+        for floor in self.floor_index["index"]:
+            self.event_database[floor] = []
+            temp_event = self.MAP_DATABASE[floor]["events"]
+            if temp_event != {}:
+                for coordinate in temp_event:
+                    result = coordinate.split(",")
+                    result = [int(i) for i in result]
+                    self.event_database[floor].append(result)
+        print(self.event_database)
+        WriteLog.debug(__name__, "初始化事件完成")
+
 
     def trans_locate(self, *args):
         """
@@ -71,11 +87,25 @@ class MapGround(GroundSurface):
     def set_map(self, floor):
         self.clear_map()
         self.map_data = self.get_map(floor)
+        self.event_data = self.get_event(floor)
         self.draw_map()
 
     def get_map(self, floor):
         data = self.MAP_DATABASE[self.floor_index["index"][floor]]["map"]
         return data
+
+    def get_event(self, floor):
+        data = self.event_database[self.floor_index["index"][floor]]
+        return data
+
+    def get_event_flow(self, x, y, floor):
+        coordinate = str(x) + "," + str(y)
+        data = self.MAP_DATABASE[self.floor_index["index"][floor]]["events"][coordinate]
+        return data
+
+    def get_floor_id(self, floor):
+        floor_id = self.floor_index["index"][floor]
+        return floor_id
 
     def clear_map(self):
         # self.group.clear()
@@ -93,7 +123,7 @@ class MapGround(GroundSurface):
     
     # draw_map 绘制地图，之后刷新不再重绘，除非更新地图状态
     def draw_map(self, map_data=None):
-        print("draw map")
+        WriteLog.debug(__name__, "绘制地图")
         self.clear_map() # 清空精灵
         if map_data is None:
             map_data = self.map_data
@@ -145,7 +175,7 @@ class MapGround(GroundSurface):
             if x >= 0 and x <= SIDE_BLOCK_COUNT - 1 and y >= 0 and y <= SIDE_BLOCK_COUNT - 1:
                 return temp_map_data[y][x]
             else:
-                print("[DEBUG]尝试读取地图边界外数据！")
+                WriteLog.debug(__name__, "尝试读取地图边界外数据！")
                 return "onSide"
         else:
             return []

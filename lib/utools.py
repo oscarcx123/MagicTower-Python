@@ -2,6 +2,7 @@
 import pygame
 import time
 from sysconf import *
+from lib import WriteLog
 
 
 def crop_images(image, start_num, rect):
@@ -17,7 +18,7 @@ def crop_images(image, start_num, rect):
     img_rect = image.get_rect()
     while rect.bottom <= img_rect.bottom:
         while rect.right <= img_rect.right:
-            print(image.get_rect(), rect)
+            WriteLog.debug(__name__, (image.get_rect(), rect))
             data_dict[str(start_num)] = image.subsurface(rect)
             rect.left += rect.w
             start_num += 1

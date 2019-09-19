@@ -1,6 +1,7 @@
 import pygame
 from sysconf import *
 import math
+from lib import WriteLog
 
 
 # 事件原型精灵 用于对事件的蒙皮 也可以暂时当作做动态图块用
@@ -103,7 +104,7 @@ class EventSprite(pygame.sprite.Sprite):
         self.change_face(diff_x, diff_y)
         self.moving_frames = frames
         self.callback = callback
-        print('dst:', dst, 'frames:', self.moving_frames)
+        WriteLog.debug(__name__, ('dst:', dst, 'frames:', self.moving_frames))
 
         # 弃用线程
         # self.move_t = threading.Thread(target=move_thread)

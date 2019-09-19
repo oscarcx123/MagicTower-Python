@@ -14,3 +14,6 @@ def get_value(key,defValue=None):
         return _global_dict[key]
     except KeyError:
         return defValue
+
+def global_var_lib_init():
+    _init()

@@ -32,10 +32,14 @@ class Player(EventSprite):
         self.exp = PLAYER_EXP
         self.floor = PLAYER_FLOOR
         self.item = PLAYER_ITEM
+        self.flag = {}
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
-        if block_id == "onSide":
+        if [x, y] in CurrentMap.event_data:
+            EVENTFLOW = global_var.get_value("EVENTFLOW")
+            EVENTFLOW.add_action(x, y)
+        elif block_id == "onSide":
             return False
         # block_id = 0 -> 空地
         elif int(block_id) == 0:
@@ -74,6 +78,9 @@ class Player(EventSprite):
         return False
 
     def update(self, *args):
+        EVENTFLOW = global_var.get_value("EVENTFLOW")
+        while len(EVENTFLOW.data_list) > 0 and not self.lock:
+            EVENTFLOW.do_event()
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()

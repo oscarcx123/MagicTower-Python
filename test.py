@@ -24,9 +24,10 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption(TOWER_NAME)
 
 from lib.utools import *
-from lib import CurrentMap, PlayerCon
+from lib import CurrentMap, PlayerCon, WriteLog
 from lib.ground import GroundSurface
 from lib import global_var
+from lib.event import EventFlow
 from project.function import function_init, draw_status_bar
 
 RootScreen = GroundSurface(mode="copy", surface=screen)
@@ -41,8 +42,6 @@ action_control = actions.ActionControl()
 from lib import music
 
 def init():
-    # 初始化全局变量
-    global_var._init()
     global_var.set_value("font_name", FONT_NAME)
     global_var.set_value("RootScreen", RootScreen)
     global_var.set_value("action_control", action_control)
@@ -58,14 +57,15 @@ def init():
     CurrentMap.set_map(PLAYER_FLOOR)
     CurrentMap.add_sprite(PlayerCon)
     global_var.set_value("CurrentMap", CurrentMap)
+    WriteLog.debug(__name__, "初始化地图完成")
     
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
     global_var.set_value("StatusBar", StatusBar)
-    RootScreen.add_child(CurrentMap)
-    
+    RootScreen.add_child(CurrentMap)  
     # 绘制状态栏
     draw_status_bar()
+    WriteLog.debug(__name__, "初始化状态栏完成")
     
     # 初始化UI图层
     # --- UI1 - 怪物手册
@@ -118,6 +118,7 @@ def init():
     TEXTBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(TEXTBOX)
     global_var.set_value("TEXTBOX", TEXTBOX)
+    WriteLog.debug(__name__, "初始化UI图层完成")
 
 
 def init_actions():
@@ -139,12 +140,18 @@ def init_actions():
     action_control.register_action('SHOP1', pygame.KEYUP, global_var.get_value('SHOP1').action)
     action_control.register_action('SHOP2', pygame.KEYUP, global_var.get_value('SHOP2').action)
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
-    print("事件全部注册完成！")
+    WriteLog.debug(__name__, "事件全部注册完成")
 
 
 def init_sound():
     Music = music.MusicWrapper()
     global_var.set_value("Music", Music)
+    WriteLog.debug(__name__, "初始化音效完成")
+
+def init_event_flow():
+    EVENTFLOW = EventFlow()
+    global_var.set_value("EVENTFLOW", EVENTFLOW)
+    WriteLog.debug(__name__, "初始化事件流完成")
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:
@@ -169,6 +176,7 @@ if DEBUG:
 init()
 init_actions()
 init_sound()
+init_event_flow()
 clock = pygame.time.Clock()
 
 # 主程序

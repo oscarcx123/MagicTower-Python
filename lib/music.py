@@ -1,6 +1,7 @@
 import pygame
 import os
 from sysconf import *
+from lib import WriteLog
 
 class MusicWrapper():
     def __init__(self):
@@ -14,7 +15,7 @@ class MusicWrapper():
         # 让背景音乐循环播放
         pygame.mixer.music.play(loops=-1)
         self.load_SE()
-        print("[DEBUG]SE初始化完成！")
+        WriteLog.debug(__name__, "SE初始化完成！")
 
 
     # 遍历file_path下所有文件，返回list
@@ -29,14 +30,14 @@ class MusicWrapper():
             for item in temp_list:
                 self.SE_dict[item] = pygame.mixer.Sound(path.join(se_dir, item))
         except:
-            print("SE加载失败，请检查目录下是否混入其它文件")
+            WriteLog.error(__name__, "SE加载失败，请检查目录下是否混入其它文件")
 
     # 播放指定的SE
     def play_SE(self, SE):
         try:
             self.SE_dict[SE].play()
         except:
-            print("SE播放失败！")
+            WriteLog.error(__name__, "SE播放失败！")
         
     
 

@@ -1,4 +1,12 @@
 # 库文件初始化区 通用访问接口在这里（如CurrentMap） ! 注意导包顺序 很重要
+# 初始化全局变量
+from .global_var import global_var_lib_init
+global_var_lib_init()
+
+# 初始化日志
+from .logger import LoggingWrapper
+WriteLog = LoggingWrapper()
+global_var.set_value("WriteLog", WriteLog)
 
 from .map import MapGround
 from sysconf import *
