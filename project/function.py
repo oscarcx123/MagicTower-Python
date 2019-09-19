@@ -516,6 +516,9 @@ def change_floor(block, floor=None, loc=None):
             CurrentMap.set_map(PlayerCon.floor)
         if loc != None:
             PlayerCon.change_hero_loc(loc[0], loc[1])
+
+    # 切换BGM
+    Music.change_BGM(PlayerCon.floor)
     
     # 检查玩家是否去过目标楼层
     if CurrentMap.floor_index["index"][PlayerCon.floor] not in PlayerCon.visited:
