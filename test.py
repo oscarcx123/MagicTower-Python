@@ -27,8 +27,9 @@ from lib.utools import *
 from lib import CurrentMap, PlayerCon, WriteLog
 from lib.ground import GroundSurface
 from lib import global_var
-from lib.event import EventFlow
+from lib.event import EventFlow, Event
 from project.function import function_init, draw_status_bar
+from project.block import BlockData
 
 RootScreen = GroundSurface(mode="copy", surface=screen)
 global StatusBar
@@ -58,7 +59,14 @@ def init():
     CurrentMap.add_sprite(PlayerCon)
     global_var.set_value("CurrentMap", CurrentMap)
     WriteLog.debug(__name__, "初始化地图完成")
-    
+
+    # 初始化BlockData（建立通过id反查地图编号的字典）
+    BlockDataReverse = {}
+    for map_obj in BlockData:
+        block_id = BlockData[map_obj]["id"]
+        BlockDataReverse[block_id] = map_obj
+    global_var.set_value("BlockDataReverse", BlockDataReverse)
+
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
     global_var.set_value("StatusBar", StatusBar)
@@ -104,15 +112,15 @@ def init():
     RootScreen.add_child(HELP)
     global_var.set_value("HELP", HELP)
     # --- UI8 - 商店1界面
-    SHOP1 = ui.Shop1(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    SHOP1.priority = 5  # 显示的优先级 高于地图 所以在地图上
-    RootScreen.add_child(SHOP1)
-    global_var.set_value("SHOP1", SHOP1)
+    Shop1 = ui.Shop1(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    Shop1.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(Shop1)
+    global_var.set_value("Shop1", Shop1)
     # --- UI9 - 商店2界面
-    SHOP2 = ui.Shop2(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    SHOP2.priority = 5  # 显示的优先级 高于地图 所以在地图上
-    RootScreen.add_child(SHOP2)
-    global_var.set_value("SHOP2", SHOP2)
+    Shop2 = ui.Shop2(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    Shop2.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(Shop2)
+    global_var.set_value("Shop2", Shop2)
     # --- UI10 - 文本框界面
     TEXTBOX = ui.TextBox(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
     TEXTBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
@@ -137,8 +145,8 @@ def init_actions():
     action_control.register_action('LOAD', pygame.KEYUP, global_var.get_value('LOAD').action)
     action_control.register_action('FLY', pygame.KEYUP, global_var.get_value('FLY').action)
     action_control.register_action('HELP', pygame.KEYUP, global_var.get_value('HELP').action)
-    action_control.register_action('SHOP1', pygame.KEYUP, global_var.get_value('SHOP1').action)
-    action_control.register_action('SHOP2', pygame.KEYUP, global_var.get_value('SHOP2').action)
+    action_control.register_action('Shop1', pygame.KEYUP, global_var.get_value('Shop1').action)
+    action_control.register_action('Shop2', pygame.KEYUP, global_var.get_value('Shop2').action)
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 
@@ -151,6 +159,10 @@ def init_sound():
 def init_event_flow():
     EVENTFLOW = EventFlow()
     global_var.set_value("EVENTFLOW", EVENTFLOW)
+    EVENT = Event()
+    global_var.set_value("EVENT", EVENT)
+    EVENT.get_event_flow_module()
+    EVENTFLOW.get_event_module()
     WriteLog.debug(__name__, "初始化事件流完成")
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）

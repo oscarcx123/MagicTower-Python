@@ -32,7 +32,7 @@ class Player(EventSprite):
         self.exp = PLAYER_EXP
         self.floor = PLAYER_FLOOR
         self.item = PLAYER_ITEM
-        self.flag = {}
+        self.var = {}
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
@@ -59,16 +59,6 @@ class Player(EventSprite):
         # block_id = 87~88 -> 楼梯
         elif int(block_id) == 87 or int(block_id) == 88:
             result = change_floor(block_id)
-            return False
-        # block_id = 131 -> 蓝色商店（商店1）
-        elif int(block_id) == 131:
-            SHOP1 = global_var.get_value("SHOP1")
-            SHOP1.open()
-            return False
-        # block_id = 130 -> 粉色商店（商店2）
-        elif int(block_id) == 130:
-            SHOP2 = global_var.get_value("SHOP2")
-            SHOP2.open()
             return False
         # block_id = 201+ -> 怪物
         elif int(block_id) >= 201:

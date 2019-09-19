@@ -44,6 +44,11 @@ Demo的游戏内容取自《中秋2019：桂魄》的咸鱼难度，应该挺容
 
 ## 更新说明
 
+### 2019.09.19 V0.8.4
+
+* [x] 新增以下事件的解析：setValue, addValue, openShop, openDoor, playSound, sleep
+* [x] 新增BlockDataReverse，是可以通过id反查地图编号的字典（例如：从"yellowKey"得到21）
+
 ### 2019.09.19 V0.8.3
 
 * [x] 新增logger.py（Wrapper）模块，最终调用的是Python自带日志（logging）。

@@ -28,7 +28,7 @@ class WinBase(Sprite):
         self.rect = self.image.get_rect()
         self.rect.left = self.pos[0]
         self.rect.top = self.pos[1]
-        print("st", self.rect)
+        #print("st", self.rect)
         self.alpha = 255
 
     def trans_image(self, params):  # 把原图转成设备显示的surface
@@ -131,7 +131,7 @@ class TextWin(WinBase):
             pass
             # TODO： 显示在头上的对话框 & 根据坐标/字数自适应大小对话框
             # 需要建立一个界面地图坐标转换接口，并且把各个界面分离开来
-        print(self.x, self.y, self.w, self.h)
+        #print(self.x, self.y, self.w, self.h)
         super().__init__(self.x, self.y, self.w, self.h)
         self.content = ""
         self.res_content = None
@@ -149,14 +149,14 @@ class TextWin(WinBase):
             line = ""
             while clen < line_len and content != '':
                 tlen = line_len - clen
-                print(tlen)
+                #print(tlen)
                 tstr = content[:tlen]
                 line += tstr
                 clen += get_real_len(tstr)
                 content = content[tlen:]
             if content != '' and get_real_len(content) <= 2:
                 line += content
-            print("对齐长度：", get_real_len(line))
+            #print("对齐长度：", get_real_len(line))
             return line
 
         for content in content.split('\n'):
@@ -176,14 +176,14 @@ class TextWin(WinBase):
         for text in self.line_list:
             text_surface = self.font.render(text, True, WHITE)
             text_rect = text_surface.get_rect()
-            print(text_rect)
+            #print(text_rect)
             text_rect.left = TEXT_LEFT_BOARD  # self.pos[0]
             text_rect.top = TEXT_TOP_BOARD + ct * self.dh  # + self.pos[1]
             self.src_show.blit(text_surface, text_rect)
             ct += 1
 
     def updateText(self):
-        print("self.res_content", self.res_content)
+        #print("self.res_content", self.res_content)
         if self.res_content is not None:
             self.flush_skin()
             self.drawText()

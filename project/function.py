@@ -393,6 +393,10 @@ def add_item(map_object, amount):
     else:
         PlayerCon.item[map_object] = amount
 
+# set_item_amount 向背包增加物品
+def set_item_amount(map_object, amount):
+        PlayerCon.item[map_object] = amount
+
 # count_item 获取背包中指定物品的数量
 def count_item(map_object):
     if map_object in PlayerCon.item:
