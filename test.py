@@ -127,6 +127,12 @@ def init():
     RootScreen.add_child(TEXTBOX)
     global_var.set_value("TEXTBOX", TEXTBOX)
     WriteLog.debug(__name__, "初始化UI图层完成")
+    # --- UI11 - 文本框界面
+    CHOICEBOX = ui.ChoiceBox(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    CHOICEBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(CHOICEBOX)
+    global_var.set_value("CHOICEBOX", CHOICEBOX)
+    WriteLog.debug(__name__, "初始化UI图层完成")
 
 
 def init_actions():
@@ -148,6 +154,7 @@ def init_actions():
     action_control.register_action('Shop1', pygame.KEYUP, global_var.get_value('Shop1').action)
     action_control.register_action('Shop2', pygame.KEYUP, global_var.get_value('Shop2').action)
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
+    action_control.register_action('CHOICEBOX', pygame.KEYUP, global_var.get_value('CHOICEBOX').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 
 

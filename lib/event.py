@@ -81,6 +81,14 @@ class Event:
                     self.PlayerCon.var[value_name] += value
                 else:
                     self.PlayerCon.var[value_name] = value
+        elif "status:" in value_name:
+            value_name = value_name.lstrip("status:")
+            command = "self.PlayerCon." + value_name
+            if event_type == "setValue":
+                command = command + "=" + str(value)
+            elif event_type == "addValue":
+                command = command + "+=" + str(value)
+            exec(command)
         elif "item:" in value_name:
             value_name = value_name.lstrip("item:")
             if value_name in self.BlockDataReverse:
@@ -123,6 +131,61 @@ class Event:
     def sleep(self, event):
         sleep_time = int(event["time"])
         pygame.time.wait(sleep_time)
+
+    # 呼出存档界面
+    def call_save(self, event):
+        save = global_var.get_value("SAVE")
+        save.open()
+
+    # 呼出选项框
+    def choices(self, event):
+        text = event["text"]
+        choices = event["choices"]
+        ChoiceBox = global_var.get_value("CHOICEBOX")
+        ChoiceBox.init(text, choices)
+        ChoiceBox.open()
+
+    # 弹出确认框（本质上是只有两个选项的选项框）
+    def confirm(self, event):
+        text = event["text"]
+        choices = [{},{}]
+        choices[0]["text"] = "是"
+        choices[0]["action"] = event["yes"]
+        choices[1]["text"] = "否"
+        choices[1]["action"] = event["no"]
+        ChoiceBox = global_var.get_value("CHOICEBOX")
+        ChoiceBox.init(text, choices)
+        ChoiceBox.open()
+
+    # 自定义函数（没有特别好的通用解决办法，尽量避免使用）
+    def function(self, event):
+        functions = event["function"]
+        functions = functions.lstrip("function(){")
+        functions = functions.lstrip() # 去除句首\n
+        functions = functions.rstrip("}")
+        functions = functions.split("\n")
+        for item in functions:
+            if len(item) != 0:
+                convert = {
+                    "core.status.hero.hp": "self.PlayerCon.hp",
+                    "core.status.hero.atk": "self.PlayerCon.attack",
+                    "core.status.hero.def": "self.PlayerCon.defend",
+                    "core.status.hero.mdef": "self.PlayerCon.mdefend"
+                }
+                for convertible in convert:
+                    if convertible in item:
+                        item = item.lstrip(convertible)
+                        item = convert[convertible] + item
+                        exec(item)
+                        extra_command = convert[convertible] + " = int(" + convert[convertible] + ")"
+                        exec(extra_command)
+                        return True
+                self.TEXTBOX.show(f"暂时无法解析：{event}")
+                print(f"暂时无法解析：{event}")
+            else:
+                self.TEXTBOX.show(f"暂时无法解析：{event}")
+                print(f"暂时无法解析：{event}")
+
 
 class EventFlow:
     def __init__(self):
@@ -184,6 +247,14 @@ class EventFlow:
                     self.EVENT.play_sound(event)
                 elif event_type == "sleep":
                     self.EVENT.sleep(event)
+                elif event_type == "callSave":
+                    self.EVENT.call_save(event)
+                elif event_type == "choices":
+                    self.EVENT.choices(event)
+                elif event_type == "confirm":
+                    self.EVENT.confirm(event)
+                elif event_type == "function":
+                    self.EVENT.function(event)
                 else:
                     self.TEXTBOX.show(f"暂时无法解析：{event}")
                     print(f"暂时无法解析：{event}")
@@ -192,10 +263,3 @@ class EventFlow:
             else:
                 self.TEXTBOX.show(f"暂时无法解析：{event}")
                 print(f"暂时无法解析：{event}")
-
-                        
-
-
-        
-
-

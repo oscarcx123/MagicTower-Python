@@ -517,6 +517,7 @@ class SaveMenu(SaveLoadMenu):
 
     def function(self, current_index):
         CurrentMap = global_var.get_value("CurrentMap")
+        EventFlow = global_var.get_value("EVENTFLOW")
         save_file = {}
         save_file["hero"] = {}
         save_file["hero"]["hp"] = self.PlayerCon.hp
@@ -532,6 +533,7 @@ class SaveMenu(SaveLoadMenu):
         save_file["hero"]["face"] = self.PlayerCon.face[0]
         save_file["map"] = CurrentMap.MAP_DATABASE
         save_file["event"] = CurrentMap.event_database
+        save_file["event_data_list"] = EventFlow.data_list
         save_file["time"] = get_time()
         # 这里current_index += 1的原因是，index从0开始计算，但是我们希望存档从1开始计算，需要处理这个偏移。
         current_index += 1
@@ -563,6 +565,7 @@ class LoadMenu(SaveLoadMenu):
             with open(full_path) as f:
                 save_file = json.load(f)
             CurrentMap = global_var.get_value("CurrentMap")
+            EventFlow = global_var.get_value("EVENTFLOW")
             self.PlayerCon.hp = save_file["hero"]["hp"]
             self.PlayerCon.attack = save_file["hero"]["attack"]
             self.PlayerCon.defend = save_file["hero"]["defend"]
@@ -580,6 +583,7 @@ class LoadMenu(SaveLoadMenu):
             CurrentMap.event_database = save_file["event"]
             CurrentMap.set_map(self.PlayerCon.floor)
             global_var.set_value("CurrentMap", CurrentMap)
+            EventFlow.data_list = save_file["event_data_list"]
             draw_status_bar()
             self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
             WriteLog.debug(__name__, "读档成功！")
@@ -785,7 +789,7 @@ class Shop1(Shop):
     def update_text(self):
         self.text = f"给我{self.price}月饼就可以："
 
-# 商店1，通过继承商店基类得到
+# 商店2，通过继承商店基类得到
 class Shop2(Shop):
     def __init__(self, **kwargs):
         Shop.__init__(self, **kwargs)
@@ -801,6 +805,44 @@ class Shop2(Shop):
 
     def update_text(self):
         self.text = f"给我{self.price}月饼就可以："
+
+# 选项框，通过继承商店基类得到（都是类似的菜单）
+class ChoiceBox(Shop):
+    def __init__(self, **kwargs):
+        Shop.__init__(self, **kwargs)
+        self.name = ""
+        self.choices = {}
+
+    def init(self, text, choices):
+        self.choices = {}
+        self.name = text
+        for item in choices:
+            text = item["text"]
+            action = item["action"]
+            self.choices[text] = action
+
+    def do_action(self):
+        EVENTFLOW = global_var.get_value("EVENTFLOW")
+        command = list(self.choices.items())[self.current_index][1]
+        EVENTFLOW.insert_action(command)
+        
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                WriteLog.debug(__name__, (self.name,key,key_map))
+                if idx == 'enter':
+                    self.do_action()
+                    self.close()
+                    idx = 0
+                elif type(idx) is not int:
+                    idx = 0
+                else:
+                    self.current_index += idx
+                return True
+        return False
 
 
 class TextBox(UIComponent):

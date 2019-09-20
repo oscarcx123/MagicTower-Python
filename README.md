@@ -44,6 +44,16 @@ Demo的游戏内容取自《中秋2019：桂魄》的咸鱼难度，应该挺容
 
 ## 更新说明
 
+### 2019.09.19 V0.8.5
+
+* [x] 修复鬼步以及由此产生的鬼步穿墙问题（本质是禁止同时响应多个按键）
+* [x] 新增以下事件的解析：callSave, choices, confirm, function
+* [x] 新增与choices事件对应的ChoiceBox UI（注：choices跟confirm使用同一个UI）
+* [x] 新增setValue中的"status:"解析
+* [x] 存档现在可以记录/恢复当前在执行的事件列表
+
+自定义JS语句事件（function）只能尽量去解析匹配，因为语言的不同，以及项目之间的一些结构差异，很难完全把JS语句转换成对应的Python语句。
+
 ### 2019.09.19 V0.8.4
 
 * [x] 新增以下事件的解析：setValue, addValue, openShop, openDoor, playSound, sleep

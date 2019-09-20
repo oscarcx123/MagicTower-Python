@@ -19,6 +19,7 @@ class Player(EventSprite):
         self.floor = PLAYER_FLOOR
         self.visited = [CurrentMap.floor_index["index"][self.floor]] # 玩家已经去过的楼层，默认去过起始楼层
         self.lock = False
+        self.key_pressed = False
         map_pos = CurrentMap.trans_locate(*self.pos, "down")
         self.rect.centerx = map_pos[0]
         self.rect.bottom = map_pos[1]
@@ -83,7 +84,9 @@ class Player(EventSprite):
         if not self.moving and not self.lock:
             for k in key_map:
                 op = key_map[k]
-                if keystate[k]:
+                # 一次只响应一个按键，由self.key_pressed控制
+                if keystate[k] and not self.key_pressed:
+                    self.key_pressed = True
                     if type(op) is list:
                         if not self.proc_block(CurrentMap.get_block(self.pos[0] + op[0], self.pos[1] + op[1]), self.pos[0] + op[0], self.pos[1] + op[1]):
                             self.change_face(*op)
@@ -111,7 +114,7 @@ class Player(EventSprite):
                         elif op == "text_demo":
                             TEXTBOX = global_var.get_value("TEXTBOX")
                             TEXTBOX.show("欢迎来到python魔塔样板v0.8\n1. 本窗口使用TextBox包装，内部调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n3. 事件触发可以考虑用列表\n4. 文本解析也许比较费时？可以考虑先解析\n5. 更多乱七八糟的功能还在开发中。。。。。。\n目前写得乱七八糟，因为目标是先能用再说，以后肯定需要重构下的。\nby Azure（蓝皮鼠） & dljgs1（君浪）\n以下是测试内容：\n目前实现了文本框的自适应。\n当前设定的最大行数为10。\n可以看到，当文字行数超过10之后，文本框会自动截断，按回车键之后继续展示。\n如果需要展示的文字数量特别多，TextBox能够将文本每十行截断一次，并且文本框高度为自适应！\n那么接下来要演示的就是最后的自适应部分。\n由于画布在创建后无法随意调整大小，因此这里的技术原理就是获取剩下需要展示的文字list，然后计算出需要的文本框高度，最后创建一个新的对象用于覆盖旧的对象，这样就可以重新设定画布的大小。")
-
+            self.key_pressed = False
         super().update(*args)
 
     def get_face(self):
