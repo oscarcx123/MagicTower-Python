@@ -1,6 +1,6 @@
 from lib import global_var, WriteLog
 import re
-from project.function import add_item, set_item_amount, flush_status
+from project.function import add_item, count_item, set_item_amount, flush_status
 import pygame
 
 # 事件基本单元
@@ -67,11 +67,16 @@ class Event:
         else:
             self.EVENTFLOW.insert_action(event["false"])
 
+    def parse_value(self, value):
+        if "core.itemCount" in value:
+            value = value.replace("core.itemCount", "count_item")
+        return eval(value)
+
     # 设置玩家属性，道具数量，或者变量的值
     def set_value(self, event):
         event_type = event["type"]
         value_name = event["name"]
-        value = int(event["value"])
+        value = self.parse_value(event["value"])
         if "flag:" in value_name or "switch:" in value_name:
             # TODO: 独立开关需要进一步处理，否则无法识别不同事件的独立开关
             if event_type == "setValue":
@@ -186,6 +191,16 @@ class Event:
                 self.TEXTBOX.show(f"暂时无法解析：{event}")
                 print(f"暂时无法解析：{event}")
 
+    # 游戏胜利事件
+    def win(self, event):
+        reason = event["reason"]
+        score = str(self.PlayerCon.hp)
+        text = reason + "\n" + "你的分数是" + score + "。"
+        self.TEXTBOX.show(text)
+
+    # 强制战斗
+    def battle(self, event):
+        pass
 
 class EventFlow:
     def __init__(self):
@@ -255,6 +270,8 @@ class EventFlow:
                     self.EVENT.confirm(event)
                 elif event_type == "function":
                     self.EVENT.function(event)
+                elif event_type == "win":
+                    self.EVENT.win(event)
                 else:
                     self.TEXTBOX.show(f"暂时无法解析：{event}")
                     print(f"暂时无法解析：{event}")
