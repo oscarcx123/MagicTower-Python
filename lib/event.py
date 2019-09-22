@@ -198,10 +198,17 @@ class Event:
         score = str(self.PlayerCon.hp)
         text = reason + "\n" + "你的分数是" + score + "。"
         self.TEXTBOX.show(text)
+        self.EVENTFLOW.insert_action({"type": "restart"})
 
     # 强制战斗
     def battle(self, event):
-        pass
+        mon_id = event["id"]
+        map_obj_id = int(self.BlockDataReverse[mon_id])
+        self.FUNCTION.battle(map_obj_id, enforce=True)
+
+    # 回到标题界面
+    def restart(self, event):
+        self.FUNCTION.restart()
 
 class EventFlow:
     def __init__(self):
@@ -273,6 +280,10 @@ class EventFlow:
                     self.EVENT.function(event)
                 elif event_type == "win":
                     self.EVENT.win(event)
+                elif event_type == "battle":
+                    self.EVENT.battle(event)
+                elif event_type == "restart":
+                    self.EVENT.restart(event)
                 else:
                     self.TEXTBOX.show(f"暂时无法解析：{event}")
                     print(f"暂时无法解析：{event}")

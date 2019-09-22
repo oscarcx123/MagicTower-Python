@@ -17,6 +17,9 @@ class Function():
         self.CurrentMap = global_var.get_value("CurrentMap")
         self.Music = global_var.get_value("Music")
         self.StatusBar = global_var.get_value("StatusBar")
+        self.TEXTBOX = global_var.get_value("TEXTBOX")
+        self.BlockDataReverse = global_var.get_value("BlockDataReverse")
+        self.EVENTFLOW = global_var.get_value("EVENTFLOW")
         self.MONSTER_DATA = MONSTER_DATA
         self.BlockData = BlockData
         self.ITEMS_DATA = ITEMS_DATA
@@ -282,17 +285,25 @@ class Function():
             enemy_info_list.append(enemy_info)
         return enemy_info_list
 
-    # battle 进行战斗并结算
-    def battle(self, map_object, x, y):
+    # battle 进行战斗并结算，enforce是强制战斗开关
+    def battle(self, map_object, x=None, y=None, enforce=False):
         result = self.get_damage_info(map_object)
         # 检测怪物是否无法被破防
         if result["status"] == False:
-            return False
+            if enforce:
+                self.death()
+                return False
+            else:
+                return False
         # 检测玩家是否会被击杀
         else:
             # 如果受到伤害大于玩家血量，不触发战斗
             if result["damage"] >= self.PlayerCon.hp:
-                return False
+                if enforce:
+                    self.death()
+                    return False
+                else:
+                    return False
             else:
                 # 播放战斗音效
                 self.Music.play_SE("attack.ogg")
@@ -354,7 +365,8 @@ class Function():
 
 
                 # 将怪物从地图中删去
-                self.CurrentMap.remove_block(x, y)
+                if not enforce:
+                    self.CurrentMap.remove_block(x, y)
                 self.flush_status()
                 return True
 
@@ -407,8 +419,7 @@ class Function():
     # count_item 获取背包中指定物品的数量
     def count_item(self, map_object):
         if type(map_object) is not int:
-            BlockDataReverse = global_var.get_value("BlockDataReverse")
-            map_object = int(BlockDataReverse[map_object])
+            map_object = int(self.BlockDataReverse[map_object])
         if map_object in self.PlayerCon.item:
             return self.PlayerCon.item[map_object]
         else:
@@ -599,3 +610,26 @@ class Function():
         elif mon_ability != 0:
             check_result[ability_dict[mon_ability][0]] = ability_dict[mon_ability][1]
         return check_result
+
+    # 玩家被击败时执行的内容
+    def death(self):
+        self.PlayerCon.hp = 0
+        self.draw_status_bar()
+        self.TEXTBOX.show("你死了。")
+        self.EVENTFLOW.insert_action({"type": "restart"})
+
+
+    # 重置游戏数据
+    def reset(self):
+        self.EVENTFLOW.data_list = []
+        self.PlayerCon.reset()
+        self.CurrentMap.reset()
+        self.Music.reset()
+        self.draw_status_bar()
+
+        
+    # 返回标题，重新开始
+    def restart(self):
+        self.reset()
+        start = global_var.get_value("STARTMENU")
+        start.open()

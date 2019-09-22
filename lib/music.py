@@ -20,12 +20,15 @@ class MusicWrapper():
 
     # 播放BGM
     def play_BGM(self, BGM):
-        if pygame.mixer.music.get_busy():
-            pygame.mixer.music.unload()
-        pygame.mixer.music.load(path.join(bgm_dir, BGM))
-        pygame.mixer.music.play(loops=-1)
-        self.current_bgm = BGM
-        WriteLog.debug(__name__, f"播放BGM：{BGM}！")
+        if BGM != self.current_bgm:
+            if pygame.mixer.music.get_busy():
+                pygame.mixer.music.unload()
+            pygame.mixer.music.load(path.join(bgm_dir, BGM))
+            pygame.mixer.music.play(loops=-1)
+            self.current_bgm = BGM
+            WriteLog.debug(__name__, f"播放BGM：{BGM}！")
+        else:
+            WriteLog.debug(__name__, f"当前正在播放BGM：{BGM}，无需切换！")
 
     # 遍历file_path下所有文件，返回list
     def scan_dir(self, file_path):
@@ -68,3 +71,7 @@ class MusicWrapper():
             self.play_BGM(new_bgm)
         else:
             WriteLog.debug(__name__, f"无需切换当前BGM：{self.current_bgm}！")
+
+    # 重置音效
+    def reset(self):
+        self.play_BGM("bgm.mp3")

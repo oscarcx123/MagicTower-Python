@@ -16,9 +16,7 @@ The following needs to be installed:
 Run test.py to play the game~
 
 ## Instructions
-All the maps for the current demo tower is playable, the content is almost complete, but due to the lack of EventFlow, some features such as winning events and talking with NPCs are unavailable. After all, this demo is only for demonstration purposes. However, the items in the backpack are fully available, feel free to use them~
-
-The content of the demo game is the easy difficulty taken from "Mid-Autumn Festival 2019: Guiyu", and it should be quite easy. The only difference between this demo and the original game is the lack of Events.
+The content of the demo game is the easiest difficulty taken from "Mid-Autumn Festival 2019: Moon", and it should be quite easy even without the starter items / tools in backpack. All the maps for the current demo tower are playable. However, if you can't beat the game, feel free to use all the items in backpack~
 
 Currently available shortcuts:
 

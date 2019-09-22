@@ -61,7 +61,6 @@ class MapGround(GroundSurface):
                     result = coordinate.split(",")
                     result = [int(i) for i in result]
                     self.event_database[floor].append(result)
-        print(self.event_database)
         WriteLog.debug(__name__, "初始化事件完成")
 
 
@@ -206,3 +205,12 @@ class MapGround(GroundSurface):
         if self.map_data is not None:
             self.map_data[y][x] = 0
 
+
+    # 重置地图
+    def reset(self):
+        self.map_data = None
+        self.event_data = None
+        self.event_database = {}
+        self.map_database_init()
+        self.event_database_init()
+        self.set_map(PLAYER_FLOOR)

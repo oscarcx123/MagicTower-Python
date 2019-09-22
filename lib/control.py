@@ -12,6 +12,10 @@ class Player(EventSprite):
         self.image = pygame.transform.scale(player_img, (int(BLOCK_UNIT * 4), int(BLOCK_UNIT * 4)))
         # self.image.set_colorkey(WHITE)
         super().__init__(0, self.image, [4, 4])
+        self.reset()
+
+    # 重置/初始化角色数据
+    def reset(self):
         self.speedx = 0
         self.speedy = 0
         self.pos = [X_COORDINATE, Y_COORDINATE]
