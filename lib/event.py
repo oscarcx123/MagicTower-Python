@@ -104,11 +104,9 @@ class Event:
                 elif event_type == "addValue":
                     self.FUNCTION.add_item(map_obj_id, value) 
             else:
-                self.TEXTBOX.show(f"请检查{value_name}是否正确")
-                print(f"请检查{value_name}是否正确")
+                self.EVENTFLOW.throw_unknown_event(event)
         else:
-            self.TEXTBOX.show(f"暂时无法解析：{event}")
-            print(f"暂时无法解析：{event}")
+            self.EVENTFLOW.throw_unknown_event(event)
         self.FUNCTION.flush_status()
 
     # 打开全局商店
@@ -186,11 +184,9 @@ class Event:
                         extra_command = convert[convertible] + " = int(" + convert[convertible] + ")"
                         exec(extra_command)
                         return True
-                self.TEXTBOX.show(f"暂时无法解析：{event}")
-                print(f"暂时无法解析：{event}")
+                self.EVENTFLOW.throw_unknown_event(event)
             else:
-                self.TEXTBOX.show(f"暂时无法解析：{event}")
-                print(f"暂时无法解析：{event}")
+                self.EVENTFLOW.throw_unknown_event(event)
 
     # 游戏胜利事件
     def win(self, event):
@@ -218,6 +214,22 @@ class EventFlow:
         self.PlayerCon = global_var.get_value("PlayerCon")
         self.CurrentMap = global_var.get_value("CurrentMap")
         self.TEXTBOX = global_var.get_value("TEXTBOX")
+        self.supported_events = {
+            "if": "self.EVENT.if_cond(event)",
+            "setValue": "self.EVENT.set_value(event)",
+            "addValue": "self.EVENT.set_value(event)",
+            "openShop": "self.EVENT.open_shop(event)",
+            "openDoor": "self.EVENT.open_door(event)",
+            "playSound": "self.EVENT.play_sound(event)",
+            "sleep": "self.EVENT.sleep(event)",
+            "callSave": "self.EVENT.call_save(event)",
+            "choices": "self.EVENT.choices(event)",
+            "confirm": "self.EVENT.confirm(event)",
+            "function": "self.EVENT.function(event)",
+            "win": "self.EVENT.win(event)",
+            "battle": "self.EVENT.battle(event)",
+            "restart": "self.EVENT.restart(event)",
+        }
 
     def get_event_module(self):
         self.EVENT = global_var.get_value("EVENT")
@@ -258,37 +270,17 @@ class EventFlow:
             self.data_list.pop(0)
             if type(event) is dict:
                 event_type = event["type"]
-                if event_type == "if":
-                    self.EVENT.if_cond(event)
-                elif event_type == "setValue" or event_type == "addValue":
-                    self.EVENT.set_value(event)
-                elif event_type == "openShop":
-                    self.EVENT.open_shop(event)
-                elif event_type == "openDoor":
-                    self.EVENT.open_door(event)
-                elif event_type == "playSound":
-                    self.EVENT.play_sound(event)
-                elif event_type == "sleep":
-                    self.EVENT.sleep(event)
-                elif event_type == "callSave":
-                    self.EVENT.call_save(event)
-                elif event_type == "choices":
-                    self.EVENT.choices(event)
-                elif event_type == "confirm":
-                    self.EVENT.confirm(event)
-                elif event_type == "function":
-                    self.EVENT.function(event)
-                elif event_type == "win":
-                    self.EVENT.win(event)
-                elif event_type == "battle":
-                    self.EVENT.battle(event)
-                elif event_type == "restart":
-                    self.EVENT.restart(event)
+                if event_type in self.supported_events:
+                    command = self.supported_events[event_type]
+                    exec(command)
                 else:
-                    self.TEXTBOX.show(f"暂时无法解析：{event}")
-                    print(f"暂时无法解析：{event}")
+                    self.throw_unknown_event(event)
             elif type(event) is str:
                 self.EVENT.text(event)
             else:
-                self.TEXTBOX.show(f"暂时无法解析：{event}")
-                print(f"暂时无法解析：{event}")
+                self.throw_unknown_event(event)
+
+    # 抛出无法解析的事件
+    def throw_unknown_event(self, event):
+        self.TEXTBOX.show(f"暂时无法解析：{event}")
+        print(f"暂时无法解析：{event}")

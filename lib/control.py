@@ -58,6 +58,8 @@ class Player(EventSprite):
             return True
         # block_id = 81~86 -> 门
         elif int(block_id) >= 81 and int(block_id) <= 86:
+            # 快速存档
+            self.FUNCTION.save()
             result = self.FUNCTION.open_door(block_id, x, y)
             if result == False:
                 return False
@@ -67,7 +69,11 @@ class Player(EventSprite):
             return False
         # block_id = 201+ -> 怪物
         elif int(block_id) >= 201:
-            result = self.FUNCTION.battle(block_id, x, y)
+            result = self.FUNCTION.get_damage_info(block_id)
+            if result["status"] == True and result["damage"] < self.hp:
+                # 快速存档
+                self.FUNCTION.save()
+            result = self.FUNCTION.battle(block_id, x, y, result=result)
             if result == False:
                 return False
         return False
@@ -84,6 +90,7 @@ class Player(EventSprite):
                    pygame.K_UP: [0, -1],
                    pygame.K_DOWN: [0, 1],
                    pygame.K_z: "change_face",
+                   pygame.K_a: "load_auto",
                    pygame.K_b: "text_demo"} # text_demo暂时跟B键绑定在一起，方便测试文本框
         if not self.moving and not self.lock:
             for k in key_map:
@@ -118,6 +125,9 @@ class Player(EventSprite):
                         elif op == "text_demo":
                             TEXTBOX = global_var.get_value("TEXTBOX")
                             TEXTBOX.show("欢迎来到python魔塔样板v0.8\n1. 本窗口使用TextBox包装，内部调用使用TextWin，字体默认36号，字数自适应。\n2. 实现更多窗口使用WinBase，目前只能做文字显示，后续补充选择光标和图像以及计算式\n3. 事件触发可以考虑用列表\n4. 文本解析也许比较费时？可以考虑先解析\n5. 更多乱七八糟的功能还在开发中。。。。。。\n目前写得乱七八糟，因为目标是先能用再说，以后肯定需要重构下的。\nby Azure（蓝皮鼠） & dljgs1（君浪）\n以下是测试内容：\n目前实现了文本框的自适应。\n当前设定的最大行数为10。\n可以看到，当文字行数超过10之后，文本框会自动截断，按回车键之后继续展示。\n如果需要展示的文字数量特别多，TextBox能够将文本每十行截断一次，并且文本框高度为自适应！\n那么接下来要演示的就是最后的自适应部分。\n由于画布在创建后无法随意调整大小，因此这里的技术原理就是获取剩下需要展示的文字list，然后计算出需要的文本框高度，最后创建一个新的对象用于覆盖旧的对象，这样就可以重新设定画布的大小。")
+                        elif op == "load_auto":
+                            self.FUNCTION.load()
+                            pygame.time.wait(250)
             self.key_pressed = False
         super().update(*args)
 

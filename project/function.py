@@ -1,4 +1,6 @@
 import math
+import os
+import json
 import pygame
 from lib import global_var
 from sysconf import *
@@ -12,6 +14,9 @@ class Function():
         from project.enemy import MONSTER_DATA
         from project.block import BlockData
         from project.items import ITEMS_DATA
+        from lib.utools import get_time
+        from lib import WriteLog
+        self.get_time = get_time
         self.PlayerCon = global_var.get_value("PlayerCon")
         self.RootScreen = global_var.get_value("RootScreen")
         self.CurrentMap = global_var.get_value("CurrentMap")
@@ -23,6 +28,8 @@ class Function():
         self.MONSTER_DATA = MONSTER_DATA
         self.BlockData = BlockData
         self.ITEMS_DATA = ITEMS_DATA
+        self.WriteLog = WriteLog
+        self.save_path = os.path.join(os.getcwd(), "save")
 
     # flush_status 刷新地图&状态栏显示
     def flush_status(self):
@@ -185,22 +192,24 @@ class Function():
     # get_criticals 获得攻击临界数据
     # map_object（怪物数字id），result_num（临界结果数量）
     # TODO: 目前使用暴力循环法，未来实现二分法
-    def get_criticals(self, map_object, result_num):
+    def get_criticals(self, map_object, result_num, damage_info=None):
         # 设定循环攻击上限
-        LOOP_MAX_ATK = 100
+        LOOP_MAX_ATK = 200
         critical_list = []
         hero_atk = self.PlayerCon.attack
         hero_def = self.PlayerCon.defend
         hero_mdef = self.PlayerCon.mdefend
         # 获得当前怪物伤害数据
-        monster_stats = self.get_enemy_info(map_object)
-        initial_damage_info = self.get_damage_info(map_object)
+        if damage_info is not None:
+            initial_damage_info = damage_info
+        else:
+            initial_damage_info = self.get_damage_info(map_object)
         previous_damage = initial_damage_info["damage"]
         # 如果无法破防，直接返回破防所需的增量攻击
         if previous_damage == "???":
             return [[initial_damage_info["mon_def"] - hero_atk + 1, "???"]]
         if hero_atk <= LOOP_MAX_ATK:
-            for new_atk in range(hero_atk+1, monster_stats["hp"] + monster_stats["def"]):
+            for new_atk in range(hero_atk+1, initial_damage_info["mon_hp"] + initial_damage_info["mon_def"]):
                 next_damage_info = self.get_damage_info(map_object,new_atk,hero_def,hero_mdef)
                 next_damage = next_damage_info["damage"]
                 if next_damage < previous_damage:
@@ -286,8 +295,11 @@ class Function():
         return enemy_info_list
 
     # battle 进行战斗并结算，enforce是强制战斗开关
-    def battle(self, map_object, x=None, y=None, enforce=False):
-        result = self.get_damage_info(map_object)
+    def battle(self, map_object, x=None, y=None, enforce=False, result=None):
+        # 刷新显伤
+        self.CurrentMap.show_damage_update = True
+        if result is None:
+            result = self.get_damage_info(map_object)
         # 检测怪物是否无法被破防
         if result["status"] == False:
             if enforce:
@@ -373,6 +385,8 @@ class Function():
     # pickup_item 玩家捡起物品（直接使用/进入道具栏）
     def pickup_item(self, map_object, x, y):
         self.Music.play_SE("item.ogg")
+        # 刷新显伤
+        self.CurrentMap.show_damage_update = True
         item_name = self.BlockData[str(map_object)]["id"]
         item_type = self.ITEMS_DATA["items"][item_name]["cls"]
         # item_type为items，直接使用
@@ -488,6 +502,8 @@ class Function():
 
     # change_floor 处理切换楼层
     def change_floor(self, block, floor=None, loc=None):
+        # 刷新显伤
+        self.CurrentMap.show_damage_update = True
         # 使用楼层传送器，直接递归调用change_floor
         if block == "fly":
             if floor >= self.PlayerCon.floor:
@@ -633,3 +649,76 @@ class Function():
         self.reset()
         start = global_var.get_value("STARTMENU")
         start.open()
+
+
+    # 存档
+    def save(self, current_index=None):
+        save_file = {}
+        save_file["hero"] = {}
+        save_file["hero"]["hp"] = self.PlayerCon.hp
+        save_file["hero"]["attack"] = self.PlayerCon.attack
+        save_file["hero"]["defend"] = self.PlayerCon.defend
+        save_file["hero"]["mdefend"] = self.PlayerCon.mdefend
+        save_file["hero"]["gold"] = self.PlayerCon.gold
+        save_file["hero"]["exp"] = self.PlayerCon.exp
+        save_file["hero"]["floor"] = self.PlayerCon.floor
+        save_file["hero"]["visited"] = self.PlayerCon.visited
+        save_file["hero"]["item"] = self.PlayerCon.item
+        save_file["hero"]["pos"] = self.PlayerCon.pos
+        save_file["hero"]["face"] = self.PlayerCon.face[0]
+        save_file["map"] = self.CurrentMap.MAP_DATABASE
+        save_file["event"] = self.CurrentMap.event_database
+        save_file["event_data_list"] = self.EVENTFLOW.data_list
+        save_file["time"] = self.get_time()
+        if current_index is None:
+            current_index = "auto"
+        else:
+            # 这里current_index += 1的原因是，index从0开始计算，但是我们希望存档从1开始计算，需要处理这个偏移。
+            current_index += 1
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        full_file_name = file_name_1 + str(current_index) + file_name_2
+        full_path = os.path.join(self.save_path, full_file_name)
+        with open((full_path), "w") as f:
+            json.dump(save_file, f)
+        self.WriteLog.debug(__name__, "存档成功！")
+        return True
+
+
+    def load(self, current_index=None):
+        if current_index is None:
+            current_index = "auto"
+        else:
+            # 同理，这里current_index += 1也是处理index跟存档编号的偏移
+            current_index += 1
+        file_name_1 = "save_"
+        file_name_2 = ".json"
+        full_file_name = file_name_1 + str(current_index) + file_name_2
+        full_path = os.path.join(self.save_path, full_file_name)
+        if os.path.isfile(full_path):
+            with open(full_path) as f:
+                save_file = json.load(f)
+            self.PlayerCon.hp = save_file["hero"]["hp"]
+            self.PlayerCon.attack = save_file["hero"]["attack"]
+            self.PlayerCon.defend = save_file["hero"]["defend"]
+            self.PlayerCon.mdefend = save_file["hero"]["mdefend"]
+            self.PlayerCon.gold = save_file["hero"]["gold"]
+            self.PlayerCon.exp = save_file["hero"]["exp"]
+            self.PlayerCon.floor = save_file["hero"]["floor"]
+            self.PlayerCon.visited = save_file["hero"]["visited"]
+            self.PlayerCon.item = {}
+            for item_num_id in save_file["hero"]["item"]:
+                self.PlayerCon.item[int(item_num_id)] = save_file["hero"]["item"][item_num_id]
+            self.PlayerCon.pos = save_file["hero"]["pos"]
+            self.PlayerCon.face[0] = save_file["hero"]["face"]
+            self.CurrentMap.MAP_DATABASE = save_file["map"]
+            self.CurrentMap.event_database = save_file["event"]
+            self.CurrentMap.set_map(self.PlayerCon.floor)
+            self.EVENTFLOW.data_list = save_file["event_data_list"]
+            self.draw_status_bar()
+            self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
+            self.WriteLog.debug(__name__, "读档成功！")
+            return True
+        else:
+            WriteLog.debug(__name__, "读取了不存在的存档")
+            return False

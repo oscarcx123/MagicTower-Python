@@ -63,7 +63,7 @@ def init():
 
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
-    StatusBar.priority = 8
+    StatusBar.priority = 15
     global_var.set_value("StatusBar", StatusBar)
     RootScreen.add_child(CurrentMap)  
     WriteLog.debug(__name__, "初始化状态栏完成")
@@ -71,47 +71,47 @@ def init():
     # 初始化UI图层
     # --- UI1 - 怪物手册
     BOOK = ui.Book(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    BOOK.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    BOOK.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(BOOK)
     global_var.set_value("BOOK", BOOK)
     # --- UI2 - 开始界面
     STARTMENU = ui.StartMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    STARTMENU.priority = 10  # 显示的优先级 高于地图 所以在地图上
+    STARTMENU.priority = 20  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(STARTMENU)
     global_var.set_value("STARTMENU", STARTMENU)
     # --- UI3 - 背包界面
     BACKPACK = ui.Backpack(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    BACKPACK.priority = 10  # 显示的优先级 高于地图 所以在地图上
+    BACKPACK.priority = 20  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(BACKPACK)
     global_var.set_value("BACKPACK", BACKPACK)
     # --- UI4 - 存档界面
     SAVE = ui.SaveMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    SAVE.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    SAVE.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(SAVE)
     global_var.set_value("SAVE", SAVE)
     # --- UI5 - 读档界面
     LOAD = ui.LoadMenu(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    LOAD.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    LOAD.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(LOAD)
     global_var.set_value("LOAD", LOAD)
     # --- UI6 - 楼层传送器界面
     FLY = ui.Fly(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    FLY.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    FLY.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(FLY)
     global_var.set_value("FLY", FLY)
     # --- UI7 - 帮助界面
     HELP = ui.Help(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    HELP.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    HELP.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(HELP)
     global_var.set_value("HELP", HELP)
     # --- UI8 - 商店1界面
     Shop1 = ui.Shop1(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    Shop1.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    Shop1.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(Shop1)
     global_var.set_value("Shop1", Shop1)
     # --- UI9 - 商店2界面
     Shop2 = ui.Shop2(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    Shop2.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    Shop2.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(Shop2)
     global_var.set_value("Shop2", Shop2)
     # --- UI10 - 文本框界面
@@ -126,6 +126,12 @@ def init():
     RootScreen.add_child(CHOICEBOX)
     global_var.set_value("CHOICEBOX", CHOICEBOX)
     WriteLog.debug(__name__, "初始化UI图层完成")
+    # --- UI12 - 显伤层
+    SHOWDAMAGE = ui.ShowDamage(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    SHOWDAMAGE.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(SHOWDAMAGE)
+    global_var.set_value("SHOWDAMAGE", SHOWDAMAGE)
+    WriteLog.debug(__name__, "初始化显伤层完成")
 
 
 def init_actions():
@@ -148,6 +154,7 @@ def init_actions():
     action_control.register_action('Shop2', pygame.KEYUP, global_var.get_value('Shop2').action)
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
     action_control.register_action('CHOICEBOX', pygame.KEYUP, global_var.get_value('CHOICEBOX').action)
+    action_control.register_action('SHOWDAMAGE', pygame.KEYUP, global_var.get_value('SHOWDAMAGE').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 
 
@@ -206,6 +213,9 @@ while running:
         start = global_var.get_value("STARTMENU")
         start.open()
         start_menu = False
+        # 默认开启显伤
+        show_damage = global_var.get_value("SHOWDAMAGE")
+        show_damage.open()
 
     pygame.display.update()
     # clock.tick(60)

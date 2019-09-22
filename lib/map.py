@@ -35,6 +35,8 @@ class MapGround(GroundSurface):
         self.map_database_init()
         self.event_database_init()
         self.FUNCTION = global_var.get_value("FUNCTION")
+        self.show_damage_update = True
+        self.damage_layer_cache = {}
         super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
 
     def map_database_init(self):
@@ -62,7 +64,6 @@ class MapGround(GroundSurface):
                     result = [int(i) for i in result]
                     self.event_database[floor].append(result)
         WriteLog.debug(__name__, "初始化事件完成")
-
 
     def trans_locate(self, *args):
         """
@@ -119,6 +120,8 @@ class MapGround(GroundSurface):
     
     # draw_map 绘制地图，之后刷新不再重绘，除非更新地图状态
     def draw_map(self, map_data=None):
+        if self.show_damage_update:
+            self.damage_layer_cache = {}
         WriteLog.debug(__name__, "绘制地图")
         self.clear_map() # 清空精灵
         if map_data is None:
@@ -149,17 +152,30 @@ class MapGround(GroundSurface):
                         self.add_sprite(EventSprite(name, img, sp), fill_rect=img_rect)
                     elif ret is not None:
                         self.fill_surface(ret, fill_rect=rect)
+                    # 显伤怪物id和位置的缓存
                     if map_element > 200:
-                        result = self.FUNCTION.get_damage_info(map_element)
-                        if result == False:
-                            damage = "???"
-                        else:
-                            damage = result["damage"]
-                        self.draw_text(str(damage), 22, WHITE, temp_x, temp_y)
+                        if self.show_damage_update:
+                            if map_element in self.damage_layer_cache:
+                                self.damage_layer_cache[map_element]["loc"].append([temp_x, temp_y])
+                            else:
+                                self.damage_layer_cache[map_element] = {}
+                                self.damage_layer_cache[map_element]["loc"] =[]
+                                self.damage_layer_cache[map_element]["loc"].append([temp_x, temp_y])  
+                                check_result = self.FUNCTION.get_damage_info(map_element)
+                                critical = self.FUNCTION.get_criticals(map_element, 1, damage_info=check_result)
+                                if check_result == False:
+                                    self.damage_layer_cache[map_element]["damage"] = "???"
+                                else:
+                                    self.damage_layer_cache[map_element]["damage"] = check_result["damage"]
+                                if critical == []:
+                                    self.damage_layer_cache[map_element]["critical"] = 0
+                                else:
+                                    self.damage_layer_cache[map_element]["critical"] = critical[0][0]
                 temp_x += 1
             temp_y += 1
             temp_x = 0
             self.temp_srufcae = self.surface.copy()
+        self.show_damage_update = False
     
     # get_block 获取指定地点的图块
     def get_block(self, x, y, floor=None):

@@ -4,7 +4,6 @@ from lib import ground
 from sysconf import *
 from project.items import *
 from project import block
-from lib.utools import get_time
 from lib.winbase import TextWin
 import math
 import os
@@ -456,7 +455,7 @@ class SaveLoadMenu(Menu):
         total_page = math.ceil(SAVE_MAX_AMOUNT / item_per_page)
         current_page = math.ceil((self.current_index + 1) / item_per_page)
         slice_start = (current_page - 1) * item_per_page
-        slice_end = min(slice_start + item_per_page - 1, SAVE_MAX_AMOUNT)
+        slice_end = min(slice_start + item_per_page - 1, SAVE_MAX_AMOUNT - 1)
 
         # 让存档index跟实际非0自然数对应
         slice_start += 1
@@ -484,6 +483,8 @@ class SaveLoadMenu(Menu):
         # 根据当前current_index绘制高亮框
         i = current_index % item_per_page
         self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+        # 显示当前页数
+        self.draw_text(f"{current_page} / {total_page}", 30, BLACK, 9 * BLOCK_UNIT, (12 * BLOCK_UNIT) + 10, "px")
 
     def check_save_file(self, slice_start, slice_end):
         file_name_1 = "save_"
@@ -516,35 +517,7 @@ class SaveMenu(SaveLoadMenu):
         self.key_map[pygame.K_s] = 'open'
 
     def function(self, current_index):
-        CurrentMap = global_var.get_value("CurrentMap")
-        EventFlow = global_var.get_value("EVENTFLOW")
-        save_file = {}
-        save_file["hero"] = {}
-        save_file["hero"]["hp"] = self.PlayerCon.hp
-        save_file["hero"]["attack"] = self.PlayerCon.attack
-        save_file["hero"]["defend"] = self.PlayerCon.defend
-        save_file["hero"]["mdefend"] = self.PlayerCon.mdefend
-        save_file["hero"]["gold"] = self.PlayerCon.gold
-        save_file["hero"]["exp"] = self.PlayerCon.exp
-        save_file["hero"]["floor"] = self.PlayerCon.floor
-        save_file["hero"]["visited"] = self.PlayerCon.visited
-        save_file["hero"]["item"] = self.PlayerCon.item
-        save_file["hero"]["pos"] = self.PlayerCon.pos
-        save_file["hero"]["face"] = self.PlayerCon.face[0]
-        save_file["map"] = CurrentMap.MAP_DATABASE
-        save_file["event"] = CurrentMap.event_database
-        save_file["event_data_list"] = EventFlow.data_list
-        save_file["time"] = get_time()
-        # 这里current_index += 1的原因是，index从0开始计算，但是我们希望存档从1开始计算，需要处理这个偏移。
-        current_index += 1
-        file_name_1 = "save_"
-        file_name_2 = ".json"
-        full_file_name = file_name_1 + str(current_index) + file_name_2
-        full_path = os.path.join(self.save_path, full_file_name)
-        with open((full_path), "w") as f:
-            json.dump(save_file, f)
-        WriteLog.debug(__name__, "存档成功！")
-        return True
+        return self.FUNCTION.save(current_index)
 
 
 # 读档菜单，通过继承SaveLoadMenu得到
@@ -555,42 +528,7 @@ class LoadMenu(SaveLoadMenu):
         self.key_map[pygame.K_d] = 'open'
 
     def function(self, current_index):
-        # 同理，这里current_index += 1也是处理index跟存档编号的偏移
-        current_index += 1
-        file_name_1 = "save_"
-        file_name_2 = ".json"
-        full_file_name = file_name_1 + str(current_index) + file_name_2
-        full_path = os.path.join(self.save_path, full_file_name)
-        if os.path.isfile(full_path):
-            with open(full_path) as f:
-                save_file = json.load(f)
-            CurrentMap = global_var.get_value("CurrentMap")
-            EventFlow = global_var.get_value("EVENTFLOW")
-            self.PlayerCon.hp = save_file["hero"]["hp"]
-            self.PlayerCon.attack = save_file["hero"]["attack"]
-            self.PlayerCon.defend = save_file["hero"]["defend"]
-            self.PlayerCon.mdefend = save_file["hero"]["mdefend"]
-            self.PlayerCon.gold = save_file["hero"]["gold"]
-            self.PlayerCon.exp = save_file["hero"]["exp"]
-            self.PlayerCon.floor = save_file["hero"]["floor"]
-            self.PlayerCon.visited = save_file["hero"]["visited"]
-            self.PlayerCon.item = {}
-            for item_num_id in save_file["hero"]["item"]:
-                self.PlayerCon.item[int(item_num_id)] = save_file["hero"]["item"][item_num_id]
-            self.PlayerCon.pos = save_file["hero"]["pos"]
-            self.PlayerCon.face[0] = save_file["hero"]["face"]
-            CurrentMap.MAP_DATABASE = save_file["map"]
-            CurrentMap.event_database = save_file["event"]
-            CurrentMap.set_map(self.PlayerCon.floor)
-            global_var.set_value("CurrentMap", CurrentMap)
-            EventFlow.data_list = save_file["event_data_list"]
-            self.FUNCTION.draw_status_bar()
-            self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
-            WriteLog.debug(__name__, "读档成功！")
-            return True
-        else:
-            WriteLog.debug(__name__, "读取了不存在的存档")
-            return False
+        return self.FUNCTION.load(current_index)
 
 
 # 楼层传送器，通过继承Menu得到
@@ -688,8 +626,14 @@ class Help(BlankPage):
             "T = 玩家背包（带二级菜单）",
             "S = 存档界面",
             "D = 读档界面",
-            "Z = 勇士转身（顺时针）"
+            "Z = 勇士转身（顺时针）",
+            "H = 帮助界面",
+            "B = 文本框Demo（测试用）",
+            "P = 开关显伤层（默认开启）",
+            "ESC = 返回操作",
+            "Enter = 确认操作"
         ]
+
 
     def draw(self):
         cnt = 0
@@ -909,3 +853,65 @@ class TextBox(UIComponent):
             self.text_win_obj.show_on()
             
 
+class ShowDamage(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "显伤层"
+        self.showing = False
+        self.damage_cache = None
+        self.key_map = {pygame.K_p: 'open'}
+        self.PlayerCon = global_var.get_value("PlayerCon")
+        self.CurrentMap = global_var.get_value("CurrentMap")
+    
+    def open(self):
+        self.showing = True
+        self.CurrentMap.show_damage_update = True
+        self.active = False
+        self.PlayerCon.lock = False
+
+    def close(self):
+        self.showing = False
+        self.active = False
+        self.PlayerCon.lock = False
+
+    # 注册到action_control的函数
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.showing:
+                WriteLog.debug(__name__, (self.name,key,key_map))
+                if idx == 'open':
+                    self.close()
+                    idx = 0
+                elif idx == 'close':
+                    self.close()
+                    idx = 0
+                elif type(idx) is not int:
+                    idx = 0
+                else:
+                    self.current_index += idx
+                return True
+            else:
+                if idx == 'open':
+                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    if not self.PlayerCon.lock:
+                        self.open()
+                    idx = 0
+        return False
+    
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.showing:
+            self.draw()
+        super().flush(screen)
+
+    def draw(self):
+        for monster in self.CurrentMap.damage_layer_cache:
+            for loc in self.CurrentMap.damage_layer_cache[monster]["loc"]:
+                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
+                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
+        
+
+        
