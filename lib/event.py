@@ -1,6 +1,5 @@
 from lib import global_var, WriteLog
 import re
-from project.function import add_item, count_item, set_item_amount, flush_status
 import pygame
 
 # 事件基本单元
@@ -19,6 +18,8 @@ class Event:
         self.TEXTBOX = global_var.get_value("TEXTBOX")
         self.BlockDataReverse = global_var.get_value("BlockDataReverse")
         self.Music = global_var.get_value("Music")
+        self.FUNCTION = global_var.get_value("FUNCTION")
+
 
     def get_event_flow_module(self):
         self.EVENTFLOW = global_var.get_value("EVENTFLOW")
@@ -69,7 +70,7 @@ class Event:
 
     def parse_value(self, value):
         if "core.itemCount" in value:
-            value = value.replace("core.itemCount", "count_item")
+            value = value.replace("core.itemCount", "self.FUNCTION.count_item")
         return eval(value)
 
     # 设置玩家属性，道具数量，或者变量的值
@@ -99,16 +100,16 @@ class Event:
             if value_name in self.BlockDataReverse:
                 map_obj_id = int(self.BlockDataReverse[value_name])
                 if event_type == "setValue":
-                    set_item_amount(map_obj_id, value)
+                    self.FUNCTION.set_item_amount(map_obj_id, value)
                 elif event_type == "addValue":
-                    add_item(map_obj_id, value) 
+                    self.FUNCTION.add_item(map_obj_id, value) 
             else:
                 self.TEXTBOX.show(f"请检查{value_name}是否正确")
                 print(f"请检查{value_name}是否正确")
         else:
             self.TEXTBOX.show(f"暂时无法解析：{event}")
             print(f"暂时无法解析：{event}")
-        flush_status()
+        self.FUNCTION.flush_status()
 
     # 打开全局商店
     def open_shop(self, event):

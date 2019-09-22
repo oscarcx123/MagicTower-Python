@@ -28,11 +28,9 @@ from lib import CurrentMap, PlayerCon, WriteLog
 from lib.ground import GroundSurface
 from lib import global_var
 from lib.event import EventFlow, Event
-from project.function import function_init, draw_status_bar
 from project.block import BlockData
 
 RootScreen = GroundSurface(mode="copy", surface=screen)
-global StatusBar
 running = True
 start_menu = True
 from lib import ui
@@ -46,13 +44,9 @@ def init():
     global_var.set_value("font_name", FONT_NAME)
     global_var.set_value("RootScreen", RootScreen)
     global_var.set_value("action_control", action_control)
-
-    # 延迟map初始化，避免文件的循环引用
-    CurrentMap.lib_map_init()
     
     # 设置PlayerCon为全局变量（必须要在CurrentMap.set_map之前完成）
     global_var.set_value("PlayerCon", PlayerCon)
-    function_init()
     
     # 初始化地图
     CurrentMap.set_map(PLAYER_FLOOR)
@@ -69,10 +63,9 @@ def init():
 
     # 状态栏
     StatusBar = RootScreen.add_child("left", BLOCK_UNIT * 4)
+    StatusBar.priority = 8
     global_var.set_value("StatusBar", StatusBar)
     RootScreen.add_child(CurrentMap)  
-    # 绘制状态栏
-    draw_status_bar()
     WriteLog.debug(__name__, "初始化状态栏完成")
     
     # 初始化UI图层
@@ -88,7 +81,7 @@ def init():
     global_var.set_value("STARTMENU", STARTMENU)
     # --- UI3 - 背包界面
     BACKPACK = ui.Backpack(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    BACKPACK.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    BACKPACK.priority = 10  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(BACKPACK)
     global_var.set_value("BACKPACK", BACKPACK)
     # --- UI4 - 存档界面
@@ -123,13 +116,13 @@ def init():
     global_var.set_value("Shop2", Shop2)
     # --- UI10 - 文本框界面
     TEXTBOX = ui.TextBox(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    TEXTBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    TEXTBOX.priority = 15  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(TEXTBOX)
     global_var.set_value("TEXTBOX", TEXTBOX)
     WriteLog.debug(__name__, "初始化UI图层完成")
-    # --- UI11 - 文本框界面
+    # --- UI11 - 选择框界面
     CHOICEBOX = ui.ChoiceBox(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
-    CHOICEBOX.priority = 5  # 显示的优先级 高于地图 所以在地图上
+    CHOICEBOX.priority = 15  # 显示的优先级 高于地图 所以在地图上
     RootScreen.add_child(CHOICEBOX)
     global_var.set_value("CHOICEBOX", CHOICEBOX)
     WriteLog.debug(__name__, "初始化UI图层完成")
@@ -172,6 +165,13 @@ def init_event_flow():
     EVENTFLOW.get_event_module()
     WriteLog.debug(__name__, "初始化事件流完成")
 
+def init_function():
+    FUNCTION = global_var.get_value("FUNCTION")
+    FUNCTION.init_var()
+    # 绘制状态栏
+    FUNCTION.draw_status_bar()
+    WriteLog.debug(__name__, "初始化function完成")
+
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
 if DEBUG:
     import threading
@@ -196,6 +196,7 @@ init()
 init_actions()
 init_sound()
 init_event_flow()
+init_function()
 clock = pygame.time.Clock()
 
 # 主程序

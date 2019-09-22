@@ -2,7 +2,6 @@ from lib import global_var, WriteLog
 import pygame
 from lib import ground
 from sysconf import *
-from project.function import draw_status_bar, get_current_enemy, sort_item, remove_item, has_item,  get_ability_text, change_floor
 from project.items import *
 from project import block
 from lib.utools import get_time
@@ -18,6 +17,7 @@ class UIComponent(ground.GroundSurface):
         ground.GroundSurface.__init__(self, **kwargs)
         self.active = False
         self.PlayerCon = global_var.get_value("PlayerCon")
+        self.FUNCTION = global_var.get_value("FUNCTION")
 
     def open(self):
         self.active = True
@@ -134,10 +134,10 @@ class Book(Menu):
             map_index = self.PlayerCon.floor
         # UI背景和左侧状态栏
         self.fill(SKYBLUE)
-        draw_status_bar(self)
+        self.FUNCTION.draw_status_bar()
         # 获得当前地图中全部的怪物的信息
         CurrentMap = global_var.get_value("CurrentMap")
-        enemy_info_list = get_current_enemy(CurrentMap.get_map(self.PlayerCon.floor))
+        enemy_info_list = self.FUNCTION.get_current_enemy(CurrentMap.get_map(self.PlayerCon.floor))
         # 如果当前楼层没有怪物
         if len(enemy_info_list) == 0:
             self.draw_text("本层无怪物", 72, BLACK, (17 * BLOCK_UNIT / 2) - (72 * 1.5), (13 * BLOCK_UNIT / 2) - 36, "px")
@@ -160,7 +160,7 @@ class Book(Menu):
             self.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             
             # 显示怪物特殊能力
-            ability_text = get_ability_text(enemy["mon_ability"])
+            ability_text = self.FUNCTION.get_ability_text(enemy["mon_ability"])
             if len(ability_text) == 0:
                 pass
             elif len(ability_text) == 1:
@@ -281,7 +281,7 @@ class Backpack(Menu):
         self.draw_lines([(4,0),(4,13)], 5, BLACK)
         self.draw_lines([(4,3),(17,3)], 5, BLACK)
         # 获取分类后的背包（获得字典）
-        sort_info = sort_item(category)
+        sort_info = self.FUNCTION.sort_item(category)
         # 生成物品类型数组
         if self.cls_index == []:
             for cls in sort_info:
@@ -389,14 +389,14 @@ class Backpack(Menu):
                 f"item_result = {item_function}\n"
                 f"if item_result['result'] == True:\n"
                 f"    if '{item_type}' != 'constants':\n"
-                f"        remove_item(item, 1)\n"
+                f"        self.FUNCTION.remove_item(item, 1)\n"
                 f"else:\n"
                 f"    print(item_result['msg'])\n"
             )
         exec(command)
         CurrentMap = global_var.get_value("CurrentMap")
         CurrentMap.set_map(self.PlayerCon.floor)
-        draw_status_bar()
+        self.FUNCTION.draw_status_bar()
         return True
 
 
@@ -584,7 +584,7 @@ class LoadMenu(SaveLoadMenu):
             CurrentMap.set_map(self.PlayerCon.floor)
             global_var.set_value("CurrentMap", CurrentMap)
             EventFlow.data_list = save_file["event_data_list"]
-            draw_status_bar()
+            self.FUNCTION.draw_status_bar()
             self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
             WriteLog.debug(__name__, "读档成功！")
             return True
@@ -620,7 +620,7 @@ class Fly(Menu):
                 WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     if self.floor_index[self.current_index] in self.PlayerCon.visited:
-                        change_floor("fly", floor=self.current_index)
+                        self.FUNCTION.change_floor("fly", floor=self.current_index)
                         self.close()
                         idx = 0
                     else:
@@ -640,7 +640,7 @@ class Fly(Menu):
                 if idx == 'open':
                     WriteLog.debug(__name__, (self.name,key,key_map))
                     if not self.PlayerCon.lock:
-                        if has_item(46):
+                        if self.FUNCTION.has_item(46):
                             self.open()
                             self.current_index = self.floor_index.index(self.floor_index[self.PlayerCon.floor])
                         else:
@@ -654,7 +654,7 @@ class Fly(Menu):
         self.current_index = min(self.current_index, self.max_floor_index)
         # UI背景和左侧状态栏
         self.fill(SKYBLUE)
-        draw_status_bar(self)
+        self.FUNCTION.draw_status_bar()
         # 绘制楼层传送器条目
         cnt = 0
         for floor in self.floor_index:
@@ -694,7 +694,7 @@ class Help(BlankPage):
     def draw(self):
         cnt = 0
         self.fill(SKYBLUE)
-        draw_status_bar(self)
+        self.FUNCTION.draw_status_bar()
         for text in self.contents:
             self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT, (cnt * BLOCK_UNIT), "px")
             cnt += 1
@@ -745,7 +745,7 @@ class Shop(Menu):
         self.current_index = min(self.current_index, len(self.choices) - 1)
         # UI背景和左侧状态栏
         self.fill(SKYBLUE)
-        draw_status_bar(self)
+        self.FUNCTION.draw_status_bar()
         # 绘制商店条目
         cnt = 0
         self.draw_text(self.name, 30, BLACK, 5 * BLOCK_UNIT, 0, "px")
@@ -766,7 +766,7 @@ class Shop(Menu):
                 self.price += self.price_increment
                 exec(command)
                 self.update_text()
-                draw_status_bar()
+                self.FUNCTION.draw_status_bar()
                 print("购买成功！")
             else:
                 print("你不够钱！")

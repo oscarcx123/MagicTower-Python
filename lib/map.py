@@ -34,6 +34,7 @@ class MapGround(GroundSurface):
         self.temp_srufcae = None
         self.map_database_init()
         self.event_database_init()
+        self.FUNCTION = global_var.get_value("FUNCTION")
         super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
 
     def map_database_init(self):
@@ -115,11 +116,7 @@ class MapGround(GroundSurface):
         if self.temp_srufcae is not None: # 地图刷新时先直接绘上静态部分
             self.surface.blit(self.temp_srufcae, self.temp_srufcae.get_rect())
         super().flush(screen=screen)
-    
-    # TODO: 目前显伤放在draw_map里头，因此这里要进行初始化获取get_damage_info函数
-    def lib_map_init(self):
-        from project.function import get_damage_info
-        global get_damage_info
+
     
     # draw_map 绘制地图，之后刷新不再重绘，除非更新地图状态
     def draw_map(self, map_data=None):
@@ -154,7 +151,7 @@ class MapGround(GroundSurface):
                     elif ret is not None:
                         self.fill_surface(ret, fill_rect=rect)
                     if map_element > 200:
-                        result = get_damage_info(map_element)
+                        result = self.FUNCTION.get_damage_info(map_element)
                         if result == False:
                             damage = "???"
                         else:

@@ -2,7 +2,6 @@ import pygame
 from lib import CurrentMap
 from .sprite import EventSprite
 from sysconf import *
-from project.function import *
 from lib import global_var
 
 # 玩家控制逻辑：
@@ -34,6 +33,7 @@ class Player(EventSprite):
         self.floor = PLAYER_FLOOR
         self.item = PLAYER_ITEM
         self.var = {}
+        self.FUNCTION = global_var.get_value("FUNCTION")
 
     # TODO：各种block的处理
     def proc_block(self, block_id, x, y):
@@ -50,20 +50,20 @@ class Player(EventSprite):
             return False
         # block_id = 21~69 -> 道具
         elif int(block_id) >= 21 and int(block_id) <= 69:
-            pickup_item(block_id, x, y)
+            self.FUNCTION.pickup_item(block_id, x, y)
             return True
         # block_id = 81~86 -> 门
         elif int(block_id) >= 81 and int(block_id) <= 86:
-            result = open_door(block_id, x, y)
+            result = self.FUNCTION.open_door(block_id, x, y)
             if result == False:
                 return False
         # block_id = 87~88 -> 楼梯
         elif int(block_id) == 87 or int(block_id) == 88:
-            result = change_floor(block_id)
+            result = self.FUNCTION.change_floor(block_id)
             return False
         # block_id = 201+ -> 怪物
         elif int(block_id) >= 201:
-            result = battle(block_id, x, y)
+            result = self.FUNCTION.battle(block_id, x, y)
             if result == False:
                 return False
         return False
@@ -123,6 +123,3 @@ class Player(EventSprite):
     def change_hero_loc(self, x, y):
         self.move_directly(CurrentMap.trans_locate(x, y, "down"))
         self.pos = [x, y]
-
-
-#
