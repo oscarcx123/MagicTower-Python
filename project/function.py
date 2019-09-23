@@ -524,7 +524,7 @@ class Function():
                 self.PlayerCon.floor += 1
             self.CurrentMap.set_map(self.PlayerCon.floor)
             check_map_result = self.CurrentMap.check_block(88)
-            print(f"check_map_result:{check_map_result}")
+            self.WriteLog.debug(__name__, f"目标楼层楼梯位置：{check_map_result}")
             if len(check_map_result) == 1:
                 x_coordinate = check_map_result[0][0]
                 y_coordinate = check_map_result[0][1]
@@ -538,7 +538,7 @@ class Function():
                 self.PlayerCon.floor -= 1
             self.CurrentMap.set_map(self.PlayerCon.floor)
             check_map_result = self.CurrentMap.check_block(87)
-            print(f"check_map_result:{check_map_result}")
+            self.WriteLog.debug(__name__, f"目标楼层楼梯位置：{check_map_result}")
             if len(check_map_result) == 1:
                 x_coordinate = check_map_result[0][0]
                 y_coordinate = check_map_result[0][1]
@@ -713,6 +713,8 @@ class Function():
             self.PlayerCon.face[0] = save_file["hero"]["face"]
             self.CurrentMap.MAP_DATABASE = save_file["map"]
             self.CurrentMap.event_database = save_file["event"]
+            # 读档需要在set_map（绘制地图）之前刷新显伤层
+            self.CurrentMap.show_damage_update = True
             self.CurrentMap.set_map(self.PlayerCon.floor)
             self.EVENTFLOW.data_list = save_file["event_data_list"]
             self.draw_status_bar()

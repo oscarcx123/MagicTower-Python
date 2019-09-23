@@ -14,7 +14,7 @@ pygame.init()
 # 例如1920*1080屏幕，Windows推荐的缩放率就是125%。
 # 这样会导致游戏窗口被严重放大，造成一部分游戏画面处在任务栏下方。
 # 然而，在Linux系统下并没有这问题，所以这里只判定是否为Windows。
-if platform.system == "Windows":
+if platform.system() == "Windows":
     ctypes.windll.user32.SetProcessDPIAware()
 
 # 设置游戏窗口大小
@@ -216,6 +216,11 @@ while running:
         # 默认开启显伤
         show_damage = global_var.get_value("SHOWDAMAGE")
         show_damage.open()
+        # 载入初始事件
+        EVENTFLOW = global_var.get_value("EVENTFLOW")
+        with open(os.path.join(os.getcwd(),"project", "start_text.json")) as f:
+            start_text = json.load(f)
+        EVENTFLOW.insert_action(start_text["startText"])
 
     pygame.display.update()
     # clock.tick(60)
