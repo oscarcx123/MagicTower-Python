@@ -866,13 +866,9 @@ class ShowDamage(UIComponent):
     def open(self):
         self.showing = True
         self.CurrentMap.show_damage_update = True
-        self.active = False
-        self.PlayerCon.lock = False
 
     def close(self):
         self.showing = False
-        self.active = False
-        self.PlayerCon.lock = False
 
     # 注册到action_control的函数
     def action(self, event):
@@ -885,13 +881,6 @@ class ShowDamage(UIComponent):
                 if idx == 'open':
                     self.close()
                     idx = 0
-                elif idx == 'close':
-                    self.close()
-                    idx = 0
-                elif type(idx) is not int:
-                    idx = 0
-                else:
-                    self.current_index += idx
                 return True
             else:
                 if idx == 'open':
