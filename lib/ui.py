@@ -899,8 +899,8 @@ class ShowDamage(UIComponent):
     def draw(self):
         for monster in self.CurrentMap.damage_layer_cache:
             for loc in self.CurrentMap.damage_layer_cache[monster]["loc"]:
-                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
-                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
+                self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
+                self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
         
 
         

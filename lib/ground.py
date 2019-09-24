@@ -241,6 +241,16 @@ class GroundSurface:
             text_rect.top = y * BLOCK_UNIT
         self.surface.blit(text_surface, text_rect)
 
+    # draw_stroke_text 在画布上绘制描边文字
+    # 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），color（文字颜色），x，y（xy相对坐标）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
+    def draw_stroke_text(self, text, size, text_color, stroke_color, x, y, mode=None):
+        self.draw_text(text, size, stroke_color, x + 1, y + 1, mode)
+        self.draw_text(text, size, stroke_color, x + 1, y - 1, mode)
+        self.draw_text(text, size, stroke_color, x - 1, y + 1, mode)
+        self.draw_text(text, size, stroke_color, x - 1, y - 1, mode)
+        self.draw_text(text, size, text_color, x, y, mode)
+
     # draw_lines 在画布上绘制（一条或多条）线段
     # 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
     # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
