@@ -6,6 +6,24 @@
 
 使用Python的Pygame模块制作的魔塔样板，理论上支持全平台游戏！
 
+<p align="center">
+  <img src="./_docs/img/sample_map.png" alt="sample_map" width="500"/>
+  <br><br>
+  <b>游戏界面</b>
+  <br><br>
+  <img src="./_docs/img/sample_book.png" alt="sample_book" width="500"/>
+  <br><br>
+  <b>五毛特效的怪物手册</b>
+  <br><br>
+  <img src="./_docs/img/sample_backpack.png" alt="sample_backpack" width="500"/>
+  <br><br>
+  <b>五毛特效的道具背包</b>
+  <br><br>
+  <img src="./_docs/img/sample_save.png" alt="sample_save" width="500"/>
+  <br><br>
+  <b>五毛特效的存读档界面</b>
+</p>
+
 ## 运行说明
 
 电脑需要安装：
