@@ -65,6 +65,7 @@ Demo的游戏内容取自《中秋2019：桂魄》的咸鱼难度，应该挺容
 * [x] 补上了“platform.system()”掉的括号
 * [x] 实验性载入初始事件
 * [x] 地图显伤描边（draw_stroke_text）
+* [x] 新增以下事件的解析：loadBgm, playBgm
 
 ### 2019.09.23 V0.9.1
 

@@ -206,6 +206,16 @@ class Event:
     def restart(self, event):
         self.FUNCTION.restart()
 
+    # 加载BGM（实际上pygame无需这个机制，因此只需检查bgm是否存在即可）
+    def load_bgm(self, event):
+        if self.Music.check_BGM(event["name"]) == False:
+            print(f"加载{event['name']}失败，请检查BGM目录下是否有此文件！")
+
+    # 播放BGM
+    def play_bgm(self, event):
+        self.Music.play_BGM(event["name"])
+
+
 class EventFlow:
     def __init__(self):
         self.data_list = []  # 当前在执行的事件列表
@@ -229,6 +239,8 @@ class EventFlow:
             "win": "self.EVENT.win(event)",
             "battle": "self.EVENT.battle(event)",
             "restart": "self.EVENT.restart(event)",
+            "loadBgm": "self.EVENT.load_bgm(event)",
+            "playBgm": "self.EVENT.play_bgm(event)"
         }
 
     def get_event_module(self):

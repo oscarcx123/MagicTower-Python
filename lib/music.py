@@ -23,10 +23,13 @@ class MusicWrapper():
         if BGM != self.current_bgm:
             if pygame.mixer.music.get_busy():
                 pygame.mixer.music.unload()
-            pygame.mixer.music.load(path.join(bgm_dir, BGM))
-            pygame.mixer.music.play(loops=-1)
-            self.current_bgm = BGM
-            WriteLog.debug(__name__, f"播放BGM：{BGM}！")
+            try:
+                pygame.mixer.music.load(path.join(bgm_dir, BGM))
+                pygame.mixer.music.play(loops=-1)
+                self.current_bgm = BGM
+                WriteLog.debug(__name__, f"播放BGM：{BGM}！")
+            except:
+                WriteLog.debug(__name__, f"播放BGM失败：{BGM}！")
         else:
             WriteLog.debug(__name__, f"当前正在播放BGM：{BGM}，无需切换！")
 
@@ -43,6 +46,14 @@ class MusicWrapper():
                 self.SE_dict[item] = pygame.mixer.Sound(path.join(se_dir, item))
         except:
             WriteLog.error(__name__, "SE加载失败，请检查目录下是否混入其它文件")
+
+    # 检查BGM文件夹下是否有指定文件
+    def check_BGM(self, BGM):
+        temp_list = self.scan_dir(bgm_dir)
+        if BGM in temp_list:
+            return True
+        else:
+            return False
 
     # 播放指定的SE
     def play_SE(self, SE):
