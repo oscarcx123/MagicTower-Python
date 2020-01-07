@@ -1,13 +1,18 @@
-from lib import global_var, WriteLog
+import math
+import os
+import json
+import re
 import pygame
+from pygame import Surface
+from pygame.sprite import Sprite
+from pygame.transform import scale
+from pygame import Rect
+
+from lib import global_var, WriteLog
 from lib import ground
 from sysconf import *
 from project.items import *
 from project import block
-from lib.winbase import TextWin
-import math
-import os
-import json
 
 # TODO: 所有UI继承自UI组件 UI组件是集通用显示与操作响应的接口类
 # UI首先是一个ground，然后具有action（需要手动注册到action_control TODO:自动注册
@@ -687,19 +692,22 @@ class Shop(Menu):
     def draw(self, current_index=0):
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, len(self.choices) - 1)
-        # UI背景和左侧状态栏
-        self.fill(SKYBLUE)
-        self.FUNCTION.draw_status_bar()
         # 绘制商店条目
         cnt = 0
-        self.draw_text(self.name, 30, BLACK, 5 * BLOCK_UNIT, 0, "px")
-        self.draw_text(self.text, 30, BLACK, 5 * BLOCK_UNIT, BLOCK_UNIT, "px")
+        text = ""
+        text = text + self.name + "\n" + self.text + "\n"
         for choice in self.choices:
-            self.draw_text(choice, 30, BLACK, 5 * BLOCK_UNIT, (cnt + 2) * BLOCK_UNIT, "px")
+            text = text + choice + "\n"
             cnt += 1
- 
+        # 展示选项框
+        self.text_obj = TextWin("mid", content=text, TEXT_WIN_WIDTH=500, text_loc="middle")
+        self.text_obj.drawText()
+        self.text_obj.show_on()
+        self.add_sprite(self.text_obj)
         # 根据当前current_index绘制高亮框
-        self.draw_rect((5 * BLOCK_UNIT, (self.current_index + 2) * BLOCK_UNIT), (14 * BLOCK_UNIT, (self.current_index + 3) * BLOCK_UNIT), 3, RED,"px")
+        x_pos = self.text_obj.x + self.text_obj.TEXT_LEFT_BOARD
+        y_pos = self.text_obj.y + self.text_obj.TEXT_TOP_BOARD + (self.current_index + 2) * self.text_obj.dh
+        self.draw_rect((x_pos, y_pos), (x_pos + 500, y_pos + self.text_obj.dh), 3, RED,"px")
 
     # 进行对应的购买操作
     def purchase(self):
@@ -819,38 +827,38 @@ class TextBox(UIComponent):
 
     def show(self, text):
         if not self.PlayerCon.lock:
-            self.text_win_obj = TextWin("mid", text)
-            if len(self.text_win_obj.line_list) > self.text_win_obj.line_num:
-                self.text_win_obj.res_content = self.text_win_obj.line_list[self.text_win_obj.line_num:]
-                print("res", self.text_win_obj.res_content)
-                self.text_win_obj.line_list = self.text_win_obj.line_list[:self.text_win_obj.line_num]
-            self.text_win_obj.drawText()
-            self.text_win_obj.show_on()
-            self.add_sprite(self.text_win_obj)
+            self.text_obj = TextWin("mid", text)
+            if len(self.text_obj.line_list) > self.text_obj.line_num:
+                self.text_obj.res_content = self.text_obj.line_list[self.text_obj.line_num:]
+                print("res", self.text_obj.res_content)
+                self.text_obj.line_list = self.text_obj.line_list[:self.text_obj.line_num]
+            self.text_obj.drawText()
+            self.text_obj.show_on()
+            self.add_sprite(self.text_obj)
             self.open()
 
     def draw(self):
         pass
 
     def next(self):
-        if self.text_win_obj.res_content is None:
-            status = self.text_win_obj.updateText()
+        if self.text_obj.res_content is None:
+            status = self.text_obj.updateText()
             return status
-        elif len(self.text_win_obj.res_content) > self.text_win_obj.line_num:
-            self.text_win_obj.line_list = self.text_win_obj.res_content[:self.text_win_obj.line_num]
-            self.text_win_obj.res_content = self.text_win_obj.res_content[self.text_win_obj.line_num:]
-            print("res", self.text_win_obj.res_content)
-            status = self.text_win_obj.updateText()
+        elif len(self.text_obj.res_content) > self.text_obj.line_num:
+            self.text_obj.line_list = self.text_obj.res_content[:self.text_obj.line_num]
+            self.text_obj.res_content = self.text_obj.res_content[self.text_obj.line_num:]
+            print("res", self.text_obj.res_content)
+            status = self.text_obj.updateText()
             return status
-        elif len(self.text_win_obj.res_content) >= 1:
-            h = len(self.text_win_obj.res_content) * self.text_win_obj.dh + 2 * self.text_win_obj.TEXT_TOP_BOARD
-            res_content = self.text_win_obj.res_content
+        elif len(self.text_obj.res_content) >= 1:
+            h = len(self.text_obj.res_content) * self.text_obj.dh + 2 * self.text_obj.TEXT_TOP_BOARD
+            res_content = self.text_obj.res_content
             res_content.insert(0, h)
             self.group.empty()
-            self.text_win_obj = TextWin("mid", res_content)
-            self.add_sprite(self.text_win_obj)
-            self.text_win_obj.drawText()
-            self.text_win_obj.show_on()
+            self.text_obj = TextWin("mid", res_content)
+            self.add_sprite(self.text_obj)
+            self.text_obj.drawText()
+            self.text_obj.show_on()
             
 
 class ShowDamage(UIComponent):
@@ -901,6 +909,192 @@ class ShowDamage(UIComponent):
             for loc in self.CurrentMap.damage_layer_cache[monster]["loc"]:
                 self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
                 self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
-        
 
+
+# 窗口基类
+class WinBase(Sprite):
+    def __init__(self, x, y, w, h, dir=None):
+        super().__init__()
+        self.winSkinPath = "img/winskin.png"
+        self.src = pygame.image.load(self.winSkinPath).convert_alpha()
+        self.pos = [x, y]  # windows的坐标就是物理坐标 left、top
+        self.show = False
+        self.src_show = self.init_wind(w, h, dir)
+        self.dir = dir
+
+        self.image = self.src_show  # Surface([w, h])
+        self.rect = self.image.get_rect()
+        self.rect.left = self.pos[0]
+        self.rect.top = self.pos[1]
+        #print("st", self.rect)
+        self.alpha = 255
+
+    def trans_image(self, params):  # 把原图转成设备显示的surface
+        if len(params) == 3:
+            # print(params)
+            return scale(self.src.subsurface(params[0]), params[1]), params[2]
+        else:
+            return self.src.subsurface(params[0]), params[1]
+
+    def init_wind(self, w, h, dir):
+        x, y = 0, 0  # self.pos[0], self.pos[1]
+        scale_list = [
+            (Rect(0, 0, 128, 128), (w - 4, h - 4), Rect(x + 2, y + 2, w - 4, h - 4)),  # back
+            (Rect(144, 0, 32, 16), (w - 32, 16), Rect(x + 16, y, w - 32, 16)),  # top
+            (Rect(128, 16, 16, 32), (16, h - 32), Rect(x, y + 16, 16, h - 32)),  # left
+            (Rect(176, 16, 16, 32), (16, h - 32), Rect(x + w - 16, y + 16, 16, h - 32)),  # right
+            (Rect(144, 48, 32, 16), (w - 32, 16), Rect(x + 16, y + h - 16, w - 32, 16)),  # bottom
+            (Rect(128, 0, 16, 16), Rect(x, y, 16, 16)),  # top left
+            (Rect(176, 0, 16, 16), Rect(x + w - 16, y, 16, 16)),  # top right
+            (Rect(128, 48, 16, 16), Rect(x, y + h - 16, 16, 16)),  # bottom left
+            (Rect(176, 48, 16, 16), Rect(x + w - 16, y + h - 16, 16, 16)),  # bottom right
+        ]
+        src_dir = {"up": (Rect(128, 96, 32, 32), Rect(x + int(w / 2), y + h - 3, 32, 32)),
+                   "down": (Rect(160, 96, 32, 32), Rect(x + int(w / 2), y - 29, 32, 32))
+                   }
+        if dir is not None:
+            scale_list.append(src_dir[dir])
+
+        blit_list = [self.trans_image(fmt) for fmt in scale_list]
+        ret = Surface([w, h])
+        for l1, l2 in blit_list:
+            ret.blit(l1, l2)
+        # ret.blits(blit_list)
+        return ret
+
+    def show_off(self):
+        self.show = False
+        # self.image = Surface([self.rect.w, self.rect.h])
+        self.src_show.set_alpha(0)
+
+    def show_on(self):
+        self.show = True
+        self.image = self.src_show
+        self.src_show.set_alpha(self.alpha)
+        # self.rect = self.image.get_rect()
+
+    def set_alpha(self, value):
+        if type(value) is float:
+            self.alpha = int(255 * value)
+        self.src_show.set_alpha(self.alpha)
+
+    def flush_skin(self):  # 刷新
+        self.src_show = self.init_wind(self.rect.w, self.rect.h, self.dir)
+        self.image = self.src_show
+
+    def update(self, *args):
+        # 窗口变化- 坐标位置
+        # print('update')
+        self.rect.left = self.pos[0]
+        self.rect.top = self.pos[1]
+
+# 剧情文字窗口
+# loc_type = 文本框在游戏窗口的位置
+# content = 显示的内容
+# is_talk = 带箭头的对话框
+class TextWin(WinBase):
+    def __init__(self, loc_type, content=None, is_talk=False, TEXT_WIN_WIDTH=int((WIDTH - 4 * BLOCK_UNIT) - 30), text_loc="left"):
+        # 正则匹配半角字符
+        self.dw_pattern = re.compile("[\x00-\xff]", re.A)
+        # 字体路径
+        self.font_name = "resource/simhei.ttf"
+        # 文本框窗口的宽度
+        self.TEXT_WIN_WIDTH = TEXT_WIN_WIDTH
+        # 文本的侧边距
+        self.TEXT_LEFT_BOARD = 40
+        # 文本的顶边距
+        self.TEXT_TOP_BOARD = 34
+        # 文本方位（靠左，居中，靠右）
+        self.text_loc = text_loc
+        self.size = 36
+        self.line_num = 10
+        self.font = pygame.font.Font(self.font_name, self.size)
+        self.dw = self.font.render("字", True, WHITE).get_rect().w  # 全角宽
+        self.dh = self.font.get_height()
+        # x, y, w, h -> 窗口左上角坐标(x, y)，窗口宽w，高h
+        # 计算窗口左上角坐标(x, y)，其中x坐标为居中
+        self.x = int(((WIDTH + 4 * BLOCK_UNIT) - self.TEXT_WIN_WIDTH) / 2)
+        self.y = 0  # 默认贴边
+        self.w = self.TEXT_WIN_WIDTH
+        if type(content) is list:
+            self.h = content[0]
+            content.pop(0)
+            self.line_list = content
+        else:
+            self.h = self.get_win_height(content)
+        self.is_talk = is_talk
+        if loc_type == "mid":
+            self.y = int(HEIGHT / 2 - self.h / 2)
+        elif loc_type == "down":
+            self.y = HEIGHT - self.h
+        elif loc_type == "auto":
+            pass
+            # TODO： 显示在头上的对话框 & 根据坐标/字数自适应大小对话框
+            # 需要建立一个界面地图坐标转换接口，并且把各个界面分离开来
+        #print(self.x, self.y, self.w, self.h)
+        super().__init__(self.x, self.y, self.w, self.h)
+        self.content = ""
+        self.res_content = None
+
+    def get_win_height(self, content):
+        line_len = int((self.w - 2 * self.TEXT_LEFT_BOARD) / self.dw)  # 行长        
+
+        self.line_list = []
+
+        def get_real_len(s):
+            return len(s) - int(len(self.dw_pattern.findall(s)) * 0.5 + 0.6)
+
+        def align_char(content):
+            clen = 0
+            line = ""
+            while clen < line_len and content != '':
+                tlen = line_len - clen
+                #print(tlen)
+                tstr = content[:tlen]
+                line += tstr
+                clen += get_real_len(tstr)
+                content = content[tlen:]
+            if content != '' and get_real_len(content) <= 2:
+                line += content
+            #print("对齐长度：", get_real_len(line))
+            return line
+
+        for content in content.split('\n'):
+            while content != '':
+                s = align_char(content)
+                self.line_list.append(s)
+                content = content[len(s):]
         
+        if len(self.line_list) > self.line_num:
+            h = self.line_num * self.dh + 2 * self.TEXT_TOP_BOARD
+        else:
+            h = len(self.line_list) * self.dh + 2 * self.TEXT_TOP_BOARD
+        return h
+
+    def drawText(self, size=None, content=None):
+        ct = 0
+        for text in self.line_list:
+            text_surface = self.font.render(text, True, WHITE)
+            text_rect = text_surface.get_rect()
+            #print(text_rect)
+            if self.text_loc == "left":
+                text_rect.left = self.TEXT_LEFT_BOARD  # self.pos[0]
+            elif self.text_loc == "middle":
+                text_rect.left = int((self.TEXT_WIN_WIDTH - self.dw * len(text)) / 2)
+            text_rect.top = self.TEXT_TOP_BOARD + ct * self.dh  # + self.pos[1]
+            self.src_show.blit(text_surface, text_rect)
+            ct += 1
+
+    def updateText(self):
+        #print("self.res_content", self.res_content)
+        if self.res_content is not None:
+            self.flush_skin()
+            self.drawText()
+            return True
+        else:
+            self.show_off()
+            return False
+
+    def update(self, *args):
+        super().update(args)
+
