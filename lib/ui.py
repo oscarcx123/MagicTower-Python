@@ -631,6 +631,7 @@ class Help(BlankPage):
             "T = 玩家背包（带二级菜单）",
             "S = 存档界面",
             "D = 读档界面",
+            "A = 撤回上一关键步（打怪&开门）",
             "Z = 勇士转身（顺时针）",
             "H = 帮助界面",
             "B = 文本框Demo（测试用）",
@@ -648,6 +649,52 @@ class Help(BlankPage):
             self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT, (cnt * BLOCK_UNIT), "px")
             cnt += 1
 
+class ChoiceBox2(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "选项框"
+        self.key_map = {pygame.K_UP: -1,
+                        pygame.K_DOWN: +1,
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter'}
+    
+    # 注册到action_control的函数
+    def action(self, event):
+        key_map = self.key_map
+        key = event.key
+        if key in key_map:
+            idx = key_map[key]
+            if self.active:
+                WriteLog.debug(__name__, (self.name,key,key_map))
+                if idx == 'enter':
+                    self.text_obj.show_off()
+                    self.close()
+                elif idx == 'close':
+                    self.close()
+                return True
+        return False
+    
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.active:
+            self.draw()
+        super().flush(screen)
+
+    def show(self, text):
+        if self.PlayerCon.lock:
+            self.text_obj = TextWin("mid", content=text, TEXT_WIN_WIDTH=500, text_loc="middle")
+            self.text_obj.drawText()
+            self.text_obj.show_on()
+            self.add_sprite(self.text_obj)
+            self.open()
+
+    def draw(self):
+        pass
+
+    def close(self):
+        self.group.empty()
+        self.text_obj.show_off()
+
 
 # 商店基类，通过继承Menu得到
 class Shop(Menu):
@@ -662,6 +709,7 @@ class Shop(Menu):
                         pygame.K_ESCAPE: 'close',
                         pygame.K_RETURN: 'enter'}
         self.choices = {}
+        self.CHOICEBOX2 = global_var.get_value("CHOICEBOX2")
 
     # 继承之后，可以通过复写，把任何需要动态更新的文字放这个函数    
     def update_text(self):
@@ -676,9 +724,11 @@ class Shop(Menu):
                 WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     self.purchase()
+                    self.CHOICEBOX2.close()
                     self.close()
                     idx = 0
                 elif idx == 'close':
+                    self.CHOICEBOX2.close()
                     self.close()
                     idx = 0
                 elif type(idx) is not int:
@@ -696,19 +746,16 @@ class Shop(Menu):
         cnt = 0
         text = ""
         text = text + self.name + "\n" + self.text + "\n"
+        # 根据当前current_index绘制高亮框
         for choice in self.choices:
-            text = text + choice + "\n"
+            if cnt == self.current_index:
+                text = text + "=>" + choice + "\n"
+            else:
+                text = text + choice + "\n"
             cnt += 1
         # 展示选项框
-        self.text_obj = TextWin("mid", content=text, TEXT_WIN_WIDTH=500, text_loc="middle")
-        self.text_obj.drawText()
-        self.text_obj.show_on()
-        self.add_sprite(self.text_obj)
-        # 根据当前current_index绘制高亮框
-        x_pos = self.text_obj.x + self.text_obj.TEXT_LEFT_BOARD
-        y_pos = self.text_obj.y + self.text_obj.TEXT_TOP_BOARD + (self.current_index + 2) * self.text_obj.dh
-        self.draw_rect((x_pos, y_pos), (x_pos + 500, y_pos + self.text_obj.dh), 3, RED,"px")
-
+        self.CHOICEBOX2.show(text)
+        
     # 进行对应的购买操作
     def purchase(self):
         command = list(self.choices.items())[self.current_index][1]
@@ -907,8 +954,10 @@ class ShowDamage(UIComponent):
     def draw(self):
         for monster in self.CurrentMap.damage_layer_cache:
             for loc in self.CurrentMap.damage_layer_cache[monster]["loc"]:
-                self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
-                self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
+                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
+                self.draw_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
+                #self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
+                #self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
 
 
 # 窗口基类

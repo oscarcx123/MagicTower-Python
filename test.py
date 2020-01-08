@@ -69,6 +69,11 @@ def init():
     WriteLog.debug(__name__, "初始化状态栏完成")
     
     # 初始化UI图层
+    CHOICEBOX2 = ui.ChoiceBox2(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    CHOICEBOX2.priority = 15  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(CHOICEBOX2)
+    global_var.set_value("CHOICEBOX2", CHOICEBOX2)
+    WriteLog.debug(__name__, "初始化UI图层完成")
     # --- UI1 - 怪物手册
     BOOK = ui.Book(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
     BOOK.priority = 10  # 显示的优先级 高于地图 所以在地图上
@@ -154,6 +159,7 @@ def init_actions():
     action_control.register_action('Shop2', pygame.KEYUP, global_var.get_value('Shop2').action)
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
     action_control.register_action('CHOICEBOX', pygame.KEYUP, global_var.get_value('CHOICEBOX').action)
+    action_control.register_action('CHOICEBOX2', pygame.KEYUP, global_var.get_value('CHOICEBOX2').action)
     action_control.register_action('SHOWDAMAGE', pygame.KEYUP, global_var.get_value('SHOWDAMAGE').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 

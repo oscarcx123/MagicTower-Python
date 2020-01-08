@@ -722,5 +722,5 @@ class Function():
             self.WriteLog.debug(__name__, "读档成功！")
             return True
         else:
-            WriteLog.debug(__name__, "读取了不存在的存档")
+            self.WriteLog.debug(__name__, "读取了不存在的存档")
             return False
