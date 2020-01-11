@@ -6,6 +6,7 @@ from os import path
 TOWER_NAME = "Python魔塔"
 FONT_NAME = "resource/simhei.ttf"
 DEBUG = False
+LOGGING_LEVEL = "INFO"
 # SAVE_MAX_AMOUNT为最大允许存档数量
 SAVE_MAX_AMOUNT = 100
 # 玩家移动速度（移动一格所需要的毫秒数 & 换腿所需时间的两倍）

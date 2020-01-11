@@ -241,15 +241,80 @@ class GroundSurface:
             text_rect.top = y * BLOCK_UNIT
         self.surface.blit(text_surface, text_rect)
 
+    # draw_bulk_text 在画布上绘制大量文字
+    # 接受GroundSurface（画板），content（需要显示的内容），size（文字大小）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
+    '''
+    content = [
+        {
+            "x": x,
+            "y": y,
+            "text": text,
+            "color": color
+        }
+    ]
+    '''
+    def draw_bulk_text(self, content, size, mode=None):
+        font_name = global_var.get_value("font_name")
+        font = pygame.font.Font(font_name, size)
+        for text_obj in content:
+            text_surface = font.render(text_obj["text"], True, text_obj["color"])
+            text_rect = text_surface.get_rect()
+            if mode == "px":
+                text_rect.left = text_obj["x"]
+                text_rect.top = text_obj["y"]
+            else:
+                text_rect.left = text_obj["x"] * BLOCK_UNIT
+                text_rect.top = text_obj["y"] * BLOCK_UNIT
+            self.surface.blit(text_surface, text_rect)
+
     # draw_stroke_text 在画布上绘制描边文字
-    # 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），color（文字颜色），x，y（xy相对坐标）
+    # 接受GroundSurface（画板），content（需要显示的内容），size（文字大小），color（文字颜色），x，y（xy相对坐标）
     # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
     def draw_stroke_text(self, text, size, text_color, stroke_color, x, y, mode=None):
-        self.draw_text(text, size, stroke_color, x + 1, y + 1, mode)
-        self.draw_text(text, size, stroke_color, x + 1, y - 1, mode)
-        self.draw_text(text, size, stroke_color, x - 1, y + 1, mode)
-        self.draw_text(text, size, stroke_color, x - 1, y - 1, mode)
-        self.draw_text(text, size, text_color, x, y, mode)
+        content = []
+        coord = [(x + 1, y + 1), (x + 1, y - 1), (x - 1, y + 1), (x - 1, y - 1), (x, y)]
+        for i in range(len(coord)):
+            text_obj = {}
+            text_obj["x"] = coord[i][0]
+            text_obj["y"] = coord[i][1]
+            text_obj["text"] = text
+            if i < len(coord) - 1:
+                text_obj["color"] = stroke_color
+            else:
+                text_obj["color"] = text_color
+            content.append(text_obj)
+        self.draw_bulk_text(content, size, mode)
+
+    # draw_bulk_stroke_text 在画布上绘制大量描边文字
+    # 接受GroundSurface（画板），text（需要显示的文字），size（文字大小），text_color（文字颜色），stroke_color（描边颜色）
+    # mode（模式，默认为画布相对方格坐标，如果mode="px"那么将为画布相对像素坐标）
+    '''
+    content = [
+        {
+            "x": x,
+            "y": y,
+            "text": text,
+        }
+    ]
+    '''
+    def draw_bulk_stroke_text(self, content, size, text_color, stroke_color, mode=None):
+        result_content = []
+        for i in content:
+            x = i["x"]
+            y = i["y"]
+            coord = [(x + 1, y + 1), (x + 1, y - 1), (x - 1, y + 1), (x - 1, y - 1), (x, y)]
+            for j in range(len(coord)):
+                text_obj = {}
+                text_obj["x"] = coord[j][0]
+                text_obj["y"] = coord[j][1]
+                text_obj["text"] = i["text"]
+                if j < len(coord) - 1:
+                    text_obj["color"] = stroke_color
+                else:
+                    text_obj["color"] = text_color
+                result_content.append(text_obj)
+        self.draw_bulk_text(result_content, size, mode)
 
     # draw_lines 在画布上绘制（一条或多条）线段
     # 接受points（端点数组，格式[(x, y)]），width（线条宽度），color（线条颜色）
