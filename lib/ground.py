@@ -298,7 +298,7 @@ class GroundSurface:
         }
     ]
     '''
-    def draw_bulk_stroke_text(self, content, size, text_color, stroke_color, mode=None):
+    def draw_bulk_stroke_text(self, content, size, mode=None):
         result_content = []
         for i in content:
             x = i["x"]
@@ -310,9 +310,9 @@ class GroundSurface:
                 text_obj["y"] = coord[j][1]
                 text_obj["text"] = i["text"]
                 if j < len(coord) - 1:
-                    text_obj["color"] = stroke_color
+                    text_obj["color"] = i["stroke_color"]
                 else:
-                    text_obj["color"] = text_color
+                    text_obj["color"] = i["text_color"]
                 result_content.append(text_obj)
         self.draw_bulk_text(result_content, size, mode)
 

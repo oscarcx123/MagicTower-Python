@@ -790,6 +790,7 @@ class ChoiceBox(Shop):
                 WriteLog.debug(__name__, (self.name,key,key_map))
                 if idx == 'enter':
                     self.do_action()
+                    self.group.empty()
                     self.close()
                     idx = 0
                 elif type(idx) is not int:
@@ -908,26 +909,43 @@ class ShowDamage(UIComponent):
         super().flush(screen)
 
     def draw(self):
-        a = pygame.time.get_ticks()
         content = []
         for monster in self.CurrentMap.damage_layer_cache:
+            '''
+            显伤颜色：
+            "???"或者伤害超过玩家体力，显伤为红色；
+            战斗后玩家体力无损失（或者回血），显伤为绿色；
+            战斗后玩家体力损失在1/3内，显伤为白色；
+            战斗后玩家体力损失在2/3内，显伤为黄色；
+            战斗后玩家体力损失在2/3以上，显伤为橙色。
+            战斗后玩家体力损失在1/3内，显伤为白色。
+            '''
+            if self.CurrentMap.damage_layer_cache[monster]["damage"] == "???" or self.CurrentMap.damage_layer_cache[monster]["damage"] >= self.PlayerCon.hp:
+                text_color = RED
+            elif self.CurrentMap.damage_layer_cache[monster]["damage"] <= 0:
+                text_color = GREEN
+            elif self.CurrentMap.damage_layer_cache[monster]["damage"] < self.PlayerCon.hp / 3:
+                text_color = WHITE
+            elif self.CurrentMap.damage_layer_cache[monster]["damage"] < self.PlayerCon.hp * 2 / 3:
+                text_color = YELLOW
+            else:
+                text_color = ORANGE
             for loc in self.CurrentMap.damage_layer_cache[monster]["loc"]:
                 text_obj = {}
                 text_obj["x"] = (loc[0] + 4) * BLOCK_UNIT
                 text_obj["y"] = loc[1] * BLOCK_UNIT + 15
                 text_obj["text"] = str(self.CurrentMap.damage_layer_cache[monster]["critical"])
+                text_obj["text_color"] = text_color
+                text_obj["stroke_color"] = BLACK
                 text_obj2 = {}
                 text_obj2["x"] = (loc[0] + 4) * BLOCK_UNIT
                 text_obj2["y"] = loc[1] * BLOCK_UNIT + 40
                 text_obj2["text"] = str(self.CurrentMap.damage_layer_cache[monster]["damage"])
+                text_obj2["text_color"] = text_color
+                text_obj2["stroke_color"] = BLACK
                 content.append(text_obj)
                 content.append(text_obj2)
-        self.draw_bulk_stroke_text(content, 24, WHITE, BLACK, "px")
-        b = pygame.time.get_ticks()
-        print(b - a)
-        #self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["critical"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 15, "px")
-        #self.draw_stroke_text(str(self.CurrentMap.damage_layer_cache[monster]["damage"]), 24, WHITE, BLACK, (loc[0] + 4) * BLOCK_UNIT, loc[1] * BLOCK_UNIT + 40, "px")
-
+        self.draw_bulk_stroke_text(content, 24, "px")
 
 # 窗口基类
 class WinBase(Sprite):
@@ -1065,14 +1083,14 @@ class TextWin(WinBase):
         def align_char(content):
             clen = 0
             line = ""
-            while clen < line_len and content != '':
+            while get_real_len(line) < line_len and content != '':
                 tlen = line_len - clen
                 #print(tlen)
                 tstr = content[:tlen]
                 line += tstr
                 clen += get_real_len(tstr)
                 content = content[tlen:]
-            if content != '' and get_real_len(content) <= 2:
+            if content != '' and get_real_len(content) <= 1:
                 line += content
             #print("对齐长度：", get_real_len(line))
             return line

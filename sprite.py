@@ -94,9 +94,6 @@ class EventSprite(pygame.sprite.Sprite):
         self.moving = True
         self.change_face(diff_x, diff_y)
         self.moving_frames = frames
-        # 弃用线程
-        # self.move_t = threading.Thread(target=move_thread)
-        # self.move_t.start()
         return True
 
     def move_directly(self, dst):
@@ -239,25 +236,3 @@ class Player(EventSprite):
         # else:
         super().update(*args)
         # print(keystate)
-
-"""
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-sp = Player()
-
-if __name__ == '__main__':
-    group = pygame.sprite.Group()
-    group.add(sp)
-    running = True
-    while running:
-        screen.fill(BLACK)
-        group.draw(screen)
-        group.update()
-        pygame.display.update()
-
-        for event in pygame.event.get():
-            # Check for closing window
-            if event.type == pygame.QUIT:
-                running = False
-"""

@@ -223,10 +223,7 @@ while running:
         EVENTFLOW.insert_action(start_text["startText"])
 
     pygame.display.update()
-    # clock.tick(60)
 
     # 背景
-    # RootScreen.fill_surface(load_image("img/ground.png"), mode="repeat")
-    RootScreen.fill(GREEN)
     RootScreen.flush(screen)  # 显示刷新到屏幕
     action_control.action_render()  # 检查动作消息
