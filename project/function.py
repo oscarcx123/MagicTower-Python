@@ -36,7 +36,6 @@ class Function():
         # 刷新地图显示
         self.CurrentMap.draw_map()
         # 刷新状态栏显示
-        self.draw_status_bar()
 
     # 检测怪物是否有指定特殊能力
     def has_ability(self, mon_ability, ability_num):
@@ -405,7 +404,7 @@ class Function():
         else:
             pass
         # 刷新状态栏显示
-        self.draw_status_bar()
+
 
     # remove_item 从背包移除物品
     def remove_item(self, map_object, amount):
@@ -560,33 +559,6 @@ class Function():
             self.PlayerCon.visited.append(self.CurrentMap.floor_index["index"][self.PlayerCon.floor])
         self.flush_status()
 
-    # draw_status_bar 绘制状态栏（默认绘制在StatusBar图层）
-    def draw_status_bar(self, StatusBar=None):
-        if StatusBar == None:
-            self.StatusBar = global_var.get_value("StatusBar")
-        if 21 in self.PlayerCon.item:
-            yellowkey = self.PlayerCon.item[21]
-        else:
-            yellowkey = 0
-        if 22 in self.PlayerCon.item:
-            bluekey = self.PlayerCon.item[22]
-        else:
-            bluekey = 0
-        if 23 in self.PlayerCon.item:
-            redkey = self.PlayerCon.item[23]
-        else:
-            redkey = 0
-        self.StatusBar.fill(SKYBLUE)
-        self.StatusBar.draw_text("FLOOR = " + str(self.PlayerCon.floor), 36, BLACK, 0, 0)
-        self.StatusBar.draw_text("HP = " + str(self.PlayerCon.hp), 36, BLACK, 0, 1)
-        self.StatusBar.draw_text("ATK = " + str(self.PlayerCon.attack), 36, BLACK, 0, 2)
-        self.StatusBar.draw_text("DEF = " + str(self.PlayerCon.defend), 36, BLACK, 0, 3)
-        self.StatusBar.draw_text("MDEF = " + str(self.PlayerCon.mdefend), 36, BLACK, 0, 4)
-        self.StatusBar.draw_text("GOLD = " + str(self.PlayerCon.gold), 36, BLACK, 0, 5)
-        self.StatusBar.draw_text("EXP = " + str(self.PlayerCon.exp), 36, BLACK, 0, 6)
-        self.StatusBar.draw_text("Y_KEY = " + str(yellowkey), 36, BLACK, 0, 7)
-        self.StatusBar.draw_text("B_KEY = " + str(bluekey), 36, BLACK, 0, 8)
-        self.StatusBar.draw_text("R_KEY = " + str(redkey), 36, BLACK, 0, 9)
 
     # 获取怪物特殊能力的相关文字
     def get_ability_text(self, mon_ability):
@@ -630,7 +602,6 @@ class Function():
     # 玩家被击败时执行的内容
     def death(self):
         self.PlayerCon.hp = 0
-        self.draw_status_bar()
         self.TEXTBOX.show("你死了。")
         self.EVENTFLOW.insert_action({"type": "restart"})
 
@@ -641,7 +612,6 @@ class Function():
         self.PlayerCon.reset()
         self.CurrentMap.reset()
         self.Music.reset()
-        self.draw_status_bar()
 
         
     # 返回标题，重新开始
@@ -717,7 +687,6 @@ class Function():
             self.CurrentMap.show_damage_update = True
             self.CurrentMap.set_map(self.PlayerCon.floor)
             self.EVENTFLOW.data_list = save_file["event_data_list"]
-            self.draw_status_bar()
             self.PlayerCon.change_hero_loc(self.PlayerCon.pos[0], self.PlayerCon.pos[1])
             self.WriteLog.debug(__name__, "读档成功！")
             return True

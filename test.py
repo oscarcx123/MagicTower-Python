@@ -69,6 +69,10 @@ def init():
     WriteLog.debug(__name__, "初始化状态栏完成")
     
     # 初始化UI图层
+    STATUSBAR = ui.StatusBar(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    STATUSBAR.priority = 15
+    RootScreen.add_child(STATUSBAR)  
+    global_var.set_value("STATUSBAR", STATUSBAR)
     # --- UI1 - 怪物手册
     BOOK = ui.Book(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
     BOOK.priority = 10  # 显示的优先级 高于地图 所以在地图上
@@ -155,6 +159,7 @@ def init_actions():
     action_control.register_action('TEXTBOX', pygame.KEYUP, global_var.get_value('TEXTBOX').action)
     action_control.register_action('CHOICEBOX', pygame.KEYUP, global_var.get_value('CHOICEBOX').action)
     action_control.register_action('SHOWDAMAGE', pygame.KEYUP, global_var.get_value('SHOWDAMAGE').action)
+    action_control.register_action('STATUSBAR', pygame.KEYUP, global_var.get_value('STATUSBAR').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 
 
@@ -175,8 +180,6 @@ def init_event_flow():
 def init_function():
     FUNCTION = global_var.get_value("FUNCTION")
     FUNCTION.init_var()
-    # 绘制状态栏
-    FUNCTION.draw_status_bar()
     WriteLog.debug(__name__, "初始化function完成")
 
 # DEBUG（开关在sysconf.py，如果开启将会启动控制台）
@@ -216,14 +219,18 @@ while running:
         # 默认开启显伤
         show_damage = global_var.get_value("SHOWDAMAGE")
         show_damage.open()
+        # 默认开启状态栏
+        status_bar = global_var.get_value("STATUSBAR")
+        status_bar.open()
         # 载入初始事件
         EVENTFLOW = global_var.get_value("EVENTFLOW")
         with open(os.path.join(os.getcwd(),"project", "start_text.json")) as f:
             start_text = json.load(f)
         EVENTFLOW.insert_action(start_text["startText"])
-
     pygame.display.update()
-
     # 背景
+    a = pygame.time.get_ticks()
     RootScreen.flush(screen)  # 显示刷新到屏幕
+    b = pygame.time.get_ticks()
+    print("RootScreen.flush(screen) -> ", b - a, "ms")
     action_control.action_render()  # 检查动作消息

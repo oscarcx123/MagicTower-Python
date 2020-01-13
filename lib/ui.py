@@ -138,7 +138,6 @@ class Book(Menu):
             map_index = self.PlayerCon.floor
         # UI背景和左侧状态栏
         self.fill(SKYBLUE)
-        self.FUNCTION.draw_status_bar()
         # 获得当前地图中全部的怪物的信息
         CurrentMap = global_var.get_value("CurrentMap")
         enemy_info_list = self.FUNCTION.get_current_enemy(CurrentMap.get_map(self.PlayerCon.floor))
@@ -400,7 +399,6 @@ class Backpack(Menu):
         exec(command)
         CurrentMap = global_var.get_value("CurrentMap")
         CurrentMap.set_map(self.PlayerCon.floor)
-        self.FUNCTION.draw_status_bar()
         return True
 
 
@@ -597,7 +595,6 @@ class Fly(Menu):
         self.current_index = min(self.current_index, self.max_floor_index)
         # UI背景和左侧状态栏
         self.fill(SKYBLUE)
-        self.FUNCTION.draw_status_bar()
         # 绘制楼层传送器条目
         cnt = 0
         for floor in self.floor_index:
@@ -618,6 +615,73 @@ class Fly(Menu):
         else:
             floor_color = GRAY
         self.draw_text(str(floor), 30, floor_color, (5 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT + 10, "px")
+
+# 状态栏
+class StatusBar(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "状态栏"
+        self.showing = False
+        self.key_map = {}
+        self.PlayerCon = global_var.get_value("PlayerCon")
+        self.CurrentMap = global_var.get_value("CurrentMap")
+        self.background = pygame.Surface((int(4 * BLOCK_UNIT), int(13 * BLOCK_UNIT)))
+        self.background.fill(SKYBLUE)
+    
+    def open(self):
+        self.showing = True
+
+    def close(self):
+        self.showing = False
+
+    # 注册到action_control的函数
+    def action(self, event):
+        return False
+    
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.showing:
+            self.draw()
+        super().flush(screen)
+
+    def draw(self):
+        if 21 in self.PlayerCon.item:
+            yellowkey = self.PlayerCon.item[21]
+        else:
+            yellowkey = 0
+        if 22 in self.PlayerCon.item:
+            bluekey = self.PlayerCon.item[22]
+        else:
+            bluekey = 0
+        if 23 in self.PlayerCon.item:
+            redkey = self.PlayerCon.item[23]
+        else:
+            redkey = 0
+        self.surface.blit(self.background, (0, 0))
+        content = []
+
+        status_bar_list = [
+            "FLOOR = " + str(self.PlayerCon.floor),
+            "HP = " + str(self.PlayerCon.hp),
+            "ATK = " + str(self.PlayerCon.attack),
+            "DEF = " + str(self.PlayerCon.defend),
+            "MDEF = " + str(self.PlayerCon.mdefend),
+            "GOLD = " + str(self.PlayerCon.gold),
+            "EXP = " + str(self.PlayerCon.exp),
+            "Y_KEY = " + str(yellowkey),
+            "B_KEY = " + str(bluekey),
+            "R_KEY = " + str(redkey),
+        ]
+
+        for i in range(len(status_bar_list)):
+            text_obj = {}
+            text_obj["x"] = 0
+            text_obj["y"] = i
+            text_obj["text"] = status_bar_list[i]
+            text_obj["color"] = BLACK
+            content.append(text_obj)
+
+        self.draw_bulk_text(content, 36)
 
 
 # 帮助页面，通过继承BlankPage得到
@@ -644,7 +708,6 @@ class Help(BlankPage):
     def draw(self):
         cnt = 0
         self.fill(SKYBLUE)
-        self.FUNCTION.draw_status_bar()
         for text in self.contents:
             self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT, (cnt * BLOCK_UNIT), "px")
             cnt += 1
@@ -721,7 +784,6 @@ class Shop(Menu):
                 self.price += self.price_increment
                 exec(command)
                 self.update_text()
-                self.FUNCTION.draw_status_bar()
                 print("购买成功！")
             else:
                 print("你不够钱！")
