@@ -19,6 +19,7 @@ class Event:
         self.BlockDataReverse = global_var.get_value("BlockDataReverse")
         self.Music = global_var.get_value("Music")
         self.FUNCTION = global_var.get_value("FUNCTION")
+        self.CURTAIN = global_var.get_value("CURTAIN")
 
 
     def get_event_flow_module(self):
@@ -215,12 +216,21 @@ class Event:
     def play_bgm(self, event):
         self.Music.play_BGM(event["name"])
 
+    # 改变画面色调
+    def set_curtain(self, event):
+        self.EVENTFLOW.wait_finish = True
+        color = event["color"]
+        time = event["time"]
+        self.CURTAIN.show(color, time)
+
+
 
 class EventFlow:
     def __init__(self):
         self.data_list = []  # 当前在执行的事件列表
         self.auto = False  # 自动执行中
         self.wait_key = None  # 等待驱动的关键按钮
+        self.wait_finish = False
         self.PlayerCon = global_var.get_value("PlayerCon")
         self.CurrentMap = global_var.get_value("CurrentMap")
         self.TEXTBOX = global_var.get_value("TEXTBOX")
@@ -240,7 +250,8 @@ class EventFlow:
             "battle": "self.EVENT.battle(event)",
             "restart": "self.EVENT.restart(event)",
             "loadBgm": "self.EVENT.load_bgm(event)",
-            "playBgm": "self.EVENT.play_bgm(event)"
+            "playBgm": "self.EVENT.play_bgm(event)",
+            "setCurtain": "self.EVENT.set_curtain(event)"
         }
 
     def get_event_module(self):
@@ -276,7 +287,7 @@ class EventFlow:
             return flow
 
     def do_event(self):
-        if not self.PlayerCon.lock:
+        if not self.PlayerCon.lock and not self.wait_finish:
             event = self.data_list[0]
             WriteLog.debug(__name__, "当前执行事件：" + str(self.data_list[0]))
             self.data_list.pop(0)

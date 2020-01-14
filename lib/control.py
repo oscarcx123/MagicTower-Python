@@ -80,7 +80,7 @@ class Player(EventSprite):
 
     def update(self, *args):
         EVENTFLOW = global_var.get_value("EVENTFLOW")
-        while len(EVENTFLOW.data_list) > 0 and not self.lock:
+        while len(EVENTFLOW.data_list) > 0 and not self.lock and not EVENTFLOW.wait_finish:
             EVENTFLOW.do_event()
         self.speedx = 0
         self.speedy = 0

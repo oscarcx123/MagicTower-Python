@@ -136,6 +136,12 @@ def init():
     RootScreen.add_child(SHOWDAMAGE)
     global_var.set_value("SHOWDAMAGE", SHOWDAMAGE)
     WriteLog.debug(__name__, "初始化显伤层完成")
+    # --- UI13 - 色调层
+    CURTAIN = ui.Curtain(mode='copy', surface=RootScreen) # 必须按ground的方式初始化
+    CURTAIN.priority = 12  # 显示的优先级 高于地图 所以在地图上
+    RootScreen.add_child(CURTAIN)
+    global_var.set_value("CURTAIN", CURTAIN)
+    WriteLog.debug(__name__, "初始化色调层完成")
 
 
 def init_actions():
@@ -160,6 +166,7 @@ def init_actions():
     action_control.register_action('CHOICEBOX', pygame.KEYUP, global_var.get_value('CHOICEBOX').action)
     action_control.register_action('SHOWDAMAGE', pygame.KEYUP, global_var.get_value('SHOWDAMAGE').action)
     action_control.register_action('STATUSBAR', pygame.KEYUP, global_var.get_value('STATUSBAR').action)
+    action_control.register_action('CURTAIN', pygame.KEYUP, global_var.get_value('CURTAIN').action)
     WriteLog.debug(__name__, "事件全部注册完成")
 
 
@@ -211,7 +218,7 @@ clock = pygame.time.Clock()
 
 # 主程序
 while running:
-    a = pygame.time.get_ticks()
+    # a = pygame.time.get_ticks()
     # 展示开始菜单
     if start_menu == True:
         start = global_var.get_value("STARTMENU")
@@ -232,6 +239,6 @@ while running:
     # 背景
     RootScreen.flush(screen)  # 显示刷新到屏幕
     action_control.action_render()  # 检查动作消息
-    b = pygame.time.get_ticks()
-    print(b - a)
+    # b = pygame.time.get_ticks()
+    # print(b - a)
 

@@ -16,6 +16,8 @@ from project import block
 
 # TODO: 所有UI继承自UI组件 UI组件是集通用显示与操作响应的接口类
 # UI首先是一个ground，然后具有action（需要手动注册到action_control TODO:自动注册
+
+
 class UIComponent(ground.GroundSurface):
     def __init__(self, **kwargs):
         ground.GroundSurface.__init__(self, **kwargs)
@@ -31,12 +33,14 @@ class UIComponent(ground.GroundSurface):
         self.active = False
         self.PlayerCon.lock = False
 
-    def action(self):# 需要实现
+    def action(self):  # 需要实现
         pass
 
 # Menu （菜单）
 # 菜单类提供基础的多页操作
 # Menu类已经提供默认的key_map，action，flush，继承后需要编写draw函数
+
+
 class Menu(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
@@ -48,7 +52,7 @@ class Menu(UIComponent):
                         pygame.K_DOWN: +1,
                         pygame.K_x: 'open',
                         pygame.K_ESCAPE: 'close'}
-    
+
     # 注册到action_control的函数
     def action(self, event):
         key_map = self.key_map
@@ -56,7 +60,7 @@ class Menu(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'open':
                     self.close()
                     self.group.empty()
@@ -73,14 +77,14 @@ class Menu(UIComponent):
                 return True
             else:
                 if idx == 'open':
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
         return False
         # if self.active:
         #    self.draw(self.current_index)
-    
+
     # 刷新显示
     def flush(self, screen=None):
         if self.active:
@@ -90,13 +94,15 @@ class Menu(UIComponent):
 # BlankPage （全屏空白页）
 # 空白页类提供基础的单页展示
 # Menu类已经提供默认的key_map，action，flush，继承后需要编写draw函数
+
+
 class BlankPage(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
         self.name = "空白页"
         self.key_map = {pygame.K_h: 'open',
-                        pygame.K_ESCAPE: 'close',}
-    
+                        pygame.K_ESCAPE: 'close', }
+
     # 注册到action_control的函数
     def action(self, event):
         key_map = self.key_map
@@ -104,7 +110,7 @@ class BlankPage(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'open':
                     self.close()
                     idx = 0
@@ -114,12 +120,12 @@ class BlankPage(UIComponent):
                 return True
             else:
                 if idx == 'open':
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
         return False
-    
+
     # 刷新显示
     def flush(self, screen=None):
         if self.active:
@@ -127,6 +133,8 @@ class BlankPage(UIComponent):
         super().flush(screen)
 
 # 怪物手册，通过继承Menu得到
+
+
 class Book(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
@@ -142,7 +150,7 @@ class Book(Menu):
                         pygame.K_RETURN: 'close'}
         self.curr_enemy = None
         self.mode = "menu1"
-    
+
     # 注册到action_control的函数
     def action(self, event):
         if self.mode == "menu1":
@@ -151,7 +159,7 @@ class Book(Menu):
             if key in key_map:
                 idx = key_map[key]
                 if self.active:
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if idx == 'open':
                         self.close()
                         self.group.empty()
@@ -171,7 +179,7 @@ class Book(Menu):
                     return True
                 else:
                     if idx == 'open':
-                        WriteLog.debug(__name__, (self.name,key,key_map))
+                        WriteLog.debug(__name__, (self.name, key, key_map))
                         if not self.PlayerCon.lock:
                             self.open()
                         idx = 0
@@ -181,7 +189,7 @@ class Book(Menu):
             if key in self.key_map:
                 idx = key_map[key]
                 if self.active:
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if idx == 'close':
                         self.TEXTBOX.close()
                         self.TEXTBOX.group.empty()
@@ -190,8 +198,8 @@ class Book(Menu):
                     return True
         return False
 
-
     # 绘制怪物手册
+
     def draw(self, current_index=0, map_index=None):
         if map_index is None:
             map_index = self.PlayerCon.floor
@@ -199,10 +207,12 @@ class Book(Menu):
         self.fill(SKYBLUE)
         # 获得当前地图中全部的怪物的信息
         CurrentMap = global_var.get_value("CurrentMap")
-        enemy_info_list = self.FUNCTION.get_current_enemy(CurrentMap.get_map(self.PlayerCon.floor))
+        enemy_info_list = self.FUNCTION.get_current_enemy(
+            CurrentMap.get_map(self.PlayerCon.floor))
         # 如果当前楼层没有怪物
         if len(enemy_info_list) == 0:
-            self.draw_text("本层无怪物", 72, BLACK, (17 * BLOCK_UNIT / 2) - (72 * 1.5), (13 * BLOCK_UNIT / 2) - 36, "px")
+            self.draw_text("本层无怪物", 72, BLACK, (17 * BLOCK_UNIT / 2) -
+                           (72 * 1.5), (13 * BLOCK_UNIT / 2) - 36, "px")
             return
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, len(enemy_info_list) - 1)
@@ -218,41 +228,56 @@ class Book(Menu):
         i = 0
         drawSprite = len(self.group.spritedict) == 0
         for enemy in enemy_info_list:
-            if drawSprite : self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
+            if drawSprite: self.draw_icon(enemy["mon_num_id"], 4, 2 * i)
 
-            self.draw_text(str(enemy["mon_name"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-            
+            self.draw_text(str(enemy["mon_name"]), 30, BLACK,
+                           6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+
             # 显示怪物特殊能力
             ability_text = self.FUNCTION.get_ability_text(enemy["mon_ability"])
             if len(ability_text) == 0:
                 pass
             elif len(ability_text) == 1:
                 for item in ability_text:
-                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT,
+                                   (2 * i * BLOCK_UNIT) + 46, "px")
             elif len(ability_text) == 2:
                 temp_index = 1
                 for item in ability_text:
-                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10 + 36 * temp_index, "px")
+                    self.draw_text(item, 30, BLACK, 6 * BLOCK_UNIT,
+                                   (2 * i * BLOCK_UNIT) + 10 + 36 * temp_index, "px")
                     temp_index += 1
             else:
-                self.draw_text("能力太多", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+                self.draw_text("能力太多", 30, BLACK, 6 * BLOCK_UNIT,
+                               (2 * i * BLOCK_UNIT) + 46, "px")
 
-            self.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-            self.draw_text("攻击 " + str(enemy["mon_atk"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-            self.draw_text("防御 " + str(enemy["mon_def"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
-            self.draw_text("金币 " + str(enemy["mon_gold"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-            self.draw_text("经验 " + str(enemy["mon_exp"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-            self.draw_text("伤害 " + str(enemy["damage"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
-            self.draw_text("临界 " + str(enemy["next_critical"]), 30, BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
-            self.draw_text("减伤 " + str(enemy["next_critical_decrease"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
-            self.draw_text("1防 " + str(enemy["next_def_critical"]), 30, BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
+            self.draw_text("生命 " + str(enemy["mon_hp"]), 30, BLACK,
+                           8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            self.draw_text("攻击 " + str(enemy["mon_atk"]), 30, BLACK,
+                           11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            self.draw_text("防御 " + str(enemy["mon_def"]), 30, BLACK,
+                           14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            self.draw_text("金币 " + str(enemy["mon_gold"]), 30, BLACK,
+                           8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+            self.draw_text("经验 " + str(enemy["mon_exp"]), 30, BLACK,
+                           11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+            self.draw_text("伤害 " + str(enemy["damage"]), 30, BLACK,
+                           14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+            self.draw_text("临界 " + str(enemy["next_critical"]), 30,
+                           BLACK, 8 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
+            self.draw_text("减伤 " + str(enemy["next_critical_decrease"]),
+                           30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
+            self.draw_text("1防 " + str(enemy["next_def_critical"]), 30,
+                           BLACK, 14 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 82, "px")
             i += 1
         # 根据当前current_index绘制高亮框
         i = current_index % item_per_page
-        self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+        self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 *
+                       BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED, "px")
 
     def enemy_description(self):
-        ability_text = self.FUNCTION.get_ability_text(self.curr_enemy["mon_ability"])
+        ability_text = self.FUNCTION.get_ability_text(
+            self.curr_enemy["mon_ability"])
         content = self.curr_enemy["mon_name"] + "\n"
         for item in ability_text:
             content += item + "：" + ability_text[item] + "\n"
@@ -267,7 +292,7 @@ class StartMenu(Menu):
         self.name = "开始菜单"
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
-                        pygame.K_RETURN: 'enter',}
+                        pygame.K_RETURN: 'enter', }
 
     def action(self, event):
         key_map = self.key_map
@@ -275,7 +300,7 @@ class StartMenu(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'enter':
                     if self.current_index == 0:
                         self.close()
@@ -300,7 +325,7 @@ class StartMenu(Menu):
         self.draw_text(TOWER_NAME, 64, WHITE, 6, 0)
         self.draw_text("开始游戏", 36, WHITE, 7, 6)
         self.draw_text("读取存档", 36, WHITE, 7, 7)
-        #print("Currentindex", self.active)
+        # print("Currentindex", self.active)
         if current_index == 0:
             self.draw_text("=>", 36, WHITE, 6, 6)
         if current_index == 1:
@@ -318,7 +343,7 @@ class Backpack(Menu):
                         pygame.K_ESCAPE: 'close',
                         pygame.K_RETURN: 'enter',
                         }
-                        
+
         self.key_map_detail = {pygame.K_LEFT: -8,
                                pygame.K_RIGHT: +8,
                                pygame.K_UP: -1,
@@ -333,24 +358,26 @@ class Backpack(Menu):
         self.detail_index = 0
         self.cls_index = []
         self.current_sort_list = []
-    
+
     # 绘制背包
     def draw(self, current_index=0):
         # UI背景和左侧类别
         self.fill(SKYBLUE)
         i = 0
-        category = {"keys":"钥匙",
-                     "items":"道具",
-                     "constants":"永久物品",
-                     "tools":"工具",
-                     "equipments":"装备"}
+        category = {"keys": "钥匙",
+                     "items": "道具",
+                     "constants": "永久物品",
+                     "tools": "工具",
+                     "equipments": "装备"}
         for item in category:
-            self.draw_text(str(category[item]), 36, BLACK, BLOCK_UNIT, i * (BLOCK_UNIT + 50) + 30, "px")
-            self.draw_rect((BLOCK_UNIT * 0.5, i * (BLOCK_UNIT + 50) + 30 - 10), (3.5 * BLOCK_UNIT, i * (BLOCK_UNIT + 50) + 30 - 10 + BLOCK_UNIT), 8, RED, "px")
+            self.draw_text(str(category[item]), 36, BLACK,
+                           BLOCK_UNIT, i * (BLOCK_UNIT + 50) + 30, "px")
+            self.draw_rect((BLOCK_UNIT * 0.5, i * (BLOCK_UNIT + 50) + 30 - 10), (3.5 *
+                           BLOCK_UNIT, i * (BLOCK_UNIT + 50) + 30 - 10 + BLOCK_UNIT), 8, RED, "px")
             i += 1
         # 分割线
-        self.draw_lines([(4,0),(4,13)], 5, BLACK)
-        self.draw_lines([(4,3),(17,3)], 5, BLACK)
+        self.draw_lines([(4, 0), (4, 13)], 5, BLACK)
+        self.draw_lines([(4, 3), (17, 3)], 5, BLACK)
         # 获取分类后的背包（获得字典）
         sort_info = self.FUNCTION.sort_item(category)
         # 生成物品类型数组
@@ -361,7 +388,8 @@ class Backpack(Menu):
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, len(category) - 1)
         # 当前选中类别
-        self.draw_text(">", 36, BLACK, 0, self.current_index * (BLOCK_UNIT + 50) + 30, "px")
+        self.draw_text(">", 36, BLACK, 0, self.current_index *
+                       (BLOCK_UNIT + 50) + 30, "px")
         # 找出当前选中的类型
         current_cls = self.cls_index[self.current_index]
         current_sort_info = sort_info[current_cls]
@@ -374,27 +402,35 @@ class Backpack(Menu):
                 self.current_sort_list.append(item)
             # 检测index是否超出范围
             self.detail_index = max(0, self.detail_index)
-            self.detail_index = min(self.detail_index, len(self.current_sort_list) - 1)
+            self.detail_index = min(
+                self.detail_index, len(self.current_sort_list) - 1)
             # 计算分页并从self.current_sort_list中提取需要展示的数据
-            total_page = math.ceil(len(self.current_sort_list) / self.item_per_page)
-            current_page = math.ceil((self.detail_index + 1) / self.item_per_page)
+            total_page = math.ceil(
+                len(self.current_sort_list) / self.item_per_page)
+            current_page = math.ceil(
+                (self.detail_index + 1) / self.item_per_page)
             slice_start = (current_page - 1) * self.item_per_page
-            slice_end = min(slice_start + self.item_per_page, len(self.current_sort_list))
+            slice_end = min(slice_start + self.item_per_page,
+                            len(self.current_sort_list))
             self.current_sort_list = self.current_sort_list[slice_start:slice_end]
             # 绘制物品条目
             i = 0
             for item in self.current_sort_list:
-                self.draw_text(str(current_sort_info[item]["item_name"]), 36, BLACK, 4, 3 + i)
-                self.draw_text("数量：" + str(current_sort_info[item]["item_amount"]), 36, BLACK, 10, 3 + i)
+                self.draw_text(
+                    str(current_sort_info[item]["item_name"]), 36, BLACK, 4, 3 + i)
+                self.draw_text(
+                    "数量：" + str(current_sort_info[item]["item_amount"]), 36, BLACK, 10, 3 + i)
                 i += 1
             if self.mode == "simple":
                 self.draw_rect((4, 3), (17, 4), 3, RED)
-                self.draw_text("描述：" + current_sort_info[self.current_sort_list[0]]["item_text"], 36, BLACK, 4, 0)
+                self.draw_text(
+                    "描述：" + current_sort_info[self.current_sort_list[0]]["item_text"], 36, BLACK, 4, 0)
             elif self.mode == "detail":
                 k = self.detail_index % self.item_per_page
                 self.draw_rect((4, 3 + k), (17, 4 + k), 3, RED)
-                self.draw_text("描述：" + current_sort_info[self.current_sort_list[k]]["item_text"], 36, BLACK, 4, 0)
-        
+                self.draw_text(
+                    "描述：" + current_sort_info[self.current_sort_list[k]]["item_text"], 36, BLACK, 4, 0)
+
     # 注册到action_control的函数
     def action(self, event):
         if self.mode == "simple":
@@ -403,7 +439,7 @@ class Backpack(Menu):
             if key in key_map:
                 idx = key_map[key]
                 if self.active:
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if idx == 'open':
                         self.close()
                         idx = 0
@@ -417,7 +453,7 @@ class Backpack(Menu):
                     return True
                 else:
                     if idx == 'open':
-                        WriteLog.debug(__name__, (self.name,key,key_map))
+                        WriteLog.debug(__name__, (self.name, key, key_map))
                         if not self.PlayerCon.lock:
                             self.open()
                         idx = 0
@@ -427,7 +463,7 @@ class Backpack(Menu):
             key = event.key
             if key in key_map:
                 idx = key_map[key]
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == "enter":
                     self.mode = "simple"
                     self.close()
@@ -481,7 +517,7 @@ class SaveLoadMenu(Menu):
                         pygame.K_LEFT: -6,
                         pygame.K_RIGHT: +6,
                         pygame.K_ESCAPE: 'close',
-                        pygame.K_RETURN: 'enter',}
+                        pygame.K_RETURN: 'enter', }
         self.save_path = os.path.join(os.getcwd(), "save")
 
     def action(self, event):
@@ -490,7 +526,7 @@ class SaveLoadMenu(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'open':
                     self.close()
                     idx = 0
@@ -512,7 +548,7 @@ class SaveLoadMenu(Menu):
                 return True
             else:
                 if idx == 'open':
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
@@ -531,31 +567,38 @@ class SaveLoadMenu(Menu):
         # 让存档index跟实际非0自然数对应
         slice_start += 1
         slice_end += 1
-        
+
         check_result = self.check_save_file(slice_start, slice_end)
 
         self.fill(SKYBLUE)
-        
+
         # 绘制存档条目
         i = 0
         for item in check_result:
             save_number = (current_page - 1) * item_per_page + i + 1
-            self.draw_text("#" + str(save_number), 30, BLACK, 4 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+            self.draw_text("#" + str(save_number), 30, BLACK,
+                           4 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             if len(check_result[item]) > 0:
                 # 显示勇士基础数值（HP/ATK/DEF/MDEF）
-                self.draw_text("HP " + str(check_result[item]["hp"]) + " / ATK " + str(check_result[item]["attack"]) + " / DEF " + str(check_result[item]["defend"]) + " / MDEF " + str(check_result[item]["mdefend"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+                self.draw_text("HP " + str(check_result[item]["hp"]) + " / ATK " + str(check_result[item]["attack"]) + " / DEF " + str(
+                    check_result[item]["defend"]) + " / MDEF " + str(check_result[item]["mdefend"]), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
                 # 显示勇士位置（楼层 & 坐标）
-                self.draw_text(str(check_result[item]["floor"]) + "F @ " + str((check_result[item]["pos"][0], check_result[item]["pos"][1])), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+                self.draw_text(str(check_result[item]["floor"]) + "F @ " + str((check_result[item]["pos"][0],
+                               check_result[item]["pos"][1])), 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
                 # 显示存档时间（格式YYYY-MM-DD HH:MM:SS）
-                self.draw_text(str(check_result[item]["time"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
+                self.draw_text(str(
+                    check_result[item]["time"]), 30, BLACK, 11 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 46, "px")
             else:
-                self.draw_text("不存在存档！！", 30, BLACK, 6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
+                self.draw_text("不存在存档！！", 30, BLACK, 6 *
+                               BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
             i += 1
         # 根据当前current_index绘制高亮框
         i = current_index % item_per_page
-        self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+        self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 *
+                       BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED, "px")
         # 显示当前页数
-        self.draw_text(f"{current_page} / {total_page}", 30, BLACK, 9 * BLOCK_UNIT, (12 * BLOCK_UNIT) + 10, "px")
+        self.draw_text(f"{current_page} / {total_page}", 30,
+                       BLACK, 9 * BLOCK_UNIT, (12 * BLOCK_UNIT) + 10, "px")
 
     def check_save_file(self, slice_start, slice_end):
         file_name_1 = "save_"
@@ -614,22 +657,23 @@ class Fly(Menu):
                         pygame.K_g: 'open',
                         pygame.K_ESCAPE: 'close',
                         pygame.K_RETURN: 'enter'}
-        
+
         CurrentMap = global_var.get_value("CurrentMap")
         self.floor_index = CurrentMap.floor_index["index"]
         self.max_floor_index = len(self.floor_index) - 1
         self.floor_per_row = 4
-    
+
     def action(self, event):
         key_map = self.key_map
         key = event.key
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'enter':
                     if self.floor_index[self.current_index] in self.PlayerCon.visited:
-                        self.FUNCTION.change_floor("fly", floor=self.current_index)
+                        self.FUNCTION.change_floor(
+                            "fly", floor=self.current_index)
                         self.close()
                         idx = 0
                     else:
@@ -647,11 +691,12 @@ class Fly(Menu):
                 return True
             else:
                 if idx == 'open':
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if not self.PlayerCon.lock:
                         if self.FUNCTION.has_item(46):
                             self.open()
-                            self.current_index = self.floor_index.index(self.floor_index[self.PlayerCon.floor])
+                            self.current_index = self.floor_index.index(
+                                self.floor_index[self.PlayerCon.floor])
                         else:
                             print("你还没有楼层传送器！")
                     idx = 0
@@ -668,11 +713,12 @@ class Fly(Menu):
         for floor in self.floor_index:
             self.draw_floor(floor, cnt)
             cnt += 1
- 
+
         # 根据当前current_index绘制高亮框
         temp_x = current_index % self.floor_per_row
         temp_y = current_index // self.floor_per_row
-        self.draw_rect(((4 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT), ((4 + 3 * (temp_x + 1)) * BLOCK_UNIT, (temp_y + 1) * BLOCK_UNIT), 3, RED,"px")
+        self.draw_rect(((4 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT),
+                       ((4 + 3 * (temp_x + 1)) * BLOCK_UNIT, (temp_y + 1) * BLOCK_UNIT), 3, RED, "px")
 
     # 绘制楼层传送器中的楼层
     def draw_floor(self, floor, cnt):
@@ -682,9 +728,12 @@ class Fly(Menu):
             floor_color = BLACK
         else:
             floor_color = GRAY
-        self.draw_text(str(floor), 30, floor_color, (5 + 3 * temp_x) * BLOCK_UNIT, temp_y * BLOCK_UNIT + 10, "px")
+        self.draw_text(str(floor), 30, floor_color, (5 + 3 * temp_x)
+                       * BLOCK_UNIT, temp_y * BLOCK_UNIT + 10, "px")
 
 # 状态栏
+
+
 class StatusBar(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
@@ -693,9 +742,10 @@ class StatusBar(UIComponent):
         self.key_map = {}
         self.PlayerCon = global_var.get_value("PlayerCon")
         self.CurrentMap = global_var.get_value("CurrentMap")
-        self.background = pygame.Surface((int(4 * BLOCK_UNIT), int(13 * BLOCK_UNIT)))
+        self.background = pygame.Surface(
+            (int(4 * BLOCK_UNIT), int(13 * BLOCK_UNIT)))
         self.background.fill(SKYBLUE)
-    
+
     def open(self):
         self.showing = True
         self.active = True
@@ -707,7 +757,7 @@ class StatusBar(UIComponent):
     # 注册到action_control的函数
     def action(self, event):
         return False
-    
+
     # 刷新显示
     def flush(self, screen=None):
         if self.showing:
@@ -774,12 +824,12 @@ class Help(BlankPage):
             "Enter = 确认操作"
         ]
 
-
     def draw(self):
         cnt = 0
         self.fill(SKYBLUE)
         for text in self.contents:
-            self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT, (cnt * BLOCK_UNIT), "px")
+            self.draw_text(text, 30, BLACK, 5 * BLOCK_UNIT,
+                           (cnt * BLOCK_UNIT), "px")
             cnt += 1
 
 
@@ -797,7 +847,7 @@ class Shop(Menu):
                         pygame.K_RETURN: 'enter'}
         self.choices = {}
 
-    # 继承之后，可以通过复写，把任何需要动态更新的文字放这个函数    
+    # 继承之后，可以通过复写，把任何需要动态更新的文字放这个函数
     def update_text(self):
         pass
 
@@ -807,7 +857,7 @@ class Shop(Menu):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'enter':
                     self.purchase()
                     self.group.empty()
@@ -840,11 +890,12 @@ class Shop(Menu):
                 text = text + choice + "\n"
             cnt += 1
         # 展示选项框
-        self.text_obj = TextWin("mid", content=text, TEXT_WIN_WIDTH=500, text_loc="middle")
+        self.text_obj = TextWin("mid", content=text,
+                                TEXT_WIN_WIDTH=500, text_loc="middle")
         self.text_obj.drawText()
         self.text_obj.show_on()
         self.add_sprite(self.text_obj)
-        
+
     # 进行对应的购买操作
     def purchase(self):
         command = list(self.choices.items())[self.current_index][1]
@@ -877,6 +928,8 @@ class Shop1(Shop):
         self.text = f"给我{self.price}月饼就可以："
 
 # 商店2，通过继承商店基类得到
+
+
 class Shop2(Shop):
     def __init__(self, **kwargs):
         Shop.__init__(self, **kwargs)
@@ -894,6 +947,8 @@ class Shop2(Shop):
         self.text = f"给我{self.price}月饼就可以："
 
 # 选项框，通过继承商店基类得到（都是类似的菜单）
+
+
 class ChoiceBox(Shop):
     def __init__(self, **kwargs):
         Shop.__init__(self, **kwargs)
@@ -912,14 +967,14 @@ class ChoiceBox(Shop):
         EVENTFLOW = global_var.get_value("EVENTFLOW")
         command = list(self.choices.items())[self.current_index][1]
         EVENTFLOW.insert_action(command)
-        
+
     def action(self, event):
         key_map = self.key_map
         key = event.key
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'enter':
                     self.do_action()
                     self.group.empty()
@@ -933,12 +988,14 @@ class ChoiceBox(Shop):
         return False
 
 # 文本框
+
+
 class TextBox(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
         self.name = "文本框"
         self.key_map = {pygame.K_RETURN: 'enter'}
-    
+
     # 注册到action_control的函数
     def action(self, event):
         key_map = self.key_map
@@ -946,7 +1003,7 @@ class TextBox(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.active:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'enter':
                     status = self.next()
                     if status == False:
@@ -954,7 +1011,7 @@ class TextBox(UIComponent):
                         idx = 0
                 return True
         return False
-    
+
     # 刷新显示
     def flush(self, screen=None):
         if self.active:
@@ -989,7 +1046,8 @@ class TextBox(UIComponent):
             status = self.text_obj.updateText()
             return status
         elif len(self.text_obj.res_content) >= 1:
-            h = len(self.text_obj.res_content) * self.text_obj.dh + 2 * self.text_obj.TEXT_TOP_BOARD
+            h = len(self.text_obj.res_content) * self.text_obj.dh + \
+                    2 * self.text_obj.TEXT_TOP_BOARD
             res_content = self.text_obj.res_content
             res_content.insert(0, h)
             self.group.empty()
@@ -997,8 +1055,10 @@ class TextBox(UIComponent):
             self.add_sprite(self.text_obj)
             self.text_obj.drawText()
             self.text_obj.show_on()
-            
+
 # 显伤层
+
+
 class ShowDamage(UIComponent):
     def __init__(self, **kwargs):
         UIComponent.__init__(self, **kwargs)
@@ -1008,7 +1068,7 @@ class ShowDamage(UIComponent):
         self.key_map = {pygame.K_p: 'open'}
         self.PlayerCon = global_var.get_value("PlayerCon")
         self.CurrentMap = global_var.get_value("CurrentMap")
-    
+
     def open(self):
         self.showing = True
         self.active = True
@@ -1025,19 +1085,19 @@ class ShowDamage(UIComponent):
         if key in key_map:
             idx = key_map[key]
             if self.showing:
-                WriteLog.debug(__name__, (self.name,key,key_map))
+                WriteLog.debug(__name__, (self.name, key, key_map))
                 if idx == 'open':
                     self.close()
                     idx = 0
                 return True
             else:
                 if idx == 'open':
-                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    WriteLog.debug(__name__, (self.name, key, key_map))
                     if not self.PlayerCon.lock:
                         self.open()
                     idx = 0
         return False
-    
+
     # 刷新显示
     def flush(self, screen=None):
         if self.showing:
@@ -1070,13 +1130,15 @@ class ShowDamage(UIComponent):
                 text_obj = {}
                 text_obj["x"] = (loc[0] + 4) * BLOCK_UNIT
                 text_obj["y"] = loc[1] * BLOCK_UNIT + 15
-                text_obj["text"] = str(self.CurrentMap.damage_layer_cache[monster]["critical"])
+                text_obj["text"] = str(
+                    self.CurrentMap.damage_layer_cache[monster]["critical"])
                 text_obj["text_color"] = text_color
                 text_obj["stroke_color"] = BLACK
                 text_obj2 = {}
                 text_obj2["x"] = (loc[0] + 4) * BLOCK_UNIT
                 text_obj2["y"] = loc[1] * BLOCK_UNIT + 40
-                text_obj2["text"] = str(self.CurrentMap.damage_layer_cache[monster]["damage"])
+                text_obj2["text"] = str(
+                    self.CurrentMap.damage_layer_cache[monster]["damage"])
                 text_obj2["text_color"] = text_color
                 text_obj2["stroke_color"] = BLACK
                 content.append(text_obj)
@@ -1084,6 +1146,8 @@ class ShowDamage(UIComponent):
         self.draw_bulk_stroke_text(content, 24, "px")
 
 # 窗口基类
+
+
 class WinBase(Sprite):
     def __init__(self, x, y, w, h, dir=None):
         super().__init__()
@@ -1098,7 +1162,7 @@ class WinBase(Sprite):
         self.rect = self.image.get_rect()
         self.rect.left = self.pos[0]
         self.rect.top = self.pos[1]
-        #print("st", self.rect)
+        # print("st", self.rect)
         self.alpha = 255
 
     def trans_image(self, params):  # 把原图转成设备显示的surface
@@ -1111,15 +1175,21 @@ class WinBase(Sprite):
     def init_wind(self, w, h, dir):
         x, y = 0, 0  # self.pos[0], self.pos[1]
         scale_list = [
-            (Rect(0, 0, 128, 128), (w - 4, h - 4), Rect(x + 2, y + 2, w - 4, h - 4)),  # back
-            (Rect(144, 0, 32, 16), (w - 32, 16), Rect(x + 16, y, w - 32, 16)),  # top
-            (Rect(128, 16, 16, 32), (16, h - 32), Rect(x, y + 16, 16, h - 32)),  # left
-            (Rect(176, 16, 16, 32), (16, h - 32), Rect(x + w - 16, y + 16, 16, h - 32)),  # right
-            (Rect(144, 48, 32, 16), (w - 32, 16), Rect(x + 16, y + h - 16, w - 32, 16)),  # bottom
+            (Rect(0, 0, 128, 128), (w - 4, h - 4),
+             Rect(x + 2, y + 2, w - 4, h - 4)),  # back
+            (Rect(144, 0, 32, 16), (w - 32, 16),
+             Rect(x + 16, y, w - 32, 16)),  # top
+            (Rect(128, 16, 16, 32), (16, h - 32),
+             Rect(x, y + 16, 16, h - 32)),  # left
+            (Rect(176, 16, 16, 32), (16, h - 32),
+             Rect(x + w - 16, y + 16, 16, h - 32)),  # right
+            (Rect(144, 48, 32, 16), (w - 32, 16),
+             Rect(x + 16, y + h - 16, w - 32, 16)),  # bottom
             (Rect(128, 0, 16, 16), Rect(x, y, 16, 16)),  # top left
             (Rect(176, 0, 16, 16), Rect(x + w - 16, y, 16, 16)),  # top right
             (Rect(128, 48, 16, 16), Rect(x, y + h - 16, 16, 16)),  # bottom left
-            (Rect(176, 48, 16, 16), Rect(x + w - 16, y + h - 16, 16, 16)),  # bottom right
+            (Rect(176, 48, 16, 16), Rect(x + w - 16,
+             y + h - 16, 16, 16)),  # bottom right
         ]
         src_dir = {"up": (Rect(128, 96, 32, 32), Rect(x + int(w / 2), y + h - 3, 32, 32)),
                    "down": (Rect(160, 96, 32, 32), Rect(x + int(w / 2), y - 29, 32, 32))
@@ -1164,6 +1234,8 @@ class WinBase(Sprite):
 # loc_type = 文本框在游戏窗口的位置
 # content = 显示的内容
 # is_talk = 带箭头的对话框
+
+
 class TextWin(WinBase):
     def __init__(self, loc_type, content=None, is_talk=False, TEXT_WIN_WIDTH=int((WIDTH - 4 * BLOCK_UNIT) - 30), text_loc="left"):
         # 正则匹配半角字符
@@ -1203,13 +1275,13 @@ class TextWin(WinBase):
             pass
             # TODO： 显示在头上的对话框 & 根据坐标/字数自适应大小对话框
             # 需要建立一个界面地图坐标转换接口，并且把各个界面分离开来
-        #print(self.x, self.y, self.w, self.h)
+        # print(self.x, self.y, self.w, self.h)
         super().__init__(self.x, self.y, self.w, self.h)
         self.content = ""
         self.res_content = None
 
     def get_win_height(self, content):
-        line_len = int((self.w - 2 * self.TEXT_LEFT_BOARD) / self.dw)  # 行长        
+        line_len = int((self.w - 2 * self.TEXT_LEFT_BOARD) / self.dw)  # 行长
 
         self.line_list = []
 
@@ -1221,14 +1293,14 @@ class TextWin(WinBase):
             line = ""
             while get_real_len(line) < line_len and content != '':
                 tlen = line_len - clen
-                #print(tlen)
+                # print(tlen)
                 tstr = content[:tlen]
                 line += tstr
                 clen += get_real_len(tstr)
                 content = content[tlen:]
             if content != '' and get_real_len(content) <= 1:
                 line += content
-            #print("对齐长度：", get_real_len(line))
+            # print("对齐长度：", get_real_len(line))
             return line
 
         for content in content.split('\n'):
@@ -1236,7 +1308,7 @@ class TextWin(WinBase):
                 s = align_char(content)
                 self.line_list.append(s)
                 content = content[len(s):]
-        
+
         if len(self.line_list) > self.line_num:
             h = self.line_num * self.dh + 2 * self.TEXT_TOP_BOARD
         else:
@@ -1248,17 +1320,18 @@ class TextWin(WinBase):
         for text in self.line_list:
             text_surface = self.font.render(text, True, WHITE)
             text_rect = text_surface.get_rect()
-            #print(text_rect)
+            # print(text_rect)
             if self.text_loc == "left":
                 text_rect.left = self.TEXT_LEFT_BOARD  # self.pos[0]
             elif self.text_loc == "middle":
-                text_rect.left = int((self.TEXT_WIN_WIDTH - self.dw * len(text)) / 2)
+                text_rect.left = int(
+                    (self.TEXT_WIN_WIDTH - self.dw * len(text)) / 2)
             text_rect.top = self.TEXT_TOP_BOARD + ct * self.dh  # + self.pos[1]
             self.src_show.blit(text_surface, text_rect)
             ct += 1
 
     def updateText(self):
-        #print("self.res_content", self.res_content)
+        # print("self.res_content", self.res_content)
         if self.res_content is not None:
             self.flush_skin()
             self.drawText()
@@ -1270,3 +1343,86 @@ class TextWin(WinBase):
     def update(self, *args):
         super().update(args)
 
+# 色调层
+class Curtain(UIComponent):
+    def __init__(self, **kwargs):
+        UIComponent.__init__(self, **kwargs)
+        self.name = "色调层"
+        self.key_map = {}
+        self.PlayerCon = global_var.get_value("PlayerCon")
+        self.CurrentMap = global_var.get_value("CurrentMap")
+        self.curtain = pygame.Surface(
+            (int(13 * BLOCK_UNIT), int(13 * BLOCK_UNIT)))
+        self.frame_time = 30
+        self.curr_color = None
+        self.curr_alpha = None
+        self.animation_list = []
+        self.EVENTFLOW = None
+
+    def open(self):
+        self.active = True
+
+    def close(self):
+        #self.active = False
+        pass
+
+    # 注册到action_control的函数
+    def action(self, event):
+        return False
+
+    # 刷新显示
+    def flush(self, screen=None):
+        if self.active:
+            self.draw()
+        super().flush(screen)
+
+    def draw(self):
+        if len(self.animation_list) > 0:
+            animation = self.animation_list[0]
+            print(animation)
+            self.animation_list.pop(0)
+            self.curtain.fill(animation[0])
+            self.curtain.set_alpha(animation[1])
+            if len(self.animation_list) == 0:
+                self.EVENTFLOW.wait_finish = False
+                self.curr_color = animation[0]
+                self.curr_alpha = animation[1]
+        self.surface.blit(self.curtain, (256, 0))
+
+    def show(self, color, time):
+        if self.EVENTFLOW is None:
+            self.EVENTFLOW = global_var.get_value("EVENTFLOW")
+        self.active = True
+        if len(color) == 4:
+            alpha = int(255 * color[-1])
+            color = tuple(color[:3])
+        elif len(color) == 3:
+            alpha = 255
+            color = tuple(color)
+        if time == 0:
+            self.curr_color = color
+            self.curr_alpha = alpha
+            self.curtain.fill(color)
+            self.curtain.set_alpha(alpha)
+            self.EVENTFLOW.wait_finish = False
+        else:
+            self.EVENTFLOW.wait_finish = True
+            self.curtain_animation(color, alpha, time)
+
+    def curtain_animation(self, color, alpha, time):
+        step = int(time / self.frame_time)
+        if self.curr_color is None:
+            self.curr_color = (0, 0, 0)
+        if self.curr_alpha is None:
+            self.curr_alpha = 0
+        if step <= 0:
+            step = 1
+        for i in range(step):
+            self.animation_list.append([
+                (
+                int((i + 1) * (color[0] - self.curr_color[0]) / step),
+                int((i + 1) * (color[1] - self.curr_color[1]) / step),
+                int((i + 1) * (color[2] - self.curr_color[2]) / step)
+                ),
+                int((i + 1) * (alpha - self.curr_alpha) / step)
+            ])

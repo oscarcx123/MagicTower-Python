@@ -8,9 +8,9 @@ FONT_NAME = "resource/simhei.ttf"
 # 创建一个线程并开启控制台
 DEBUG = False
 # 日志输出等级
-LOGGING_LEVEL = "INFO"
+LOGGING_LEVEL = "DEBUG"
 # 静音模式
-MUTE = False
+MUTE = True
 # SAVE_MAX_AMOUNT为最大允许存档数量
 SAVE_MAX_AMOUNT = 100
 # 玩家移动速度（移动一格所需要的毫秒数 & 换腿所需时间的两倍）
