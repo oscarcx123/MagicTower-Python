@@ -5,8 +5,12 @@ from os import path
 # 全塔属性设置
 TOWER_NAME = "Python魔塔"
 FONT_NAME = "resource/simhei.ttf"
+# 创建一个线程并开启控制台
 DEBUG = False
+# 日志输出等级
 LOGGING_LEVEL = "INFO"
+# 静音模式
+MUTE = False
 # SAVE_MAX_AMOUNT为最大允许存档数量
 SAVE_MAX_AMOUNT = 100
 # 玩家移动速度（移动一格所需要的毫秒数 & 换腿所需时间的两倍）
@@ -75,7 +79,7 @@ WIDTH = (13 + 4) * 64  # 1088  # (13 + 4) * 64
 HEIGHT = 13 * 64  # 832  # 13 * 64
 # BLOCK_UNIT 定义每格大小
 BLOCK_UNIT = HEIGHT / 13  # BLOCK_UNIT = 64
-FPS = 120  # 每秒帧数
+FPS = 60  # 每秒帧数
 MSPF = int(1000 / FPS)  # 每一帧毫秒数
 DEFAULT_SPEED = 500  # 默认动画速度(周期)
 

@@ -211,6 +211,7 @@ clock = pygame.time.Clock()
 
 # 主程序
 while running:
+    a = pygame.time.get_ticks()
     # 展示开始菜单
     if start_menu == True:
         start = global_var.get_value("STARTMENU")
@@ -229,8 +230,8 @@ while running:
         EVENTFLOW.insert_action(start_text["startText"])
     pygame.display.update()
     # 背景
-    a = pygame.time.get_ticks()
     RootScreen.flush(screen)  # 显示刷新到屏幕
-    b = pygame.time.get_ticks()
-    print("RootScreen.flush(screen) -> ", b - a, "ms")
     action_control.action_render()  # 检查动作消息
+    b = pygame.time.get_ticks()
+    print(b - a)
+

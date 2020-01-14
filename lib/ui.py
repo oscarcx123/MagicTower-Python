@@ -95,7 +95,7 @@ class BlankPage(UIComponent):
         UIComponent.__init__(self, **kwargs)
         self.name = "空白页"
         self.key_map = {pygame.K_h: 'open',
-                        pygame.K_ESCAPE: 'close'}
+                        pygame.K_ESCAPE: 'close',}
     
     # 注册到action_control的函数
     def action(self, event):
@@ -131,7 +131,66 @@ class Book(Menu):
     def __init__(self, **kwargs):
         Menu.__init__(self, **kwargs)
         self.name = "怪物手册"
+        self.key_map = {pygame.K_LEFT: -6,
+                        pygame.K_RIGHT: +6,
+                        pygame.K_UP: -1,
+                        pygame.K_DOWN: +1,
+                        pygame.K_x: 'open',
+                        pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'enter'}
+        self.key_map2 = {pygame.K_ESCAPE: 'close',
+                        pygame.K_RETURN: 'close'}
+        self.curr_enemy = None
+        self.mode = "menu1"
     
+    # 注册到action_control的函数
+    def action(self, event):
+        if self.mode == "menu1":
+            key_map = self.key_map
+            key = event.key
+            if key in key_map:
+                idx = key_map[key]
+                if self.active:
+                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    if idx == 'open':
+                        self.close()
+                        self.group.empty()
+                        idx = 0
+                    elif idx == 'close':
+                        self.close()
+                        self.group.empty()
+                        idx = 0
+                    elif idx == 'enter':
+                        self.mode = "menu2"
+                        self.enemy_description()
+                    elif type(idx) is not int:
+                        idx = 0
+                    else:
+                        self.current_index += idx
+                        self.group.empty()
+                    return True
+                else:
+                    if idx == 'open':
+                        WriteLog.debug(__name__, (self.name,key,key_map))
+                        if not self.PlayerCon.lock:
+                            self.open()
+                        idx = 0
+        elif self.mode == "menu2":
+            key_map = self.key_map2
+            key = event.key
+            if key in self.key_map:
+                idx = key_map[key]
+                if self.active:
+                    WriteLog.debug(__name__, (self.name,key,key_map))
+                    if idx == 'close':
+                        self.TEXTBOX.close()
+                        self.TEXTBOX.group.empty()
+                        self.PlayerCon.lock = True
+                        self.mode = "menu1"
+                    return True
+        return False
+
+
     # 绘制怪物手册
     def draw(self, current_index=0, map_index=None):
         if map_index is None:
@@ -147,6 +206,7 @@ class Book(Menu):
             return
         self.current_index = max(0, self.current_index)
         self.current_index = min(self.current_index, len(enemy_info_list) - 1)
+        self.curr_enemy = enemy_info_list[self.current_index]
         # 计算分页并从enemy_info_list中提取需要展示的数据
         item_per_page = 6
         total_page = math.ceil(len(enemy_info_list) / item_per_page)
@@ -190,6 +250,14 @@ class Book(Menu):
         # 根据当前current_index绘制高亮框
         i = current_index % item_per_page
         self.draw_rect((4 * BLOCK_UNIT, 2 * BLOCK_UNIT * i), (17 * BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED,"px")
+
+    def enemy_description(self):
+        ability_text = self.FUNCTION.get_ability_text(self.curr_enemy["mon_ability"])
+        content = self.curr_enemy["mon_name"] + "\n"
+        for item in ability_text:
+            content += item + "：" + ability_text[item] + "\n"
+        self.TEXTBOX = global_var.get_value("TEXTBOX")
+        self.TEXTBOX.show(content)
 
 
 # 开始菜单，通过继承Menu得到
@@ -630,9 +698,11 @@ class StatusBar(UIComponent):
     
     def open(self):
         self.showing = True
+        self.active = True
 
     def close(self):
         self.showing = False
+        self.active = False
 
     # 注册到action_control的函数
     def action(self, event):
@@ -892,16 +962,18 @@ class TextBox(UIComponent):
         super().flush(screen)
 
     def show(self, text):
-        if not self.PlayerCon.lock:
-            self.text_obj = TextWin("mid", text)
-            if len(self.text_obj.line_list) > self.text_obj.line_num:
-                self.text_obj.res_content = self.text_obj.line_list[self.text_obj.line_num:]
-                print("res", self.text_obj.res_content)
-                self.text_obj.line_list = self.text_obj.line_list[:self.text_obj.line_num]
-            self.text_obj.drawText()
-            self.text_obj.show_on()
-            self.add_sprite(self.text_obj)
-            self.open()
+        self.text_obj = TextWin("mid", text)
+        if len(self.text_obj.line_list) > self.text_obj.line_num:
+            self.text_obj.res_content = self.text_obj.line_list[self.text_obj.line_num:]
+            print("res", self.text_obj.res_content)
+            self.text_obj.line_list = self.text_obj.line_list[:self.text_obj.line_num]
+        self.text_obj.drawText()
+        self.text_obj.show_on()
+        self.add_sprite(self.text_obj)
+        self.open()
+
+    def disable(self):
+        self.close()
 
     def draw(self):
         pass
@@ -939,10 +1011,12 @@ class ShowDamage(UIComponent):
     
     def open(self):
         self.showing = True
+        self.active = True
         self.CurrentMap.show_damage_update = True
 
     def close(self):
         self.showing = False
+        self.active = False
 
     # 注册到action_control的函数
     def action(self, event):

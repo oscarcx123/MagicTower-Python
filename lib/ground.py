@@ -92,6 +92,8 @@ class GroundSurface:
         if "priority" in kwargs:
             self.priority = kwargs["priority"]
 
+        self.active = True
+
     # 增加子画布 这类画布可以是别的独立画布 也可以给出参数创建
     def add_child(self, *args):
         if len(args) == 1:
@@ -216,7 +218,8 @@ class GroundSurface:
         self.children.sort(key=lambda it: it.priority)
         # tempSurface = Surface()
         for c in self.children:
-            c.flush(screen=self.surface)
+            if c.active:
+                c.flush(screen=self.surface)
         if screen is not None:
             screen.blit(self.surface.convert_alpha(self.surface), self.rect)
 

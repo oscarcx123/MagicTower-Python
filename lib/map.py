@@ -37,6 +37,7 @@ class MapGround(GroundSurface):
         self.FUNCTION = global_var.get_value("FUNCTION")
         self.show_damage_update = True
         self.damage_layer_cache = {}
+        self.active = True
         super().__init__(mode="custom",x=0,y=0,w=w * block_size,h=h * block_size)
 
     def map_database_init(self):
