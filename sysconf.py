@@ -7,10 +7,10 @@ TOWER_NAME = "Python魔塔"
 FONT_NAME = "resource/simhei.ttf"
 # 创建一个线程并开启控制台
 DEBUG = False
-# 日志输出等级
-LOGGING_LEVEL = "DEBUG"
+# 日志输出等级（DEBUG, INFO, WARNING, ERROR, CRITICAL）
+LOGGING_LEVEL = "INFO"
 # 静音模式
-MUTE = True
+MUTE = False
 # SAVE_MAX_AMOUNT为最大允许存档数量
 SAVE_MAX_AMOUNT = 100
 # 玩家移动速度（移动一格所需要的毫秒数 & 换腿所需时间的两倍）
@@ -85,6 +85,7 @@ DEFAULT_SPEED = 500  # 默认动画速度(周期)
 
 RESOURCE_SCALE = BLOCK_UNIT / 32
 
+# 定义这些是为了兼容h5魔塔的一些数据
 true = True
 false = False
 null = None

@@ -20,6 +20,7 @@ class Event:
         self.Music = global_var.get_value("Music")
         self.FUNCTION = global_var.get_value("FUNCTION")
         self.CURTAIN = global_var.get_value("CURTAIN")
+        self.STATUSBAR = global_var.get_value("STATUSBAR")
 
 
     def get_event_flow_module(self):
@@ -223,6 +224,9 @@ class Event:
         time = event["time"]
         self.CURTAIN.show(color, time)
 
+    def hide_status_bar(self, event):
+        self.STATUSBAR.close()
+
 
 
 class EventFlow:
@@ -251,7 +255,8 @@ class EventFlow:
             "restart": "self.EVENT.restart(event)",
             "loadBgm": "self.EVENT.load_bgm(event)",
             "playBgm": "self.EVENT.play_bgm(event)",
-            "setCurtain": "self.EVENT.set_curtain(event)"
+            "setCurtain": "self.EVENT.set_curtain(event)",
+            "hideStatusBar": "self.EVENT.hide_status_bar(event)"
         }
 
     def get_event_module(self):

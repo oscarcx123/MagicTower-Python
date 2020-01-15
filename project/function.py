@@ -612,13 +612,17 @@ class Function():
         self.PlayerCon.reset()
         self.CurrentMap.reset()
         self.Music.reset()
+        self.CurrentMap.damage_layer_cache = {}
+        for c in self.RootScreen.children:
+            if c.active:
+                c.active = False
 
         
     # 返回标题，重新开始
     def restart(self):
         self.reset()
         start = global_var.get_value("STARTMENU")
-        start.open()
+        start.new_game = True
 
 
     # 存档

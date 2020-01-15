@@ -292,7 +292,8 @@ class StartMenu(Menu):
         self.name = "开始菜单"
         self.key_map = {pygame.K_UP: -1,
                         pygame.K_DOWN: +1,
-                        pygame.K_RETURN: 'enter', }
+                        pygame.K_RETURN: 'enter'}
+        self.new_game = True
 
     def action(self, event):
         key_map = self.key_map
@@ -846,6 +847,7 @@ class Shop(Menu):
                         pygame.K_ESCAPE: 'close',
                         pygame.K_RETURN: 'enter'}
         self.choices = {}
+        self.CurrentMap = global_var.get_value("CurrentMap")
 
     # 继承之后，可以通过复写，把任何需要动态更新的文字放这个函数
     def update_text(self):
@@ -906,6 +908,8 @@ class Shop(Menu):
                 exec(command)
                 self.update_text()
                 print("购买成功！")
+                self.CurrentMap.show_damage_update = True
+                self.CurrentMap.draw_map()
             else:
                 print("你不够钱！")
 
@@ -1379,7 +1383,6 @@ class Curtain(UIComponent):
     def draw(self):
         if len(self.animation_list) > 0:
             animation = self.animation_list[0]
-            print(animation)
             self.animation_list.pop(0)
             self.curtain.fill(animation[0])
             self.curtain.set_alpha(animation[1])
