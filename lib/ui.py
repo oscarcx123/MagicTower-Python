@@ -234,7 +234,7 @@ class Book(Menu):
                            6 * BLOCK_UNIT, (2 * i * BLOCK_UNIT) + 10, "px")
 
             # 显示怪物特殊能力
-            ability_text = self.FUNCTION.get_ability_text(enemy["mon_ability"])
+            ability_text = self.FUNCTION.get_ability_text(enemy)
             if len(ability_text) == 0:
                 pass
             elif len(ability_text) == 1:
@@ -276,11 +276,12 @@ class Book(Menu):
                        BLOCK_UNIT - 10, 2 * BLOCK_UNIT * (i + 1)), 3, RED, "px")
 
     def enemy_description(self):
-        ability_text = self.FUNCTION.get_ability_text(
-            self.curr_enemy["mon_ability"])
+        ability_text = self.FUNCTION.get_ability_text(self.curr_enemy)
         content = self.curr_enemy["mon_name"] + "\n"
         for item in ability_text:
             content += item + "：" + ability_text[item] + "\n"
+        if len(ability_text) == 0:
+            content += "该怪物无特殊属性\n"
         self.TEXTBOX = global_var.get_value("TEXTBOX")
         self.TEXTBOX.show(content)
 

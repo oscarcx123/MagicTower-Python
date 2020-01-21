@@ -57,6 +57,7 @@ class Function():
         def return_good():
             return {"status": True,
                     "mon_name": mon_name,
+                    "mon_id": monster_stats["id"],
                     "mon_hp": mon_hp,
                     "mon_atk": mon_atk,
                     "mon_def": mon_def,
@@ -69,6 +70,7 @@ class Function():
         def return_bad():
             return {"status": False,
                     "mon_name": mon_name,
+                    "mon_id": monster_stats["id"],
                     "mon_hp": mon_hp,
                     "mon_atk": mon_atk,
                     "mon_def": mon_def,
@@ -239,6 +241,7 @@ class Function():
         monster_id = self.BlockData[str(map_object)]["id"]
         # 从/project/enemy.py获取怪物详细数据
         monster_stats = self.MONSTER_DATA[monster_id]
+        monster_stats["id"] = monster_id
         mon_ability = monster_stats["special"]
 
         # 模仿（怪物的攻防和勇士攻防相等）
@@ -554,14 +557,43 @@ class Function():
         # 切换BGM
         self.Music.change_BGM(self.PlayerCon.floor)
         
+        # 提取楼层相关信息
+        curr_map_data = self.CurrentMap.MAP_DATABASE[self.CurrentMap.floor_index["index"][self.PlayerCon.floor]]
+
         # 检查玩家是否去过目标楼层
         if self.CurrentMap.floor_index["index"][self.PlayerCon.floor] not in self.PlayerCon.visited:
             self.PlayerCon.visited.append(self.CurrentMap.floor_index["index"][self.PlayerCon.floor])
+            # 处理firstArrive事件
+            event = curr_map_data["firstArrive"]
+            if len(event) > 0:
+                self.EVENTFLOW.insert_action(event)
+
+        # 处理eachArrive事件
+        event = curr_map_data["eachArrive"]
+        if len(event) > 0:
+            self.EVENTFLOW.insert_action(event)
+
+        
         self.flush_status()
+        
 
 
     # 获取怪物特殊能力的相关文字
-    def get_ability_text(self, mon_ability):
+    def get_ability_text(self, enemy):
+        mon_ability = enemy["mon_ability"]
+        enemy_val = self.MONSTER_DATA[enemy["mon_id"]]
+        
+        enemy_n = enemy_val['n'] if 'n' in enemy_val else 4
+        enemy_breakArmor = math.floor(100 * MON_ABILITY_VALUE["breakArmor"])
+        enemy_counterAttack = math.floor(100 * MON_ABILITY_VALUE["counterAttack"])
+        enemy_purify = MON_ABILITY_VALUE["purify"]
+        enemy_value = math.floor(100 * enemy_val['value']) if 'value' in enemy_val else 0
+        enemy_poisonDamage = MON_ABILITY_VALUE["poisonDamage"]
+        enemy_weakValue = MON_ABILITY_VALUE["weakValue"]
+        enemy_atkValue = enemy_val['atkValue'] if 'atkValue' in enemy_val else 0
+        enemy_defValue = enemy_val['defValue'] if 'defValue' in enemy_val else 0
+        enemy_damage = enemy_val['damage'] if 'damage' in enemy_val else 0
+        
         check_result = {}
         ability_dict = {
             1:["先攻", "怪物首先攻击"],
@@ -569,14 +601,14 @@ class Function():
             3:["坚固", "勇士每回合最多只能对怪物造成1点伤害"],
             4:["2连击", "怪物每回合攻击2次"],
             5:["3连击", "怪物每回合攻击3次"],
-            6:["N连击", "怪物每回合攻击N次"],
-            7:["破甲", "战斗前，怪物附加角色防御的X%作为伤害"],
-            8:["反击", "战斗时，怪物每回合附加角色攻击的X%作为伤害，无视角色防御"],
-            9:["净化", "战斗前，怪物附加勇士魔防的X倍作为伤害"],
+            6:[f"{enemy_n}连击", f"怪物每回合攻击{enemy_n}次"],
+            7:["破甲", f"战斗前，怪物附加角色防御的{enemy_breakArmor}%作为伤害"],
+            8:["反击", f"战斗时，怪物每回合附加角色攻击的{enemy_counterAttack}%作为伤害，无视角色防御"],
+            9:["净化", f"战斗前，怪物附加勇士魔防的{enemy_purify}倍作为伤害"],
             10:["模仿", "怪物的攻防和勇士攻防相等"],
-            11:["吸血", "战斗前，怪物首先吸取角色的X%生命（约X点）作为伤害，并把伤害数值加到自身生命上"],
-            12:["中毒", "战斗后，勇士陷入中毒状态，每一步损失生命X点"],
-            13:["衰弱", "战斗后，勇士陷入衰弱状态，攻防暂时下降X点 / X%"],
+            11:["吸血", f"战斗前，怪物首先吸取角色的{enemy_value}%生命（约{int(enemy_value / 100 * self.PlayerCon.hp)}点）作为伤害，并把伤害数值加到自身生命上"],
+            12:["中毒", f"战斗后，勇士陷入中毒状态，每一步损失生命{enemy_poisonDamage}点"],
+            13:["衰弱", f"战斗后，勇士陷入衰弱状态，攻防暂时下降{enemy_weakValue}点 "],
             14:["诅咒", "战斗后，勇士陷入诅咒状态，战斗无法获得金币和经验"],
             15:["领域", "经过怪物周围自动减生命X点"],
             16:["夹击", "经过两只相同的怪物中间，勇士生命值变成一半"],
@@ -584,8 +616,8 @@ class Function():
             18:["阻击", "经过怪物的十字领域时自动减生命X点，同时怪物后退一格"],
             19:["自爆", "战斗后勇士的生命值变成1"],
             20:["无敌", "勇士无法打败怪物，除非拥有十字架"],
-            21:["退化", "战斗后勇士永久下降X点攻击和X点防御"],
-            22:["固伤", "战斗前，怪物对勇士造成X点固定伤害，无视勇士魔防。"],
+            21:["退化", f"战斗后勇士永久下降{enemy_atkValue}点攻击和{enemy_defValue}点防御"],
+            22:["固伤", f"战斗前，怪物对勇士造成{enemy_damage}点固定伤害，无视勇士魔防。"],
             23:["重生", "怪物被击败后，角色转换楼层则怪物将再次出现"],
             24:["激光", "经过怪物同行或同列时自动减生命X点"],
             25:["光环", "同楼层所有怪物生命提升X%，攻击提升X%，防御提升X%"],
